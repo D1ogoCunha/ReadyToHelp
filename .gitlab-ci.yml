@@ -1,5 +1,5 @@
 # -------------------------------
-# ReadyToHelp - CI Pipeline (.NET 8 + PostgreSQL)
+# ReadyToHelp - CI Pipeline
 # -------------------------------
 
 stages:
@@ -18,16 +18,18 @@ variables:
 
 setup-database:
   stage: setup
+  services:
+    - name: postgres:14
+      alias: postgres
   script:
-    - echo "PostgreSQL pronto"
-
+    - ./wait-for-it.sh postgres:5432 -- echo "PostgreSQL is ready"
 
 build:
   stage: build
   script:
     - echo "Building ReadyToHelp API..."
-    - dotnet restore ReadyToHelp.sln
-    - dotnet build ReadyToHelp.sln --configuration Release --no-restore
+    - dotnet restore ReadyToHelpAPI.sln
+    - dotnet build ReadyToHelpAPI.sln --configuration Release --no-restore
   artifacts:
     expire_in: 1 day
   only:
@@ -44,7 +46,7 @@ test:
   script:
     - ./wait-for-it.sh postgres:5432 -- echo "PostgreSQL is ready"
     - echo "Running unit and integration tests..."
-    - dotnet test ReadyToHelp.sln --configuration Release --no-build --verbosity normal
+    - dotnet test ReadyToHelpAPI.sln --configuration Release --no-build --verbosity normal
   artifacts:
     reports:
       junit: test-results.xml
