@@ -1,9 +1,26 @@
 version: '3.9'
 
 services:
+  app:
+    build:
+      context: ./ReadyToHelpAPI
+      dockerfile: Dockerfile
+    container_name: r2h_api
+    restart: unless-stopped
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_USERNAME: readytohelp
+      POSTGRES_PASSWORD: readytohelppwd
+    depends_on:
+      - postgres
+    ports:
+      - "8080:8080"
+    networks:
+      - r2h_network
+
   postgres:
-    image: postgres:14
     container_name: r2h_postgres
+    image: postgres:14
     restart: always
     environment:
       POSTGRES_USER: readytohelp
@@ -12,7 +29,14 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - r2h_network
 
 volumes:
-  pgdata:
+  postgres_data:
+    external: true
+
+networks:
+  r2h_network:
+    external: true
