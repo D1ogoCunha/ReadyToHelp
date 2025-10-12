@@ -1,5 +1,7 @@
+using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using readytohelpapi.User.Data;
+using readytohelpapi.User.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,8 +10,25 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Enable string enum conversion for JSON
+builder.Services.AddControllers()
+    .AddJsonOptions(opts =>
+    {
+        opts.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
+
+var postgresHost = Environment.GetEnvironmentVariable("POSTGRES_HOST") ?? "localhost";
+var pgUsername = Environment.GetEnvironmentVariable("POSTGRES_USERNAME") ?? "readytohelp";
+var pgPassword = Environment.GetEnvironmentVariable("POSTGRES_PASSWORD") ?? "readytohelppwd";
+
+
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IUserService, UserServiceImpl>();
+
 builder.Services.AddDbContext<UserContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(
+        $"Host={postgresHost};Username={pgUsername};Password={pgPassword};Database=readytohelp_db"
+    ));
 
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
@@ -23,6 +42,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.MapControllers();
 
 app.Run();
 

@@ -26,9 +26,9 @@ public class User
     public string Email { get; set; }
 
     /// <summary>
-    ///     Gets or sets the password hash of the user.
+    ///     Gets or sets the password of the user.
     /// </summary>
-    public string PasswordHash { get; set; }
+    public string Password { get; set; }
 
     /// <summary>
     ///     Gets or sets the profile of the user.
@@ -54,7 +54,7 @@ public class User
         Id = id;
         Email = email;
         Name = name;
-        PasswordHash = password;
+        Password = password;
         Profile = profile;
     }
 
