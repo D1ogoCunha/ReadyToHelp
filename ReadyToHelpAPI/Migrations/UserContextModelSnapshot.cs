@@ -39,7 +39,7 @@ namespace ReadyToHelpAPI.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
-                    b.Property<string>("PasswordHash")
+                    b.Property<string>("Password")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");

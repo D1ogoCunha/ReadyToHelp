@@ -23,25 +23,25 @@ public class UserContext : DbContext
     ///     Gets or sets the Users DbSet.
     /// </summary>
     public DbSet<Models.User> Users { get; set; }
-            protected override void OnModelCreating(ModelBuilder modelBuilder)
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Models.User>(entity =>
         {
-            modelBuilder.Entity<Models.User>(entity =>
-            {
-                entity.ToTable("users");
-                entity.HasKey(u => u.Id);
-                entity.Property(u => u.Name)
-                      .HasMaxLength(100)
-                      .IsRequired();
-                entity.Property(u => u.Email)
-                      .HasMaxLength(120)
-                      .IsRequired();
-                entity.Property(u => u.PasswordHash)
-                      .HasMaxLength(200)
-                      .IsRequired();
-                entity.Property(u => u.Profile)
-                      .HasConversion<string>()
-                      .HasMaxLength(20);
-            });
-        }
+            entity.ToTable("users");
+            entity.HasKey(u => u.Id);
+            entity.Property(u => u.Name)
+                  .HasMaxLength(100)
+                  .IsRequired();
+            entity.Property(u => u.Email)
+                  .HasMaxLength(120)
+                  .IsRequired();
+            entity.Property(u => u.Password)
+                  .HasMaxLength(200)
+                  .IsRequired();
+            entity.Property(u => u.Profile)
+                  .HasConversion<string>()
+                  .HasMaxLength(20);
+        });
+    }
 
 }
