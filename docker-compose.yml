@@ -11,12 +11,12 @@ services:
     depends_on:
       - postgres
     ports:
-      - "8080:80" # mapeie para 80 do container (ajuste conforme a sua app)
+      - "8080:8080"
     networks:
       - r2h_network
 
   postgres:
-    image: postgres:14
+    image: postgres:15
     restart: unless-stopped
     environment:
       POSTGRES_USER: readytohelp
