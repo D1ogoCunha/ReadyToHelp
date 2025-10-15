@@ -40,7 +40,7 @@ public class UserServiceImpl : IUserService
 
         var existingUsers = this.userRepository.GetUserByEmail(user.Email);
 
-        if (existingUsers != null && existingUsers.Count > 0)
+        if (existingUsers != null)
             throw new ArgumentException($"Email {user.Email} already exists.");
 
         user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
@@ -84,7 +84,7 @@ public class UserServiceImpl : IUserService
 
         var emailExists = this.userRepository.GetUserByEmail(user.Email);
 
-        if (emailExists.Count > 0 && emailExists.FirstOrDefault().Id != user.Id)
+        if (emailExists != null && emailExists.Id != user.Id)
         {
             throw new ArgumentException($"Email {user.Email} already exists.");
         }
@@ -131,11 +131,6 @@ public class UserServiceImpl : IUserService
     public List<User> GetUserByName(string name)
     {
       return this.userRepository.GetUserByName(name);
-    }
-
-    public List<User> GetUserByEmail(string email)
-    {
-      return this.userRepository.GetUserByEmail(email);
     }
 
     public List<User> GetAllUsers(int pageNumber, int pageSize, string sortBy, string sortOrder, string filter)

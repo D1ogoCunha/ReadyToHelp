@@ -52,11 +52,11 @@ public interface IUserRepository
     List<Models.User> GetUserByName(string name);
 
     /// <summary>
-    ///   Retrieves users by partial or full email.
+    ///   Retrieves users by email.
     /// </summary>
-    /// <param name="email">The email to search for.</param>
-    /// <returns>A list of users that match the email.</returns>
-    List<Models.User> GetUserByEmail(string email);
+    /// <param name="email">The email of the user.</param>
+    /// <returns>A list of users with the specified email.</returns>
+    Models.User? GetUserByEmail(string email);
 
     /// <summary>
     ///     Retrieves a paginated, filtered, and sorted list of users.

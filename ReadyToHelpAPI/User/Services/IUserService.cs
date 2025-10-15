@@ -43,13 +43,6 @@ public interface IUserService
     List<User> GetUserByName(string name);
 
     /// <summary>
-    ///     Retrieves a list of users by partial email.
-    /// </summary>
-    /// <param name="email">The partial or full email to search for.</param>
-    /// <returns>A list of users that match the search criteria.</returns>
-    List<User> GetUserByEmail(string email);
-
-    /// <summary>
     ///     Retrieves a paginated, filtered, and sorted list of users.
     /// </summary>
     /// <param name="pageNumber">The page number for pagination.</param>

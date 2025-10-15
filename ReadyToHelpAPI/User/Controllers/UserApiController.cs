@@ -125,75 +125,6 @@ public class UserApiController : ControllerBase
         }
     }
 
-    /// <summary>
-    ///   Updates an existing user. Only accessible by ADMIN users.
-    /// </summary>
-    [HttpPut("{id:int}")]
-    public ActionResult Update([FromRoute] int id, [FromBody] User user, [FromHeader(Name = "X-User-Profile")] string? callerProfile)
-    {
-        if (!string.Equals(callerProfile, "ADMIN", StringComparison.OrdinalIgnoreCase))
-            return Forbid();
-
-        if (user == null) return BadRequest(new { error = "user_required" });
-
-        user.Id = id;
-
-        try
-        {
-            var updated = userService.Update(user);
-            return Ok(updated);
-        }
-        catch (ArgumentNullException ex)
-        {
-            return BadRequest(new { error = ex.Message });
-        }
-        catch (ArgumentException ex) when (ex.Message?.Contains("exists", StringComparison.OrdinalIgnoreCase) == true)
-        {
-            return Conflict(new { error = ex.Message });
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { error = ex.Message });
-        }
-        catch (KeyNotFoundException)
-        {
-            return NotFound();
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { error = "internal_server_error", detail = ex.Message });
-        }
-    }
-
-    /// <summary>
-    ///   Deletes an existing user. Only accessible by ADMIN users.
-    /// </summary>
-    [HttpDelete("{id:int}")]
-    public ActionResult Delete([FromRoute] int id, [FromHeader(Name = "X-User-Profile")] string? callerProfile)
-    {
-        if (!string.Equals(callerProfile, "ADMIN", StringComparison.OrdinalIgnoreCase))
-            return Forbid();
-
-        try
-        {
-            var deleted = userService.Delete(id);
-            if (deleted == null) return NotFound();
-            return Ok(deleted);
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { error = ex.Message });
-        }
-        catch (KeyNotFoundException)
-        {
-            return NotFound();
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { error = "internal_server_error", detail = ex.Message });
-        }
-    }
-
     // GET api/user/{id}
     [HttpGet("{id:int}")]
     public ActionResult GetProfile(int id)
@@ -244,7 +175,7 @@ public class UserApiController : ControllerBase
         }
     }
 
-     /// <summary>
+    /// <summary>
     ///   Lists users with pagination, sorting and filtering.
     /// </summary>
     [HttpGet]
