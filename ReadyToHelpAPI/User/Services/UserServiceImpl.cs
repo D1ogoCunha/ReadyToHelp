@@ -43,6 +43,8 @@ public class UserServiceImpl : IUserService
         if (existingUsers != null && existingUsers.Count > 0)
             throw new ArgumentException($"Email {user.Email} already exists.");
 
+        user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
+        
         try
         {
             return this.userRepository.Create(user);
@@ -164,5 +166,23 @@ public class UserServiceImpl : IUserService
     public User? GetProfile(int id)
     {
         return userRepository.GetProfile(id);
+    }
+
+    public Models.User? GetUserByEmail(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrEmpty(email))
+            throw new ArgumentException("Email cannot be null or empty", nameof(email));
+
+        return userRepository.GetUserByEmail(email);
+    }
+
+    public Models.User Register(Models.User user)
+    {
+        if (user == null)
+            throw new ArgumentNullException(nameof(user), "User object is null");
+
+        user.Profile = Profile.CITIZEN;
+
+        return Create(user);
     }
 }

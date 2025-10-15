@@ -67,4 +67,17 @@ public interface IUserService
     /// <param name="id">The ID of the user.</param>
     /// <returns>The user entity if found; otherwise, null.</returns>
     User? GetProfile(int id);
+
+    /// <summary>
+    ///     Retrieves a user by email.
+    /// </summary>
+    /// <param name="email">The email of the user.</param>
+    /// <returns>The user entity if found; otherwise, null.</returns>
+    Models.User? GetUserByEmail(string email);
+    
+    /// <summary>
+    /// Registers for a new user in the mobile app, forces the user was a CITIZEN.
+    /// </summary>
+    /// <param name="user">The user object containing registration details.</param>
+    Models.User Register(User user);
 }
