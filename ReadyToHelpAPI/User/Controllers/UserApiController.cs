@@ -1,5 +1,6 @@
 namespace readytohelpapi.User.Controllers;
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using readytohelpapi.User.Models;
 using readytohelpapi.User.Services;
@@ -24,34 +25,30 @@ public class UserApiController : ControllerBase
         this.userService = userService;
     }
 
+
     /// <summary>
-    ///   Creates a new user. Only accessible by ADMIN users.
+    /// Creates a new user. Only ADMIN can call.
     /// </summary>
-    /// <param name="user">The user to create.</param>
-    /// <param name="callerProfile">The profile of the user making the request.</param>
-    /// <returns></returns>
+    [Authorize(Roles = "ADMIN")]
     [HttpPost]
-    public ActionResult Create([FromBody] User user, [FromHeader(Name = "X-User-Profile")] string? callerProfile)
+    public ActionResult Create([FromBody] User user)
     {
-        if (!string.Equals(callerProfile, "ADMIN", StringComparison.OrdinalIgnoreCase))
-            return Forbid();
+        if (user is null) return BadRequest(new { error = "User payload is required." });
 
         try
         {
             var created = userService.Create(user);
-            return CreatedAtAction(nameof(GetProfile), new { id = created.Id }, created);
+            return CreatedAtAction(nameof(GetProfile), new { id = created.Id }, new
+            {
+                created.Id,
+                created.Name,
+                created.Email,
+                created.Profile
+            });
         }
         catch (ArgumentException ex) when (ex.Message?.Contains("exists", StringComparison.OrdinalIgnoreCase) == true)
         {
             return Conflict(new { error = ex.Message });
-        }
-        catch (ArgumentNullException ex)
-        {
-            return BadRequest(new { error = ex.Message });
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { error = ex.Message });
         }
         catch (Exception ex)
         {
@@ -137,7 +134,48 @@ public class UserApiController : ControllerBase
         return Ok(user);
     }
 
-     /// <summary>
+    public record RegisterRequest(string Name, string Email, string Password);
+
+    /// <summary>
+    /// Registers a new user with the CITIZEN profile. Publicly accessible.
+    /// </summary>
+    [AllowAnonymous]
+    [HttpPost("register")]
+    public ActionResult Register([FromBody] RegisterRequest? req)
+    {
+        if (req is null || string.IsNullOrWhiteSpace(req.Name) ||
+            string.IsNullOrWhiteSpace(req.Email) || string.IsNullOrWhiteSpace(req.Password))
+            return BadRequest(new { error = "Name, Email and Password are required." });
+
+        try
+        {
+            var created = userService.Register(new User
+            {
+                Name = req.Name.Trim(),
+                Email = req.Email.Trim(),
+                Password = req.Password,
+                Profile = Profile.CITIZEN
+            });
+
+            return CreatedAtAction(nameof(GetProfile), new { id = created.Id }, new
+            {
+                created.Id,
+                created.Name,
+                created.Email,
+                created.Profile
+            });
+        }
+        catch (ArgumentException ex) when (ex.Message?.Contains("exists", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            return Conflict(new { error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = "internal_server_error", detail = ex.Message });
+        }
+    }
+
+    /// <summary>
     ///   Lists users with pagination, sorting and filtering.
     /// </summary>
     [HttpGet]

@@ -43,17 +43,15 @@ public class UserRepository : IUserRepository
             .AsNoTracking()
             .FirstOrDefault(u => u.Id == id);
     }
-
-   public List<User> GetUserByEmail(string email)
+    
+    public User? GetUserByEmail(string email)
     {
         if (string.IsNullOrWhiteSpace(email))
-            return new List<User>();
+            return null;
 
-        var pattern = $"%{email.Trim()}%";
         return userContext.Users
             .AsNoTracking()
-            .Where(u => EF.Functions.ILike(u.Email, pattern))
-            .ToList();
+            .FirstOrDefault(u => EF.Functions.ILike(u.Email, email.Trim()));
     }
 
  public List<User> GetUserByName(string name)

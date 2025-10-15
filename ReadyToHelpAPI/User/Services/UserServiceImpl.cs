@@ -40,9 +40,11 @@ public class UserServiceImpl : IUserService
 
         var existingUsers = this.userRepository.GetUserByEmail(user.Email);
 
-        if (existingUsers != null && existingUsers.Count > 0)
+        if (existingUsers != null)
             throw new ArgumentException($"Email {user.Email} already exists.");
 
+        user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
+        
         try
         {
             return this.userRepository.Create(user);
@@ -82,7 +84,7 @@ public class UserServiceImpl : IUserService
 
         var emailExists = this.userRepository.GetUserByEmail(user.Email);
 
-        if (emailExists.Count > 0 && emailExists.FirstOrDefault().Id != user.Id)
+        if (emailExists != null && emailExists.Id != user.Id)
         {
             throw new ArgumentException($"Email {user.Email} already exists.");
         }
@@ -131,11 +133,6 @@ public class UserServiceImpl : IUserService
       return this.userRepository.GetUserByName(name);
     }
 
-    public List<User> GetUserByEmail(string email)
-    {
-      return this.userRepository.GetUserByEmail(email);
-    }
-
     public List<User> GetAllUsers(int pageNumber, int pageSize, string sortBy, string sortOrder, string filter)
 {
     if (string.IsNullOrEmpty(sortBy))
@@ -164,5 +161,23 @@ public class UserServiceImpl : IUserService
     public User? GetProfile(int id)
     {
         return userRepository.GetProfile(id);
+    }
+
+    public Models.User? GetUserByEmail(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrEmpty(email))
+            throw new ArgumentException("Email cannot be null or empty", nameof(email));
+
+        return userRepository.GetUserByEmail(email);
+    }
+
+    public Models.User Register(Models.User user)
+    {
+        if (user == null)
+            throw new ArgumentNullException(nameof(user), "User object is null");
+
+        user.Profile = Profile.CITIZEN;
+
+        return Create(user);
     }
 }

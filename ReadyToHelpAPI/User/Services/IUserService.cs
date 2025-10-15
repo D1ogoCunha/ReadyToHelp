@@ -43,13 +43,6 @@ public interface IUserService
     List<User> GetUserByName(string name);
 
     /// <summary>
-    ///     Retrieves a list of users by partial email.
-    /// </summary>
-    /// <param name="email">The partial or full email to search for.</param>
-    /// <returns>A list of users that match the search criteria.</returns>
-    List<User> GetUserByEmail(string email);
-
-    /// <summary>
     ///     Retrieves a paginated, filtered, and sorted list of users.
     /// </summary>
     /// <param name="pageNumber">The page number for pagination.</param>
@@ -67,4 +60,17 @@ public interface IUserService
     /// <param name="id">The ID of the user.</param>
     /// <returns>The user entity if found; otherwise, null.</returns>
     User? GetProfile(int id);
+
+    /// <summary>
+    ///     Retrieves a user by email.
+    /// </summary>
+    /// <param name="email">The email of the user.</param>
+    /// <returns>The user entity if found; otherwise, null.</returns>
+    Models.User? GetUserByEmail(string email);
+    
+    /// <summary>
+    /// Registers for a new user in the mobile app, forces the user was a CITIZEN.
+    /// </summary>
+    /// <param name="user">The user object containing registration details.</param>
+    Models.User Register(User user);
 }
