@@ -12,12 +12,59 @@ public interface IUserService
     /// </summary>
     /// <param name="user">The user object to be created.</param>
     /// <returns>The created user entity.</returns>
-    Models.User Create(User user);
+    User Create(User user);
+
+    /// <summary>
+    ///     Updates a user.
+    /// </summary>
+    /// <param name="user">The user object to be updated.</param>
+    /// <returns>The updated user entity.</returns>
+    User Update(User user);
+
+    /// <summary>
+    ///     Deletes a user.
+    /// </summary>
+    /// <param name="id">The user id to be deleted.</param>
+    /// <returns>The deleted user entity, if successfully found.</returns>
+    User Delete(int id);
+
+    /// <summary>
+    ///     Retrieves a user by their unique identifier.
+    /// </summary>
+    /// <param name="id">The user ID.</param>
+    /// <returns>The user entity if found.</returns>
+    User GetUserById(int id);
+
+    /// <summary>
+    ///     Retrieves a list of users by partial name.
+    /// </summary>
+    /// <param name="name">The partial or full name to search for.</param>
+    /// <returns>A list of users that match the search criteria.</returns>
+    List<User> GetUserByName(string name);
+
+    /// <summary>
+    ///     Retrieves a list of users by partial email.
+    /// </summary>
+    /// <param name="email">The partial or full email to search for.</param>
+    /// <returns>A list of users that match the search criteria.</returns>
+    List<User> GetUserByEmail(string email);
+
+    /// <summary>
+    ///     Retrieves a paginated, filtered, and sorted list of users.
+    /// </summary>
+    /// <param name="pageNumber">The page number for pagination.</param>
+    /// <param name="pageSize">The number of items per page.</param>
+    /// <param name="sortBy">The field by which to sort the results.</param>
+    /// <param name="sortOrder">The sort order, either "asc" or "desc".</param>
+    /// <param name="filter">The string to filter the user data.</param>
+    /// <returns>A paginated, sorted, and filtered list of users.</returns>
+    List<User> GetAllUsers(int pageNumber, int pageSize, string sortBy, string sortOrder, string filter);
+
 
     /// <summary>
     ///     Retrieves a user profile by ID.
     /// </summary>
     /// <param name="id">The ID of the user.</param>
     /// <returns>The user entity if found; otherwise, null.</returns>
-    Models.User? GetProfile(int id);
+    User? GetProfile(int id);
 }
