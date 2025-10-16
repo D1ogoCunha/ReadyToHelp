@@ -21,6 +21,9 @@ obj/
 .idea/**/dictionaries
 .idea/**/shelf
 
+# Local coverage report
+.coveragereport/
+
 # AWS User-specific
 .idea/**/aws.xml
 

@@ -2,6 +2,9 @@ using System.IdentityModel.Tokens.Jwt;
 
 namespace readytohelpapi.Authentication.Service;
 
+/// <summary>
+///     Utility class for handling JWT operations.
+/// </summary>
 public static class JwtUtility
 {
     /// <summary>

@@ -3,22 +3,32 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using readytohelpapi.Authentication.Service;
 
-
-
-
 namespace readytohelpapi.Authentication.Controllers;
 
+
+/// <summary>
+/// Controller for handling authentication-related API endpoints.
+/// </summary>
 [ApiController]
 [Route("api/auth")]
 public class AuthApiController : ControllerBase
 {
     private readonly IAuthService authService;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AuthApiController"/> class.
+    /// </summary>
+    /// <param name="authService">The authentication service.</param>
     public AuthApiController(IAuthService authService)
     {
         this.authService = authService;
     }
 
+    /// <summary>
+    /// Logs in a user for mobile access and returns a JWT token.
+    /// </summary>
+    /// <param name="authentication">The authentication details.</param>
+    /// <returns>A JWT token if successful or an error message if not.</returns>
     [AllowAnonymous]
     [HttpPost("login/mobile")]
     public ActionResult<string> LoginMobile([FromBody] Models.Authentication? authentication)
@@ -44,6 +54,11 @@ public class AuthApiController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Logs in a user for web access and returns a JWT token.
+    /// </summary>
+    /// <param name="authentication">The authentication details.</param>
+    /// <returns>A JWT token if successful or an error message if not.</returns>
     [AllowAnonymous]
     [HttpPost("login/web")]
     public ActionResult<string> LoginWeb([FromBody] Models.Authentication? authentication)
@@ -73,6 +88,10 @@ public class AuthApiController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Refreshes a JWT token. The existing token must be provided in the Authorization header as a Bearer token.
+    /// </summary>
+    /// <returns></returns>
     [Authorize]
     [HttpPost("refresh-token")]
     public ActionResult<string> RefreshToken()
