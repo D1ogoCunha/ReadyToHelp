@@ -8,6 +8,8 @@ using readytohelpapi.User.Services;
 using readytohelpapi.Authentication.Service;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Builder;
+using readytohelpapi.Occurrence.Services;
+using readytohelpapi.Occurrence.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -42,12 +44,18 @@ var pgPassword = Environment.GetEnvironmentVariable("POSTGRES_PASSWORD") ?? "rea
 builder.Services.AddScoped<IAuthService, AuthServiceImpl>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserServiceImpl>();
+builder.Services.AddScoped<IOccurrenceRepository, OccurrenceRepository>();
+builder.Services.AddScoped<IOccurrenceService, OccurrenceServiceImpl>();
 
 builder.Services.AddDbContext<UserContext>(options =>
     options.UseNpgsql(
         $"Host={postgresHost};Username={pgUsername};Password={pgPassword};Database=readytohelp_db"
     ));
 
+builder.Services.AddDbContext<OccurrenceContext>(options =>
+    options.UseNpgsql(
+        $"Host={postgresHost};Username={pgUsername};Password={pgPassword};Database=readytohelp_db"
+    ));
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 var jwtSecret = builder.Configuration["Jwt:Secret"] ?? throw new InvalidOperationException("Jwt:Secret not configured");
