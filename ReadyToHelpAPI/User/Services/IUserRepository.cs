@@ -13,7 +13,7 @@ public interface IUserRepository
     ///     Creates a user in the repository.
     /// </summary>
     /// <param name="user">The user object to be created.</param>
-    /// <returns>The created user entity.</returns>
+    /// <returns>The created user entity.</returns>s
     Models.User Create(User user);
 
     /// <summary>
@@ -52,10 +52,10 @@ public interface IUserRepository
     List<Models.User> GetUserByName(string name);
 
     /// <summary>
-    ///   Retrieves users by email.
+    ///   Retrieves the user by email.
     /// </summary>
     /// <param name="email">The email of the user.</param>
-    /// <returns>A list of users with the specified email.</returns>
+    /// <returns>The user with the specified email.</returns>
     Models.User? GetUserByEmail(string email);
 
     /// <summary>

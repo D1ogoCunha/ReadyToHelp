@@ -59,12 +59,10 @@ public class UserApiController : ControllerBase
     /// <summary>
     ///   Updates an existing user. Only accessible by ADMIN users.
     /// </summary>
+    [Authorize(Roles = "ADMIN")]
     [HttpPut("{id:int}")]
-    public ActionResult Update([FromRoute] int id, [FromBody] User user, [FromHeader(Name = "X-User-Profile")] string? callerProfile)
+    public ActionResult Update([FromRoute] int id, [FromBody] User user)
     {
-        if (!string.Equals(callerProfile, "ADMIN", StringComparison.OrdinalIgnoreCase))
-            return Forbid();
-
         if (user == null) return BadRequest(new { error = "user_required" });
 
         user.Id = id;
@@ -99,12 +97,10 @@ public class UserApiController : ControllerBase
     /// <summary>
     ///   Deletes an existing user. Only accessible by ADMIN users.
     /// </summary>
+    [Authorize(Roles = "ADMIN")]
     [HttpDelete("{id:int}")]
-    public ActionResult Delete([FromRoute] int id, [FromHeader(Name = "X-User-Profile")] string? callerProfile)
+    public ActionResult Delete([FromRoute] int id)
     {
-        if (!string.Equals(callerProfile, "ADMIN", StringComparison.OrdinalIgnoreCase))
-            return Forbid();
-
         try
         {
             var deleted = userService.Delete(id);
@@ -124,7 +120,6 @@ public class UserApiController : ControllerBase
             return StatusCode(500, new { error = "internal_server_error", detail = ex.Message });
         }
     }
-
     // GET api/user/{id}
     [HttpGet("{id:int}")]
     public ActionResult GetProfile(int id)
@@ -199,5 +194,14 @@ public class UserApiController : ControllerBase
         {
             return StatusCode(500, new { error = "internal_server_error", detail = ex.Message });
         }
+    }
+
+    [HttpGet("email/{email}")]
+    public ActionResult GetUserByEmail(string email)
+    {
+        var user = userService.GetUserByEmail(email);
+        if (user == null)
+            return NotFound();
+        return Ok(user);
     }
 }

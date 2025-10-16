@@ -56,48 +56,55 @@ public class UserServiceImpl : IUserService
     }
 
      public User Update(User user)
+{
+    if (user == null)
+        throw new ArgumentNullException(nameof(user), "User cannot be null");
+
+    if (user.Id <= 0)
+        throw new ArgumentException("Invalid user id.");
+
+    if (string.IsNullOrWhiteSpace(user.Email))
+        throw new ArgumentException("User email object is null or empty.");
+
+    if (string.IsNullOrWhiteSpace(user.Name))
+        throw new ArgumentException("User name cannot be null or empty");
+
+    // Busca o utilizador atual
+    var existingUser = this.userRepository.GetUserById(user.Id);
+    if (existingUser == null)
+        throw new KeyNotFoundException($"User with id {user.Id} not found.");
+
+    // Se password não vier, mantém a antiga
+    if (string.IsNullOrWhiteSpace(user.Password))
     {
-        if (user == null)
+        user.Password = existingUser.Password;
+    }
+    else
+    {
+        // Se password mudou, faz hash
+        if (!BCrypt.Net.BCrypt.Verify(user.Password, existingUser.Password))
         {
-            throw new ArgumentNullException(nameof(user), "User cannot be null");
+            user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
         }
-
-        if (user.Id <= 0)
+        else
         {
-            throw new ArgumentException("Invalid user id.");
-        }
-
-        if (string.IsNullOrWhiteSpace(user.Email) || string.IsNullOrEmpty(user.Email))
-        {
-            throw new ArgumentException("User email object is null or empty.");
-        }
-
-        if (string.IsNullOrWhiteSpace(user.Name) || string.IsNullOrEmpty(user.Name))
-        {
-            throw new ArgumentException("User name cannot be null or empty");
-        }
-
-        if (string.IsNullOrWhiteSpace(user.Password) && user.Id > 0)
-        {
-            user.Password = this.userRepository.GetUserById(user.Id).Password; 
-        }
-
-        var emailExists = this.userRepository.GetUserByEmail(user.Email);
-
-        if (emailExists != null && emailExists.Id != user.Id)
-        {
-            throw new ArgumentException($"Email {user.Email} already exists.");
-        }
-
-        try
-        {
-            return this.userRepository.Update(user);
-        }
-        catch (Exception e)
-        {
-            throw new InvalidOperationException("An error occurred while trying to update a user.", e);
+            user.Password = existingUser.Password;
         }
     }
+
+    var emailExists = this.userRepository.GetUserByEmail(user.Email);
+    if (emailExists != null && emailExists.Id != user.Id)
+        throw new ArgumentException($"Email {user.Email} already exists.");
+
+    try
+    {
+        return this.userRepository.Update(user);
+    }
+    catch (Exception e)
+    {
+        throw new InvalidOperationException("An error occurred while trying to update a user.", e);
+    }
+}
 
     public User Delete(int id)
       {
