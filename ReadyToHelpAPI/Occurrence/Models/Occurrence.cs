@@ -5,7 +5,6 @@ namespace readytohelpapi.Occurrence.Models;
 /// <summary>
 ///   Represents an occurrence.
 /// </summary>
-
 public class Occurrence
 {
 
