@@ -29,6 +29,26 @@ public class Report
     public bool IsDuplicate { get; set; }
 
     /// <summary>
+    ///   Gets or sets the title of the occurrence on the report.
+    /// </summary>
+    public string Title { get; set; }
+
+    /// <summary>
+    ///   Gets or sets the status of the occurrence on the report.
+    /// </summary>
+    public OccurrenceStatus Status { get; set; }
+
+    /// <summary>
+    ///   Gets or sets the priority level of the occurrence on the report.
+    /// </summary>
+    public PriorityLevel Priority { get; set; }
+
+    /// <summary>
+    ///   Gets or sets the type of occurrence reported.
+    /// </summary>
+    public OccurrenceType Type { get; set; }
+
+    /// <summary>
     ///   Gets or sets the user identifier associated with the report.
     /// </summary>
     public int UserId { get; set; }
