@@ -545,6 +545,12 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 
+# Local coverage reports
+coveragereport/
+**/coveragereport/
+.coveragereport/
+**/.coveragereport/
+
 ### VisualStudio Patch ###
 # Additional files built by Visual Studio
 

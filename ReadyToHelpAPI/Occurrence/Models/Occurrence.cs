@@ -26,7 +26,6 @@ public class Occurrence
     /// <param name="id">The unique identifier for the occurrence.</param>
     /// <param name="title">The title of the occurrence.</param>
     /// <param name="description">The description of the occurrence.</param>
-    /// <param name="location">The location of the occurrence.</param>
     /// <param name="type">The type of the occurrence.</param>
     /// <param name="status">The status of the occurrence.</param>
     /// <param name="priority">The priority level of the occurrence.</param>
@@ -35,7 +34,7 @@ public class Occurrence
     /// <param name="reportCount">The report count of the occurrence.</param>
     /// <param name="reportId">The report identifier associated with the occurrence.</param>
     /// <param name="responsibleEntityId">The responsible entity identifier associated with the occurrence.</param>
-    public Occurrence(int id, string title, string description, /*string location,*/ OccurrenceType type, OccurrenceStatus status, PriorityLevel priority, double proximityRadius, DateTime endDateTime, int reportCount, int reportId, int responsibleEntityId)
+    public Occurrence(int id, string title, string description, OccurrenceType type, OccurrenceStatus status, PriorityLevel priority, double proximityRadius, DateTime endDateTime, int reportCount, int reportId, int responsibleEntityId)
     {
         Id = id;
         Title = title;
@@ -66,11 +65,6 @@ public class Occurrence
     ///   Gets or sets the description of the occurrence.
     /// </summary>
     public string Description { get; set; }
-
-    /// <summary>
-    ///   Gets or sets the location of the occurrence.
-    /// </summary>
-    //public string Location { get; set; }
 
     /// <summary>
     ///   Gets or sets the type of the occurrence.
