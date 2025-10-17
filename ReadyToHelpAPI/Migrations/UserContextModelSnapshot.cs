@@ -51,6 +51,9 @@ namespace ReadyToHelpAPI.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Email")
+                        .IsUnique();
+
                     b.ToTable("users", (string)null);
                 });
 #pragma warning restore 612, 618

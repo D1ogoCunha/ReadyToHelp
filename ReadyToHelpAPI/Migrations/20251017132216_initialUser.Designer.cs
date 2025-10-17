@@ -11,8 +11,8 @@ using readytohelpapi.User.Data;
 namespace ReadyToHelpAPI.Migrations
 {
     [DbContext(typeof(UserContext))]
-    [Migration("20251015100920_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20251017132216_initialUser")]
+    partial class initialUser
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
