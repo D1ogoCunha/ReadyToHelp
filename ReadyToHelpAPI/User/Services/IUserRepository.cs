@@ -17,13 +17,6 @@ public interface IUserRepository
     Models.User Create(User user);
 
     /// <summary>
-    ///    Retrieves a user profile by ID.
-    /// </summary>
-    /// <param name="id">The ID of the user.</param>
-    /// <returns>The user entity if found; otherwise, null.</returns>
-    Models.User? GetProfile(int id);
-
-    /// <summary>
     ///    Retrieves a user by ID.
     /// </summary>
     /// <param name="id">The user ID.</param>

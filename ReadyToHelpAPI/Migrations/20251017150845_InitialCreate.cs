@@ -26,6 +26,12 @@ namespace ReadyToHelpAPI.Migrations
                 {
                     table.PrimaryKey("PK_users", x => x.Id);
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_users_Email",
+                table: "users",
+                column: "Email",
+                unique: true);
         }
 
         /// <inheritdoc />
