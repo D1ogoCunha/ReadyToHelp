@@ -1,15 +1,14 @@
 namespace readytohelpapi.User.Controllers;
 
+using System;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using readytohelpapi.User.Models;
 using readytohelpapi.User.Services;
-using System;
 
 /// <summary>
 ///   Provides API endpoints for managing users.
 /// </summary>
-
 [ApiController]
 [Route("api/user")]
 public class UserApiController : ControllerBase
@@ -25,7 +24,6 @@ public class UserApiController : ControllerBase
         this.userService = userService;
     }
 
-
     /// <summary>
     /// Creates a new user. Only ADMIN can call.
     /// </summary>
@@ -33,20 +31,26 @@ public class UserApiController : ControllerBase
     [HttpPost]
     public ActionResult Create([FromBody] User user)
     {
-        if (user is null) return BadRequest(new { error = "User payload is required." });
+        if (user is null)
+            return BadRequest(new { error = "User payload is required." });
 
         try
         {
             var created = userService.Create(user);
-            return CreatedAtAction(nameof(GetProfile), new { id = created.Id }, new
-            {
-                created.Id,
-                created.Name,
-                created.Email,
-                created.Profile
-            });
+            return CreatedAtAction(
+                nameof(GetUserById),
+                new { id = created.Id },
+                new
+                {
+                    created.Id,
+                    created.Name,
+                    created.Email,
+                    created.Profile,
+                }
+            );
         }
-        catch (ArgumentException ex) when (ex.Message?.Contains("exists", StringComparison.OrdinalIgnoreCase) == true)
+        catch (ArgumentException ex)
+            when (ex.Message?.Contains("exists", StringComparison.OrdinalIgnoreCase) == true)
         {
             return Conflict(new { error = ex.Message });
         }
@@ -63,7 +67,8 @@ public class UserApiController : ControllerBase
     [HttpPut("{id:int}")]
     public ActionResult Update([FromRoute] int id, [FromBody] User user)
     {
-        if (user == null) return BadRequest(new { error = "user_required" });
+        if (user == null)
+            return BadRequest(new { error = "user_required" });
 
         user.Id = id;
 
@@ -76,7 +81,8 @@ public class UserApiController : ControllerBase
         {
             return BadRequest(new { error = ex.Message });
         }
-        catch (ArgumentException ex) when (ex.Message?.Contains("exists", StringComparison.OrdinalIgnoreCase) == true)
+        catch (ArgumentException ex)
+            when (ex.Message?.Contains("exists", StringComparison.OrdinalIgnoreCase) == true)
         {
             return Conflict(new { error = ex.Message });
         }
@@ -104,7 +110,8 @@ public class UserApiController : ControllerBase
         try
         {
             var deleted = userService.Delete(id);
-            if (deleted == null) return NotFound();
+            if (deleted == null)
+                return NotFound();
             return Ok(deleted);
         }
         catch (ArgumentException ex)
@@ -120,13 +127,28 @@ public class UserApiController : ControllerBase
             return StatusCode(500, new { error = "internal_server_error", detail = ex.Message });
         }
     }
+
     // GET api/user/{id}
     [HttpGet("{id:int}")]
-    public ActionResult GetProfile(int id)
+    public ActionResult GetUserById(int id)
     {
-        var user = userService.GetProfile(id);
-        if (user == null) return NotFound();
-        return Ok(user);
+        try
+        {
+            var user = userService.GetUserById(id);
+            return Ok(user);
+        }
+        catch (ArgumentException)
+        {
+            return BadRequest(new { error = "Invalid user id." });
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = "internal_server_error", detail = ex.Message });
+        }
     }
 
     public record RegisterRequest(string Name, string Email, string Password);
@@ -138,29 +160,40 @@ public class UserApiController : ControllerBase
     [HttpPost("register")]
     public ActionResult Register([FromBody] RegisterRequest? req)
     {
-        if (req is null || string.IsNullOrWhiteSpace(req.Name) ||
-            string.IsNullOrWhiteSpace(req.Email) || string.IsNullOrWhiteSpace(req.Password))
+        if (
+            req is null
+            || string.IsNullOrWhiteSpace(req.Name)
+            || string.IsNullOrWhiteSpace(req.Email)
+            || string.IsNullOrWhiteSpace(req.Password)
+        )
             return BadRequest(new { error = "Name, Email and Password are required." });
 
         try
         {
-            var created = userService.Register(new User
-            {
-                Name = req.Name.Trim(),
-                Email = req.Email.Trim(),
-                Password = req.Password,
-                Profile = Profile.CITIZEN
-            });
+            var created = userService.Register(
+                new User
+                {
+                    Name = req.Name.Trim(),
+                    Email = req.Email.Trim(),
+                    Password = req.Password,
+                    Profile = Profile.CITIZEN,
+                }
+            );
 
-            return CreatedAtAction(nameof(GetProfile), new { id = created.Id }, new
-            {
-                created.Id,
-                created.Name,
-                created.Email,
-                created.Profile
-            });
+            return CreatedAtAction(
+                nameof(GetUserById),
+                new { id = created.Id },
+                new
+                {
+                    created.Id,
+                    created.Name,
+                    created.Email,
+                    created.Profile,
+                }
+            );
         }
-        catch (ArgumentException ex) when (ex.Message?.Contains("exists", StringComparison.OrdinalIgnoreCase) == true)
+        catch (ArgumentException ex)
+            when (ex.Message?.Contains("exists", StringComparison.OrdinalIgnoreCase) == true)
         {
             return Conflict(new { error = ex.Message });
         }
@@ -179,7 +212,8 @@ public class UserApiController : ControllerBase
         [FromQuery] int pageSize = 10,
         [FromQuery] string sortBy = "Name",
         [FromQuery] string sortOrder = "asc",
-        [FromQuery] string filter = "")
+        [FromQuery] string filter = ""
+    )
     {
         try
         {
@@ -199,9 +233,20 @@ public class UserApiController : ControllerBase
     [HttpGet("email/{email}")]
     public ActionResult GetUserByEmail(string email)
     {
-        var user = userService.GetUserByEmail(email);
-        if (user == null)
-            return NotFound();
-        return Ok(user);
+        try
+        {
+            var user = userService.GetUserByEmail(email);
+            if (user == null)
+                return NotFound();
+            return Ok(user);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = "internal_server_error", detail = ex.Message });
+        }
     }
 }

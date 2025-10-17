@@ -55,13 +55,6 @@ public interface IUserService
 
 
     /// <summary>
-    ///     Retrieves a user profile by ID.
-    /// </summary>
-    /// <param name="id">The ID of the user.</param>
-    /// <returns>The user entity if found; otherwise, null.</returns>
-    User? GetProfile(int id);
-
-    /// <summary>
     ///     Retrieves a user by email.
     /// </summary>
     /// <param name="email">The email of the user.</param>

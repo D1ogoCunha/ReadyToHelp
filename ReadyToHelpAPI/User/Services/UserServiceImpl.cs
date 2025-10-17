@@ -43,10 +43,6 @@ public class UserServiceImpl : IUserService
         if (!Enum.IsDefined(typeof(Profile), user.Profile))
             throw new ArgumentOutOfRangeException(nameof(user.Profile), "Invalid profile");
 
-        if (user.Profile != Profile.ADMIN && user.Profile != Profile.CITIZEN)
-            throw new UnauthorizedAccessException("Insufficient privileges to assign this profile");
-
-
         var existingUsers = this.userRepository.GetUserByEmail(user.Email);
 
         if (existingUsers != null)
@@ -64,7 +60,16 @@ public class UserServiceImpl : IUserService
         }
     }
 
-    public User Update(User user)
+    /// <summary>
+    ///   Updates a user.
+    /// </summary>
+    /// <param name="user">The user to update.</param>
+    /// <returns>The updated user.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when the user is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when the user has invalid properties.</exception>
+    /// <exception cref="KeyNotFoundException">Thrown when the user is not found.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when an error occurs while updating the user.</exception>
+     public User Update(User user)
     {
         if (user == null)
             throw new ArgumentNullException(nameof(user), "User cannot be null");
@@ -78,27 +83,32 @@ public class UserServiceImpl : IUserService
         if (string.IsNullOrWhiteSpace(user.Name))
             throw new ArgumentException("User name cannot be null or empty");
 
-        // Busca o utilizador atual
         var existingUser = this.userRepository.GetUserById(user.Id);
         if (existingUser == null)
             throw new KeyNotFoundException($"User with id {user.Id} not found.");
 
-        // Se password não vier, mantém a antiga
         if (string.IsNullOrWhiteSpace(user.Password))
         {
             user.Password = existingUser.Password;
         }
         else
         {
-            // Se password mudou, faz hash
-            if (!BCrypt.Net.BCrypt.Verify(user.Password, existingUser.Password))
+            bool sameAsExisting = false;
+            if (!string.IsNullOrEmpty(existingUser.Password))
             {
-                user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
+                try
+                {
+                    sameAsExisting = BCrypt.Net.BCrypt.Verify(user.Password, existingUser.Password);
+                }
+                catch (BCrypt.Net.SaltParseException)
+                {
+                    sameAsExisting = false;
+                }
             }
-            else
-            {
-                user.Password = existingUser.Password;
-            }
+
+            user.Password = sameAsExisting
+                ? existingUser.Password
+                : BCrypt.Net.BCrypt.HashPassword(user.Password);
         }
 
         var emailExists = this.userRepository.GetUserByEmail(user.Email);
@@ -115,6 +125,13 @@ public class UserServiceImpl : IUserService
         }
     }
 
+    /// <summary>
+    ///   Deletes a user by id.
+    /// </summary>
+    /// <param name="id">The id of the user to delete.</param>
+    /// <returns>The deleted user.</returns>
+    /// <exception cref="ArgumentException">Thrown when the user id is invalid.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when an error occurs while deleting the user.</exception>
     public User Delete(int id)
     {
         if (id <= 0)
@@ -132,6 +149,13 @@ public class UserServiceImpl : IUserService
         }
     }
 
+    /// <summary>
+    ///  Gets a user by id.
+    /// </summary>
+    /// <param name="id">The id of the user to get.</param>
+    /// <returns>The user with the specified id.</returns>
+    /// <exception cref="ArgumentException">Thrown when the user id is invalid.</exception>
+    /// <exception cref="KeyNotFoundException">Thrown when the user is not found.</exception>
     public User GetUserById(int id)
     {
         if (id <= 0)
@@ -144,11 +168,27 @@ public class UserServiceImpl : IUserService
         return user;
     }
 
+    /// <summary>
+    /// Gets users by name.
+    /// </summary>
+    /// <param name="name">The name of the users to get.</param>
+    /// <returns>A list of users with the specified name.</returns>
     public List<User> GetUserByName(string name)
     {
         return this.userRepository.GetUserByName(name);
     }
 
+    /// <summary>
+    /// Gets all users with pagination, sorting, and filtering.
+    /// </summary>
+    /// <param name="pageNumber">The page number to retrieve.</param>
+    /// <param name="pageSize">The number of users per page.</param>
+    /// <param name="sortBy">The field to sort by.</param>
+    /// <param name="sortOrder">The sort order (asc or desc).</param>
+    /// <param name="filter">The filter to apply.</param>
+    /// <returns>A list of users matching the criteria.</returns>
+    /// <exception cref="ArgumentException">Thrown when any of the parameters are invalid.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when an error occurs while retrieving users.</exception>
     public List<User> GetAllUsers(int pageNumber, int pageSize, string sortBy, string sortOrder, string filter)
     {
         if (string.IsNullOrEmpty(sortBy))
@@ -174,10 +214,14 @@ public class UserServiceImpl : IUserService
         }
     }
 
-    public User? GetProfile(int id)
-    {
-        return userRepository.GetProfile(id);
-    }
+  
+
+    /// <summary>
+    ///   Gets a user by email.
+    /// </summary>
+    /// <param name="email">The email of the user to get.</param>
+    /// <returns>The user with the specified email, or null if not found.</returns>
+    /// <exception cref="ArgumentException">Thrown when the email is null or empty.</exception>
 
     public Models.User? GetUserByEmail(string email)
     {
@@ -187,6 +231,12 @@ public class UserServiceImpl : IUserService
         return userRepository.GetUserByEmail(email);
     }
 
+    /// <summary>
+    ///   Registers a new citizen user.
+    /// </summary>
+    /// <param name="user">The user to register.</param>
+    /// <returns>The registered user.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when the user is null.</exception>
     public Models.User Register(Models.User user)
     {
         if (user == null)

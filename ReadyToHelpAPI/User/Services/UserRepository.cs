@@ -45,11 +45,11 @@ public class UserRepository : IUserRepository
         }
     }
 
-    public User? GetProfile(int id)
-    {
-        return userContext.Users.Find(id);
-    }
-
+    /// <summary>
+    /// Gets a user by ID.
+    /// </summary>
+    /// <param name="id">The ID of the user.</param>
+    /// <returns>The user, or null if not found.</returns>
     public User? GetUserById(int id)
     {
         if (id <= 0) return null;
@@ -58,6 +58,11 @@ public class UserRepository : IUserRepository
             .FirstOrDefault(u => u.Id == id);
     }
 
+    /// <summary>
+    ///   Gets a user by email.
+    /// </summary>
+    /// <param name="email">The email of the user.</param>
+    /// <returns>The user, or null if not found.</returns>
     public User? GetUserByEmail(string email)
     {
         if (string.IsNullOrWhiteSpace(email))
@@ -68,6 +73,11 @@ public class UserRepository : IUserRepository
             .FirstOrDefault(u => EF.Functions.ILike(u.Email, email.Trim()));
     }
 
+    /// <summary>
+    ///   Gets users by name.
+    /// </summary>
+    /// <param name="name">The name to search for.</param>
+    /// <returns>A list of users matching the name.</returns>
     public List<User> GetUserByName(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
@@ -80,6 +90,13 @@ public class UserRepository : IUserRepository
             .ToList();
     }
 
+    /// <summary>
+    ///   Updates a user in the repository.
+    /// </summary>
+    /// <param name="user">The user to update.</param>
+    /// <returns>The updated user.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when the user is null.</exception>
+    /// <exception cref="DbUpdateException">Thrown when the user cannot be updated.</exception>
     public User Update(User user)
     {
         if (user == null) throw new ArgumentNullException(nameof(user));
@@ -95,6 +112,12 @@ public class UserRepository : IUserRepository
         }
     }
 
+    /// <summary>
+    ///   Deletes a user by ID.
+    /// </summary>
+    /// <param name="id">The ID of the user to delete.</param>
+    /// <returns>The deleted user, or null if not found.</returns>
+    /// <exception cref="DbUpdateException">Thrown when the user cannot be deleted.</exception>
     public User? Delete(int id)
     {
         var existing = userContext.Users.Find(id);
@@ -111,6 +134,15 @@ public class UserRepository : IUserRepository
         }
     }
 
+    /// <summary>
+    ///   Gets all users with pagination, sorting, and filtering.
+    /// </summary>
+    /// <param name="pageNumber">The page number (1-based).</param>
+    /// <param name="pageSize">The number of users per page.</param>
+    /// <param name="sortBy">The field to sort by.</param>
+    /// <param name="sortOrder">The sort order ("asc" or "desc").</param>
+    /// <param name="filter">The filter string to search by name or email.</param>
+    /// <returns>A list of users.</returns>
     public List<User> GetAllUsers(int pageNumber = 1, int pageSize = 10, string sortBy = "Name", string sortOrder = "asc", string filter = "")
     {
         if (pageNumber <= 0) pageNumber = 1;
