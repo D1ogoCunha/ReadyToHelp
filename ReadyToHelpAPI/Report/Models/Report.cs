@@ -1,5 +1,5 @@
 using GeoPointModel = readytohelpapi.GeoPoint.Models.GeoPoint;
-
+using readytohelpapi.Occurrence.Models;
 
 namespace readytohelpapi.Report.Models;
 

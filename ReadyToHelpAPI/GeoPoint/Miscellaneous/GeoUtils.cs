@@ -1,4 +1,4 @@
-using GeoCoordinatePortable;
+using System.Device.Location;
 
 namespace readytohelpapi.GeoPoint.Miscellaneous;
 
