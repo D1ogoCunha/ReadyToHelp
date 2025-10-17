@@ -1,8 +1,4 @@
-﻿// <copyright file="UserContext.cs" company="PlaceholderCompany">
-// Copyright (c) PlaceholderCompany. All rights reserved.
-// </copyright>
-
-using readytohelpapi.User.Models;
+﻿using readytohelpapi.User.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace readytohelpapi.User.Data;
@@ -27,7 +23,7 @@ public class UserContext : DbContext
     {
         modelBuilder.Entity<Models.User>(entity =>
         {
-            entity.ToTable("users");
+            entity.ToTable("Users");
             entity.HasKey(u => u.Id);
             entity.Property(u => u.Name)
                   .HasMaxLength(100)
