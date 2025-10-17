@@ -12,8 +12,8 @@ using readytohelpapi.Report.Data;
 namespace ReadyToHelpAPI.Migrations.Report
 {
     [DbContext(typeof(ReportContext))]
-    [Migration("20251016224043_AddReports")]
-    partial class AddReports
+    [Migration("20251017195742_AddReport")]
+    partial class AddReport
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -43,8 +43,22 @@ namespace ReadyToHelpAPI.Migrations.Report
                         .HasColumnType("boolean")
                         .HasDefaultValue(false);
 
+                    b.Property<int>("Priority")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("ReportDateTime")
                         .HasColumnType("timestamp without time zone");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
 
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
