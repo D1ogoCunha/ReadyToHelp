@@ -144,4 +144,82 @@ public class OccurrenceServiceImpl : IOccurrenceService
         return this.occurrenceRepository.GetOccurrencesByPriority(priority);
     }
 
+
+    /// <summary>
+    /// Updates an occurrence.
+    /// </summary>
+    public Occurrence Update(Occurrence occurrence)
+    {
+        if (occurrence == null)
+            throw new ArgumentNullException(nameof(occurrence));
+
+        if (occurrence.Id <= 0)
+            throw new ArgumentException("Invalid occurrence ID.", nameof(occurrence.Id));
+
+        if (string.IsNullOrWhiteSpace(occurrence.Title))
+            throw new ArgumentException("Occurrence title cannot be null or empty.", nameof(occurrence.Title));
+
+        if (string.IsNullOrWhiteSpace(occurrence.Description))
+            throw new ArgumentException("Occurrence description cannot be null or empty.", nameof(occurrence.Description));
+
+        if (!Enum.IsDefined(typeof(OccurrenceType), occurrence.Type))
+            throw new ArgumentOutOfRangeException(nameof(occurrence.Type), "Invalid occurrence type");
+
+        if (!Enum.IsDefined(typeof(PriorityLevel), occurrence.Priority))
+            throw new ArgumentOutOfRangeException(nameof(occurrence.Priority), "Invalid priority level");
+
+        if (occurrence.ProximityRadius <= 0)
+            throw new ArgumentException("Proximity radius must be greater than zero.", nameof(occurrence.ProximityRadius));
+
+        if (occurrence.ReportCount < 0)
+            throw new ArgumentException("ReportCount cannot be negative.", nameof(occurrence.ReportCount));
+
+        if (occurrence.ReportId < 0)
+            throw new ArgumentException("ReportId cannot be negative.", nameof(occurrence.ReportId));
+
+        if (occurrence.ResponsibleEntityId < 0)
+            throw new ArgumentException("ResponsibleEntityId cannot be negative.", nameof(occurrence.ResponsibleEntityId));
+
+        if (occurrence.EndDateTime != default && occurrence.EndDateTime <= occurrence.CreationDateTime)
+            throw new ArgumentException("EndDateTime must be later than CreationDateTime.", nameof(occurrence.EndDateTime));
+
+        try
+        {
+            var updatedOccurrence = this.occurrenceRepository.Update(occurrence);
+            if (updatedOccurrence == null)
+                throw new KeyNotFoundException($"Occurrence with ID {occurrence.Id} not found.");
+
+            return updatedOccurrence;
+        }
+        catch (KeyNotFoundException) { throw; }
+        catch (ArgumentException) { throw; }
+        catch (Exception e)
+        {
+            throw new InvalidOperationException("An error occurred while updating the occurrence.", e);
+        }
+    }
+
+    /// <summary>
+    /// Deletes an occurrence.
+    /// </summary>
+    public Occurrence Delete(int id)
+    {
+        if (id <= 0)
+            throw new ArgumentException("Invalid occurrence ID.", nameof(id));
+
+        try
+        {
+            var deletedOccurrence = this.occurrenceRepository.Delete(id);
+            if (deletedOccurrence == null)
+                throw new KeyNotFoundException($"Occurrence with ID {id} not found.");
+
+            return deletedOccurrence;
+        }
+        catch (KeyNotFoundException) { throw; }
+        catch (ArgumentException) { throw; }
+        catch (Exception e)
+        {
+            throw new InvalidOperationException("An error occurred while deleting the occurrence.", e);
+        }
+    }
 }

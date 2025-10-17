@@ -20,14 +20,14 @@ public interface IOccurrenceService
     /// </summary>
     /// <param name="occurrence">The occurrence object to be updated.</param>
     /// <returns>The updated occurrence entity.</returns>
-    //Occurrence Update(Occurrence occurrence);
+    Occurrence Update(Occurrence occurrence);
 
     /// <summary>
     ///     Deletes an occurrence.
     /// </summary>
     /// <param name="id">The occurrence id to be deleted.</param>
     /// <returns>The deleted occurrence entity, if successfully found.</returns>
-    //Occurrence Delete(int id);
+    Occurrence Delete(int id);
 
     /// <summary>
     ///     Retrieves an occurrence by its unique identifier.
