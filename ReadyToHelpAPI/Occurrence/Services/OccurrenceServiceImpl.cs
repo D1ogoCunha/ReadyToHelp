@@ -4,25 +4,57 @@ using readytohelpapi.Occurrence.Models;
 using System;
 using System.Collections.Generic;
 
+/// <summary>
+///    Implements the occurrence service operations.
+/// </summary>
 public class OccurrenceServiceImpl : IOccurrenceService
 {
     private readonly IOccurrenceRepository occurrenceRepository;
 
+    /// <summary>
+    ///   Initializes a new instance of the <see cref="OccurrenceServiceImpl"/> class.
+    /// </summary>
+    /// <param name="occurrenceRepository">The occurrence repository instance.</param>
     public OccurrenceServiceImpl(IOccurrenceRepository occurrenceRepository)
     {
         this.occurrenceRepository = occurrenceRepository;
     }
 
+    /// <summary>
+    ///  Creates an occurrence.
+    /// </summary>
     public Occurrence Create(Occurrence occurrence)
     {
         if (occurrence == null)
-            throw new ArgumentNullException(nameof(occurrence), "Occurrence object is null");
+            throw new ArgumentNullException(nameof(occurrence));
 
         if (string.IsNullOrWhiteSpace(occurrence.Title))
             throw new ArgumentException("Occurrence title cannot be null or empty", nameof(occurrence.Title));
 
         if (string.IsNullOrWhiteSpace(occurrence.Description))
             throw new ArgumentException("Occurrence description cannot be null or empty", nameof(occurrence.Description));
+
+        if (!Enum.IsDefined(typeof(OccurrenceType), occurrence.Type))
+            throw new ArgumentOutOfRangeException(nameof(occurrence.Type), "Invalid occurrence type");
+
+        if (!Enum.IsDefined(typeof(PriorityLevel), occurrence.Priority))
+            throw new ArgumentOutOfRangeException(nameof(occurrence.Priority), "Invalid priority level");
+
+        if (occurrence.ProximityRadius <= 0)
+            throw new ArgumentException("Proximity radius must be greater than zero.", nameof(occurrence.ProximityRadius));
+
+        if (occurrence.ReportCount < 0)
+            throw new ArgumentException("ReportCount cannot be negative.", nameof(occurrence.ReportCount));
+
+        if (occurrence.ReportId < 0)
+            throw new ArgumentException("ReportId cannot be negative.", nameof(occurrence.ReportId));
+
+        if (occurrence.ResponsibleEntityId < 0)
+            throw new ArgumentException("ResponsibleEntityId cannot be negative.", nameof(occurrence.ResponsibleEntityId));
+
+        occurrence.CreationDateTime = DateTime.UtcNow;
+        if (occurrence.EndDateTime != default && occurrence.EndDateTime <= occurrence.CreationDateTime)
+            throw new ArgumentException("EndDateTime must be later than CreationDateTime.", nameof(occurrence.EndDateTime));
 
         try
         {
@@ -34,6 +66,9 @@ public class OccurrenceServiceImpl : IOccurrenceService
         }
     }
 
+    /// <summary>
+    ///   Retrieves an occurrence by ID.
+    /// </summary>
     public Occurrence GetOccurrenceById(int id)
     {
         if (id <= 0)
@@ -46,6 +81,9 @@ public class OccurrenceServiceImpl : IOccurrenceService
         return occurrence;
     }
 
+    /// <summary>
+    ///  Retrieves occurrences by title.
+    /// </summary>
     public List<Occurrence> GetOccurrenceByTitle(string title)
     {
         if (string.IsNullOrWhiteSpace(title))
@@ -54,6 +92,9 @@ public class OccurrenceServiceImpl : IOccurrenceService
         return this.occurrenceRepository.GetOccurrenceByTitle(title);
     }
 
+    /// <summary>
+    ///   Retrieves a paginated, filtered, and sorted list of occurrences.
+    /// </summary>
     public List<Occurrence> GetAllOccurrences(int pageNumber, int pageSize, string sortBy, string sortOrder, string filter)
     {
         if (string.IsNullOrEmpty(sortBy))
@@ -79,16 +120,25 @@ public class OccurrenceServiceImpl : IOccurrenceService
         }
     }
 
+    /// <summary>
+    ///   Retrieves occurrences by type.
+    /// </summary>
     public List<Occurrence> GetOccurrencesByType(OccurrenceType type)
     {
         return this.occurrenceRepository.GetOccurrencesByType(type);
     }
 
+    /// <summary>
+    ///  Retrieves all active occurrences.
+    /// </summary>
     public List<Occurrence> GetAllActiveOccurrences()
     {
         return this.occurrenceRepository.GetOccurrencesByStatus(OccurrenceStatus.ACTIVE);
     }
 
+    /// <summary>
+    ///  Retrieves occurrences by priority level.
+    /// </summary>
     public List<Occurrence> GetOccurrencesByPriority(PriorityLevel priority)
     {
         return this.occurrenceRepository.GetOccurrencesByPriority(priority);

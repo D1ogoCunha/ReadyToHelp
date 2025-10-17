@@ -80,4 +80,11 @@ public interface IOccurrenceRepository
     /// </summary>
     /// <returns>A list of active occurrences.</returns>
     List<Occurrence> GetAllActiveOccurrences();
+
+    /// <summary>
+    ///     Retrieves an occurrence by reportId.
+    /// </summary>
+    /// <param name="reportId">The report identifier.</param>
+    /// <returns>The occurrence with the specified reportId or null.</returns>
+    Occurrence? GetByReportId(int reportId);
 }
