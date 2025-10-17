@@ -27,14 +27,14 @@ public interface IOccurrenceRepository
     /// </summary>
     /// <param name="occurrence">The occurrence to update.</param>
     /// <returns>The updated occurrence entity.</returns>
-    //Occurrence Update(Occurrence occurrence);
+    Occurrence Update(Occurrence occurrence);
 
     /// <summary>
     ///     Deletes an occurrence by ID.
     /// </summary>
     /// <param name="id">The occurrence ID.</param>
     /// <returns>The deleted occurrence entity if found; otherwise, null.</returns>
-    //Occurrence? Delete(int id);
+    Occurrence? Delete(int id);
 
     /// <summary>
     ///     Retrieves occurrences by partial or full title.
