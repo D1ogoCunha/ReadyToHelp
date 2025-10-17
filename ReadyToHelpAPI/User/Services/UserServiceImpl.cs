@@ -24,6 +24,8 @@ public class UserServiceImpl : IUserService
     /// <summary>
     ///   Creates a user.
     /// </summary>
+    /// <param name="user">The user to create.</param>
+    /// <returns>The created user.</returns>
     public User Create(User user)
     {
         if (user == null)
@@ -38,13 +40,20 @@ public class UserServiceImpl : IUserService
         if (string.IsNullOrWhiteSpace(user.Password) || string.IsNullOrEmpty(user.Password))
             throw new ArgumentException("User password cannot be null or empty", nameof(user.Password));
 
+        if (!Enum.IsDefined(typeof(Profile), user.Profile))
+            throw new ArgumentOutOfRangeException(nameof(user.Profile), "Invalid profile");
+
+        if (user.Profile != Profile.ADMIN && user.Profile != Profile.CITIZEN)
+            throw new UnauthorizedAccessException("Insufficient privileges to assign this profile");
+
+
         var existingUsers = this.userRepository.GetUserByEmail(user.Email);
 
         if (existingUsers != null)
             throw new ArgumentException($"Email {user.Email} already exists.");
 
         user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
-        
+
         try
         {
             return this.userRepository.Create(user);
@@ -55,59 +64,59 @@ public class UserServiceImpl : IUserService
         }
     }
 
-     public User Update(User user)
-{
-    if (user == null)
-        throw new ArgumentNullException(nameof(user), "User cannot be null");
-
-    if (user.Id <= 0)
-        throw new ArgumentException("Invalid user id.");
-
-    if (string.IsNullOrWhiteSpace(user.Email))
-        throw new ArgumentException("User email object is null or empty.");
-
-    if (string.IsNullOrWhiteSpace(user.Name))
-        throw new ArgumentException("User name cannot be null or empty");
-
-    // Busca o utilizador atual
-    var existingUser = this.userRepository.GetUserById(user.Id);
-    if (existingUser == null)
-        throw new KeyNotFoundException($"User with id {user.Id} not found.");
-
-    // Se password não vier, mantém a antiga
-    if (string.IsNullOrWhiteSpace(user.Password))
+    public User Update(User user)
     {
-        user.Password = existingUser.Password;
-    }
-    else
-    {
-        // Se password mudou, faz hash
-        if (!BCrypt.Net.BCrypt.Verify(user.Password, existingUser.Password))
-        {
-            user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
-        }
-        else
+        if (user == null)
+            throw new ArgumentNullException(nameof(user), "User cannot be null");
+
+        if (user.Id <= 0)
+            throw new ArgumentException("Invalid user id.");
+
+        if (string.IsNullOrWhiteSpace(user.Email))
+            throw new ArgumentException("User email object is null or empty.");
+
+        if (string.IsNullOrWhiteSpace(user.Name))
+            throw new ArgumentException("User name cannot be null or empty");
+
+        // Busca o utilizador atual
+        var existingUser = this.userRepository.GetUserById(user.Id);
+        if (existingUser == null)
+            throw new KeyNotFoundException($"User with id {user.Id} not found.");
+
+        // Se password não vier, mantém a antiga
+        if (string.IsNullOrWhiteSpace(user.Password))
         {
             user.Password = existingUser.Password;
         }
-    }
+        else
+        {
+            // Se password mudou, faz hash
+            if (!BCrypt.Net.BCrypt.Verify(user.Password, existingUser.Password))
+            {
+                user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
+            }
+            else
+            {
+                user.Password = existingUser.Password;
+            }
+        }
 
-    var emailExists = this.userRepository.GetUserByEmail(user.Email);
-    if (emailExists != null && emailExists.Id != user.Id)
-        throw new ArgumentException($"Email {user.Email} already exists.");
+        var emailExists = this.userRepository.GetUserByEmail(user.Email);
+        if (emailExists != null && emailExists.Id != user.Id)
+            throw new ArgumentException($"Email {user.Email} already exists.");
 
-    try
-    {
-        return this.userRepository.Update(user);
+        try
+        {
+            return this.userRepository.Update(user);
+        }
+        catch (Exception e)
+        {
+            throw new InvalidOperationException("An error occurred while trying to update a user.", e);
+        }
     }
-    catch (Exception e)
-    {
-        throw new InvalidOperationException("An error occurred while trying to update a user.", e);
-    }
-}
 
     public User Delete(int id)
-      {
+    {
         if (id <= 0)
         {
             throw new ArgumentException("Invalid user id.");
@@ -137,33 +146,33 @@ public class UserServiceImpl : IUserService
 
     public List<User> GetUserByName(string name)
     {
-      return this.userRepository.GetUserByName(name);
+        return this.userRepository.GetUserByName(name);
     }
 
     public List<User> GetAllUsers(int pageNumber, int pageSize, string sortBy, string sortOrder, string filter)
-{
-    if (string.IsNullOrEmpty(sortBy))
-        throw new ArgumentException("Sort field cannot be null or empty.", nameof(sortBy));
-
-    if (sortOrder != "asc" && sortOrder != "desc")
-        throw new ArgumentException("Sort order must be 'asc' or 'desc'.", nameof(sortOrder));
-
-    if (pageNumber <= 0)
-        throw new ArgumentException("Page number must be greater than zero.", nameof(pageNumber));
-
-    if (pageSize <= 0 || pageSize > 1000)
-        throw new ArgumentException("Page size must be between 1 and 1000.", nameof(pageSize));
-
-    try
     {
-        var users = this.userRepository.GetAllUsers(pageNumber, pageSize, sortBy, sortOrder, filter);
-        return users ?? new List<User>();
+        if (string.IsNullOrEmpty(sortBy))
+            throw new ArgumentException("Sort field cannot be null or empty.", nameof(sortBy));
+
+        if (sortOrder != "asc" && sortOrder != "desc")
+            throw new ArgumentException("Sort order must be 'asc' or 'desc'.", nameof(sortOrder));
+
+        if (pageNumber <= 0)
+            throw new ArgumentException("Page number must be greater than zero.", nameof(pageNumber));
+
+        if (pageSize <= 0 || pageSize > 1000)
+            throw new ArgumentException("Page size must be between 1 and 1000.", nameof(pageSize));
+
+        try
+        {
+            var users = this.userRepository.GetAllUsers(pageNumber, pageSize, sortBy, sortOrder, filter);
+            return users ?? new List<User>();
+        }
+        catch (Exception e)
+        {
+            throw new InvalidOperationException("An error occurred while retrieving users.", e);
+        }
     }
-    catch (Exception e)
-    {
-        throw new InvalidOperationException("An error occurred while retrieving users.", e);
-    }
-}
 
     public User? GetProfile(int id)
     {
