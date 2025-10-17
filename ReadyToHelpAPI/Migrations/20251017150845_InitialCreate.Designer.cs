@@ -11,7 +11,7 @@ using readytohelpapi.User.Data;
 namespace ReadyToHelpAPI.Migrations
 {
     [DbContext(typeof(UserContext))]
-    [Migration("20251015100920_InitialCreate")]
+    [Migration("20251017150845_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -53,6 +53,9 @@ namespace ReadyToHelpAPI.Migrations
                         .HasColumnType("character varying(20)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
 
                     b.ToTable("users", (string)null);
                 });

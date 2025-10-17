@@ -7,15 +7,29 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 
+/// <summary>
+///     Implements the user repository operations.
+/// </summary>
 public class UserRepository : IUserRepository
 {
     private readonly UserContext userContext;
 
+    /// <summary>
+    ///    Initializes a new instance of the <see cref="UserRepository"/> class.
+    /// </summary>
+    /// <param name="context">The user database context.</param>
     public UserRepository(UserContext context)
     {
         userContext = context;
-    }   
+    }
 
+    /// <summary>
+    ///   Method to create a user in the repository
+    /// </summary>
+    /// <param name="user">The user to create.</param>
+    /// <returns>The created user.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when the user is null.</exception>
+    /// <exception cref="DbUpdateException">Thrown when the user cannot be created.</exception>
     public User Create(User user)
     {
         if (user == null) throw new ArgumentNullException(nameof(user));
@@ -31,11 +45,11 @@ public class UserRepository : IUserRepository
         }
     }
 
-    public User? GetProfile(int id)
-    {
-        return userContext.Users.Find(id);
-    }
-
+    /// <summary>
+    /// Gets a user by ID.
+    /// </summary>
+    /// <param name="id">The ID of the user.</param>
+    /// <returns>The user, or null if not found.</returns>
     public User? GetUserById(int id)
     {
         if (id <= 0) return null;
@@ -43,7 +57,12 @@ public class UserRepository : IUserRepository
             .AsNoTracking()
             .FirstOrDefault(u => u.Id == id);
     }
-    
+
+    /// <summary>
+    ///   Gets a user by email.
+    /// </summary>
+    /// <param name="email">The email of the user.</param>
+    /// <returns>The user, or null if not found.</returns>
     public User? GetUserByEmail(string email)
     {
         if (string.IsNullOrWhiteSpace(email))
@@ -54,7 +73,12 @@ public class UserRepository : IUserRepository
             .FirstOrDefault(u => EF.Functions.ILike(u.Email, email.Trim()));
     }
 
- public List<User> GetUserByName(string name)
+    /// <summary>
+    ///   Gets users by name.
+    /// </summary>
+    /// <param name="name">The name to search for.</param>
+    /// <returns>A list of users matching the name.</returns>
+    public List<User> GetUserByName(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
             return new List<User>();
@@ -66,7 +90,14 @@ public class UserRepository : IUserRepository
             .ToList();
     }
 
-     public User Update(User user)
+    /// <summary>
+    ///   Updates a user in the repository.
+    /// </summary>
+    /// <param name="user">The user to update.</param>
+    /// <returns>The updated user.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when the user is null.</exception>
+    /// <exception cref="DbUpdateException">Thrown when the user cannot be updated.</exception>
+    public User Update(User user)
     {
         if (user == null) throw new ArgumentNullException(nameof(user));
         try
@@ -81,6 +112,12 @@ public class UserRepository : IUserRepository
         }
     }
 
+    /// <summary>
+    ///   Deletes a user by ID.
+    /// </summary>
+    /// <param name="id">The ID of the user to delete.</param>
+    /// <returns>The deleted user, or null if not found.</returns>
+    /// <exception cref="DbUpdateException">Thrown when the user cannot be deleted.</exception>
     public User? Delete(int id)
     {
         var existing = userContext.Users.Find(id);
@@ -97,45 +134,49 @@ public class UserRepository : IUserRepository
         }
     }
 
-    public List<User> GetAllUsers(
-    int pageNumber = 1,
-    int pageSize = 10,
-    string sortBy = "Name",
-    string sortOrder = "asc",
-    string filter = "")
-{
-    if (pageNumber <= 0) pageNumber = 1;
-    if (pageSize <= 0) pageSize = 10;
-    if (pageSize > 1000) pageSize = 1000;
-
-   var query = userContext.Users.AsNoTracking().AsQueryable();
-
-    if (!string.IsNullOrWhiteSpace(filter))
+    /// <summary>
+    ///   Gets all users with pagination, sorting, and filtering.
+    /// </summary>
+    /// <param name="pageNumber">The page number (1-based).</param>
+    /// <param name="pageSize">The number of users per page.</param>
+    /// <param name="sortBy">The field to sort by.</param>
+    /// <param name="sortOrder">The sort order ("asc" or "desc").</param>
+    /// <param name="filter">The filter string to search by name or email.</param>
+    /// <returns>A list of users.</returns>
+    public List<User> GetAllUsers(int pageNumber = 1, int pageSize = 10, string sortBy = "Name", string sortOrder = "asc", string filter = "")
     {
-        var trimmed = filter.Trim();
-        var pattern = $"%{trimmed}%";
+        if (pageNumber <= 0) pageNumber = 1;
+        if (pageSize <= 0) pageSize = 10;
+        if (pageSize > 1000) pageSize = 1000;
 
-        query = query.Where(u =>
-            EF.Functions.ILike(u.Name ?? string.Empty, pattern) ||
-            EF.Functions.ILike(u.Email ?? string.Empty, pattern));
+        var query = userContext.Users.AsNoTracking().AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(filter))
+        {
+            var trimmed = filter.Trim();
+            var pattern = $"%{trimmed}%";
+
+            query = query.Where(u =>
+                EF.Functions.ILike(u.Name ?? string.Empty, pattern) ||
+                EF.Functions.ILike(u.Email ?? string.Empty, pattern));
+        }
+
+        var asc = string.Equals(sortOrder, "asc", StringComparison.OrdinalIgnoreCase);
+        switch (sortBy?.ToLowerInvariant())
+        {
+            case "name":
+                query = asc ? query.OrderBy(u => u.Name) : query.OrderByDescending(u => u.Name);
+                break;
+            case "email":
+                query = asc ? query.OrderBy(u => u.Email) : query.OrderByDescending(u => u.Email);
+                break;
+            default:
+                query = asc ? query.OrderBy(u => u.Id) : query.OrderByDescending(u => u.Id);
+                break;
+        }
+
+        var skip = (pageNumber - 1) * pageSize;
+        return query.Skip(skip).Take(pageSize).ToList();
     }
-
-    var asc = string.Equals(sortOrder, "asc", StringComparison.OrdinalIgnoreCase);
-    switch (sortBy?.ToLowerInvariant())
-    {
-        case "name":
-            query = asc ? query.OrderBy(u => u.Name) : query.OrderByDescending(u => u.Name);
-            break;
-        case "email":
-            query = asc ? query.OrderBy(u => u.Email) : query.OrderByDescending(u => u.Email);
-            break;
-        default:
-            query = asc ? query.OrderBy(u => u.Id) : query.OrderByDescending(u => u.Id);
-            break;
-    }
-
-    var skip = (pageNumber - 1) * pageSize;
-    return query.Skip(skip).Take(pageSize).ToList();
-}
 
 }

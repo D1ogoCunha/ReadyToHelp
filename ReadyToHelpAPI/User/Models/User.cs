@@ -48,7 +48,6 @@ public class User
     /// <param name="email">The email of the user.</param>
     /// <param name="password">The password of the user.</param>
     /// <param name="profile">The type of a profile of the user.</param>
-
     public User(int id, string name, string email, string password, Profile profile)
     {
         Id = id;
