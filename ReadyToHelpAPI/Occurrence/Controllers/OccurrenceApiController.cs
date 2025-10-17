@@ -168,4 +168,44 @@ public class OccurrenceApiController : ControllerBase
             return StatusCode(500, new { error = "internal_server_error", detail = ex.Message });
         }
     }
+
+
+    /// <summary>
+    /// Updates an occurrence by ID.
+    /// </summary>
+    [HttpPut]
+    [Route("")]
+    public IActionResult Update([FromBody] Occurrence occurrence)
+    {
+        if (occurrence == null)
+            return BadRequest("Occurrence cannot be null.");
+
+        try
+        {
+            var updatedOccurrence = occurrenceService.Update(occurrence);
+            return Ok(updatedOccurrence);
+        }
+        catch (ArgumentException ex) { return BadRequest(ex.Message); }
+        catch (KeyNotFoundException ex) { return NotFound(ex.Message); }
+        catch (Exception ex) { return StatusCode(500, $"Internal server error: {ex.Message}"); }
+    }
+
+    /// <summary>
+    /// Deletes an occurrence by ID.
+    /// </summary>
+    [HttpDelete("{id:int}")]
+    public IActionResult Delete(int id)
+    {
+        if (id <= 0)
+            return BadRequest("Invalid occurrence ID.");
+
+        try
+        {
+            var deletedOccurrence = occurrenceService.Delete(id);
+            return Ok(deletedOccurrence);
+        }
+        catch (ArgumentException ex) { return BadRequest(ex.Message); }
+        catch (KeyNotFoundException ex) { return NotFound(ex.Message); }
+        catch (Exception ex) { return StatusCode(500, $"Internal server error: {ex.Message}"); }
+    }
 }
