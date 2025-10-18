@@ -5,6 +5,7 @@
 stages:
   - setup
   - build
+  - lint
   - test
   - deploy
 
@@ -16,38 +17,51 @@ variables:
   POSTGRES_DB: readytohelp_db
   POSTGRES_HOST: postgres
 
+before_script:
+  - apt-get update && apt-get install -y curl
+  - curl -o wait-for-it.sh https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh
+  - chmod +x wait-for-it.sh
+
 setup-database:
   stage: setup
+  services:
+    - name: postgres:15
+      alias: postgres
   script:
-    - echo "PostgreSQL pronto"
+    - ./wait-for-it.sh postgres:5432 -- echo "PostgreSQL pronto"
 
 build:
   stage: build
+  only:
+    - branches
+    - merge_requests
   script:
     - echo "Building ReadyToHelp API..."
     - dotnet restore ReadyToHelpAPI.sln
     - dotnet build ReadyToHelpAPI.sln --configuration Release --no-restore
-  artifacts:
-    expire_in: 1 day
+
+lint:
+  stage: lint
+  script:
+    - dotnet tool install -g dotnet-format
+    - $HOME/.dotnet/tools/dotnet-format ReadyToHelpAPI.sln --verify-no-changes
+  allow_failure: true
   only:
-    - main
+    - branches
     - merge_requests
 
 test:
   stage: test
-  dependencies:
-    - setup-database
   services:
-    - name: postgres:14
+    - name: postgres:15
       alias: postgres
   script:
-    - echo "PostgreSQL is ready"    
-    - dotnet test ReadyToHelpAPI.sln --configuration Release --no-build --verbosity normal
+    - ./wait-for-it.sh postgres:5432 -- echo "PostgreSQL is up"
+    - dotnet test ReadyToHelpAPI.sln --collect:"XPlat Code Coverage"
   artifacts:
-    reports:
-      junit: test-results.xml
+    paths:
+      - TestResults/
     expire_in: 1 week
   only:
-    - main
+    - branches
     - merge_requests
-
