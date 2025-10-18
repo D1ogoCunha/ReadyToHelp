@@ -1,7 +1,7 @@
-using GeoPointModel = readytohelpapi.GeoPoint.Models.GeoPoint;
-using readytohelpapi.Occurrence.Models;
-
 namespace readytohelpapi.Report.Models;
+
+using readytohelpapi.GeoPoint.Models;
+using readytohelpapi.Occurrence.Models;
 
 /// <summary>
 ///   Represents a report.
@@ -22,11 +22,6 @@ public class Report
     ///   Gets or sets the date and time the report was created.
     /// </summary>
     public DateTime ReportDateTime { get; set; }
-
-    /// <summary>
-    ///   Gets or sets a value indicating whether the report is marked as duplicate.
-    /// </summary>
-    public bool IsDuplicate { get; set; }
 
     /// <summary>
     ///   Gets or sets the title of the occurrence on the report.
@@ -53,5 +48,5 @@ public class Report
     /// </summary>
     public int UserId { get; set; }
 
-    public GeoPointModel Location { get; set; }
+    public GeoPoint Location { get; set; }
 }

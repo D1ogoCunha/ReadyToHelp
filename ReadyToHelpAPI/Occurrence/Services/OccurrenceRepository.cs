@@ -43,9 +43,57 @@ public class OccurrenceRepository : IOccurrenceRepository
     }
 
     /// <summary>
+    /// Updates an occurrence in the repository.
+    /// </summary>
+    /// <param name="occurrence">The occurrence to update.</param>
+    /// <returns>The updated occurrence entity.</returns>
+    public Occurrence Update(Occurrence occurrence)
+    {
+        if (occurrence == null)
+            throw new ArgumentNullException(nameof(occurrence));
+
+        try
+        {
+            occurrenceContext.Occurrences.Update(occurrence);
+            occurrenceContext.SaveChanges();
+            return occurrence;
+        }
+        catch (KeyNotFoundException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            throw new DbUpdateException("Failed to update occurrence", ex);
+        }
+    }
+
+    /// <summary>
+    /// Deletes an occurrence by ID.
+    /// </summary>
+    /// <param name="id">The occurrence ID.</param>
+    /// <returns>The deleted occurrence entity if found; otherwise, null.</returns>
+    public Occurrence? Delete(int id)
+    {
+        var existing = occurrenceContext.Occurrences.Find(id);
+        if (existing == null) return null;
+        try
+        {
+            occurrenceContext.Occurrences.Remove(existing);
+            occurrenceContext.SaveChanges();
+            return existing;
+        }
+        catch (Exception ex)
+        {
+            throw new DbUpdateException("Failed to delete occurrence", ex);
+        }
+    }
+
+    /// <summary>
     ///   Retrieves an occurrence by ID.
     /// </summary>
     /// <param name="id">The occurrence ID.</param>
+    /// <returns>The occurrence with the specified ID or null.</returns>
     public Occurrence? GetOccurrenceById(int id)
     {
         if (id <= 0) return null;
@@ -180,74 +228,5 @@ public class OccurrenceRepository : IOccurrenceRepository
         return occurrenceContext.Occurrences
             .AsNoTracking()
             .FirstOrDefault(o => o.ReportId == reportId);
-    }
-    /// <summary>
-    /// Updates an occurrence in the repository.
-    /// </summary>
-    /// <param name="occurrence">The occurrence to update.</param>
-    /// <returns>The updated occurrence entity.</returns>
-    public Occurrence Update(Occurrence occurrence)
-    {
-        if (occurrence == null)
-            throw new ArgumentNullException(nameof(occurrence));
-
-        try
-        {
-            var existingOccurrence = occurrenceContext.Occurrences.FirstOrDefault(o => o.Id == occurrence.Id);
-            if (existingOccurrence == null)
-                throw new KeyNotFoundException($"Occurrence with ID {occurrence.Id} not found.");
-
-            existingOccurrence.Title = occurrence.Title;
-            existingOccurrence.Description = occurrence.Description;
-            existingOccurrence.Type = occurrence.Type;
-            existingOccurrence.Status = occurrence.Status;
-            existingOccurrence.Priority = occurrence.Priority;
-            existingOccurrence.ProximityRadius = occurrence.ProximityRadius;
-            existingOccurrence.EndDateTime = occurrence.EndDateTime;
-            existingOccurrence.ReportCount = occurrence.ReportCount;
-            existingOccurrence.ReportId = occurrence.ReportId;
-            existingOccurrence.ResponsibleEntityId = occurrence.ResponsibleEntityId;
-
-            occurrenceContext.SaveChanges();
-            return existingOccurrence;
-        }
-        catch (KeyNotFoundException)
-        {
-            throw;
-        }
-        catch (Exception ex)
-        {
-            throw new DbUpdateException("Failed to update occurrence", ex);
-        }
-    }
-
-    /// <summary>
-    /// Deletes an occurrence by ID.
-    /// </summary>
-    /// <param name="id">The occurrence ID.</param>
-    /// <returns>The deleted occurrence entity if found; otherwise, null.</returns>
-    public Occurrence? Delete(int id)
-    {
-        if (id <= 0)
-            throw new ArgumentException("Invalid occurrence ID.", nameof(id));
-
-        try
-        {
-            var occurrence = occurrenceContext.Occurrences.FirstOrDefault(o => o.Id == id);
-            if (occurrence == null)
-                throw new KeyNotFoundException($"Occurrence with ID {id} not found.");
-
-            occurrenceContext.Occurrences.Remove(occurrence);
-            occurrenceContext.SaveChanges();
-            return occurrence;
-        }
-        catch (KeyNotFoundException)
-        {
-            throw; // deixa o 404 subir
-        }
-        catch (Exception ex)
-        {
-            throw new DbUpdateException("Failed to delete occurrence", ex);
-        }
     }
 }

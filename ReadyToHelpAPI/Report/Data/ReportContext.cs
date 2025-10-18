@@ -32,8 +32,9 @@ public class ReportContext : DbContext
 
             b.Property(r => r.Title).IsRequired().HasMaxLength(200);
             b.Property(r => r.Description).IsRequired().HasMaxLength(1000);
-            b.Property(r => r.ReportDateTime).IsRequired();
-            b.Property(r => r.IsDuplicate).HasDefaultValue(false);
+            b.Property(r => r.ReportDateTime)
+             .HasDefaultValueSql("NOW() AT TIME ZONE 'UTC'")
+             .ValueGeneratedOnAdd();
             b.Property(r => r.UserId).IsRequired();
 
             b.OwnsOne(r => r.Location, nb =>
@@ -43,6 +44,9 @@ public class ReportContext : DbContext
             });
 
             b.HasIndex(r => new { r.UserId, r.ReportDateTime });
+
+            b.Ignore(r => r.Status);
+            b.Ignore(r => r.Priority);
         });
     }
 }

@@ -3,7 +3,6 @@ namespace readytohelpapi.Occurrence.Models;
 /// <summary>
 /// Defines the type of an occurrence.
 /// </summary>
-
 public enum OccurrenceType
 {
     FOREST_FIRE,

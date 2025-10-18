@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using readytohelpapi.Occurrence.Data;
@@ -11,9 +12,11 @@ using readytohelpapi.Occurrence.Data;
 namespace ReadyToHelpAPI.Migrations.Occurrence
 {
     [DbContext(typeof(OccurrenceContext))]
-    partial class OccurrenceContextModelSnapshot : ModelSnapshot
+    [Migration("20251018145812_AddOccurrenceLocation")]
+    partial class AddOccurrenceLocation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

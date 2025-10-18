@@ -9,11 +9,11 @@ using readytohelpapi.Report.Data;
 
 #nullable disable
 
-namespace ReadyToHelpAPI.Report.Data.Migrations
+namespace ReadyToHelpAPI.Migrations.Report
 {
     [DbContext(typeof(ReportContext))]
-    [Migration("20251018103552_InitReport")]
-    partial class InitReport
+    [Migration("20251018124941_UpdateReportMapping")]
+    partial class UpdateReportMapping
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -43,14 +43,10 @@ namespace ReadyToHelpAPI.Report.Data.Migrations
                         .HasColumnType("boolean")
                         .HasDefaultValue(false);
 
-                    b.Property<int>("Priority")
-                        .HasColumnType("integer");
-
                     b.Property<DateTime>("ReportDateTime")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp without time zone")
+                        .HasDefaultValueSql("NOW() AT TIME ZONE 'UTC'");
 
                     b.Property<string>("Title")
                         .IsRequired()
