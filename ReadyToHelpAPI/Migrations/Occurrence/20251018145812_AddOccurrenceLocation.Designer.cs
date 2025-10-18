@@ -12,8 +12,8 @@ using readytohelpapi.Occurrence.Data;
 namespace ReadyToHelpAPI.Migrations.Occurrence
 {
     [DbContext(typeof(OccurrenceContext))]
-    [Migration("20251016222617_InitialOccurrence")]
-    partial class InitialOccurrence
+    [Migration("20251018145812_AddOccurrenceLocation")]
+    partial class AddOccurrenceLocation
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -79,6 +79,33 @@ namespace ReadyToHelpAPI.Migrations.Occurrence
                     b.HasKey("Id");
 
                     b.ToTable("occurrences", (string)null);
+                });
+
+            modelBuilder.Entity("readytohelpapi.Occurrence.Models.Occurrence", b =>
+                {
+                    b.OwnsOne("readytohelpapi.GeoPoint.Models.GeoPoint", "Location", b1 =>
+                        {
+                            b1.Property<int>("OccurrenceId")
+                                .HasColumnType("integer");
+
+                            b1.Property<double>("Latitude")
+                                .HasColumnType("double precision")
+                                .HasColumnName("Latitude");
+
+                            b1.Property<double>("Longitude")
+                                .HasColumnType("double precision")
+                                .HasColumnName("Longitude");
+
+                            b1.HasKey("OccurrenceId");
+
+                            b1.ToTable("occurrences");
+
+                            b1.WithOwner()
+                                .HasForeignKey("OccurrenceId");
+                        });
+
+                    b.Navigation("Location")
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

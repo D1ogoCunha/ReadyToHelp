@@ -12,8 +12,8 @@ using readytohelpapi.Occurrence.Data;
 namespace ReadyToHelpAPI.Migrations.Occurrence
 {
     [DbContext(typeof(OccurrenceContext))]
-    [Migration("20251017101052_AddOccurrence")]
-    partial class AddOccurrence
+    [Migration("20251018103855_InitOccurrence")]
+    partial class InitOccurrence
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -34,16 +34,14 @@ namespace ReadyToHelpAPI.Migrations.Occurrence
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreationDateTime")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp without time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
 
-                    b.Property<DateTime?>("EndDateTime")
+                    b.Property<DateTime>("EndDateTime")
                         .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Priority")
@@ -55,14 +53,12 @@ namespace ReadyToHelpAPI.Migrations.Occurrence
                         .HasColumnType("double precision");
 
                     b.Property<int>("ReportCount")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(0);
-
-                    b.Property<int?>("ReportId")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("ResponsibleEntityId")
+                    b.Property<int>("ReportId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ResponsibleEntityId")
                         .HasColumnType("integer");
 
                     b.Property<string>("Status")
@@ -72,8 +68,8 @@ namespace ReadyToHelpAPI.Migrations.Occurrence
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
 
                     b.Property<string>("Type")
                         .IsRequired()
@@ -82,11 +78,7 @@ namespace ReadyToHelpAPI.Migrations.Occurrence
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ReportId");
-
-                    b.HasIndex("Status", "Priority");
-
-                    b.ToTable("Occurrences", (string)null);
+                    b.ToTable("occurrences", (string)null);
                 });
 #pragma warning restore 612, 618
         }

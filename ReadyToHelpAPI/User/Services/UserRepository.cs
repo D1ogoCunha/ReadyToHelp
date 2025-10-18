@@ -45,6 +45,50 @@ public class UserRepository : IUserRepository
         }
     }
 
+        /// <summary>
+    ///   Updates a user in the repository.
+    /// </summary>
+    /// <param name="user">The user to update.</param>
+    /// <returns>The updated user.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when the user is null.</exception>
+    /// <exception cref="DbUpdateException">Thrown when the user cannot be updated.</exception>
+    public User Update(User user)
+    {
+        if (user == null) throw new ArgumentNullException(nameof(user));
+        try
+        {
+            userContext.Users.Update(user);
+            userContext.SaveChanges();
+            return user;
+        }
+        catch (Exception ex)
+        {
+            throw new DbUpdateException("Failed to update user", ex);
+        }
+    }
+
+    /// <summary>
+    ///   Deletes a user by ID.
+    /// </summary>
+    /// <param name="id">The ID of the user to delete.</param>
+    /// <returns>The deleted user, or null if not found.</returns>
+    /// <exception cref="DbUpdateException">Thrown when the user cannot be deleted.</exception>
+    public User? Delete(int id)
+    {
+        var existing = userContext.Users.Find(id);
+        if (existing == null) return null;
+        try
+        {
+            userContext.Users.Remove(existing);
+            userContext.SaveChanges();
+            return existing;
+        }
+        catch (Exception ex)
+        {
+            throw new DbUpdateException("Failed to delete user", ex);
+        }
+    }
+
     /// <summary>
     /// Gets a user by ID.
     /// </summary>
@@ -88,50 +132,6 @@ public class UserRepository : IUserRepository
             .AsNoTracking()
             .Where(u => EF.Functions.ILike(u.Name, pattern))
             .ToList();
-    }
-
-    /// <summary>
-    ///   Updates a user in the repository.
-    /// </summary>
-    /// <param name="user">The user to update.</param>
-    /// <returns>The updated user.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when the user is null.</exception>
-    /// <exception cref="DbUpdateException">Thrown when the user cannot be updated.</exception>
-    public User Update(User user)
-    {
-        if (user == null) throw new ArgumentNullException(nameof(user));
-        try
-        {
-            userContext.Users.Update(user);
-            userContext.SaveChanges();
-            return user;
-        }
-        catch (Exception ex)
-        {
-            throw new DbUpdateException("Failed to update user", ex);
-        }
-    }
-
-    /// <summary>
-    ///   Deletes a user by ID.
-    /// </summary>
-    /// <param name="id">The ID of the user to delete.</param>
-    /// <returns>The deleted user, or null if not found.</returns>
-    /// <exception cref="DbUpdateException">Thrown when the user cannot be deleted.</exception>
-    public User? Delete(int id)
-    {
-        var existing = userContext.Users.Find(id);
-        if (existing == null) return null;
-        try
-        {
-            userContext.Users.Remove(existing);
-            userContext.SaveChanges();
-            return existing;
-        }
-        catch (Exception ex)
-        {
-            throw new DbUpdateException("Failed to delete user", ex);
-        }
     }
 
     /// <summary>

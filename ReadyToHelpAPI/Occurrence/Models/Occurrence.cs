@@ -1,6 +1,7 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace readytohelpapi.Occurrence.Models;
+
+using System.ComponentModel.DataAnnotations;
+using readytohelpapi.GeoPoint.Models;
 
 /// <summary>
 ///   Represents an occurrence.
@@ -110,4 +111,9 @@ public class Occurrence
     /// Gets or sets the responsible entity identifier associated with the occurrence.
     /// </summary>
     public int ResponsibleEntityId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the location of the occurrence.
+    /// </summary>
+    public GeoPoint Location { get; set; }
 }
