@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ReadyToHelpAPI.Migrations.Occurrence
 {
     /// <inheritdoc />
-    public partial class InitialOccurrence : Migration
+    public partial class InitOccurrence : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

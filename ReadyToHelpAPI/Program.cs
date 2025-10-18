@@ -10,6 +10,7 @@ using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Builder;
 using readytohelpapi.Occurrence.Services;
 using readytohelpapi.Occurrence.Data;
+using readytohelpapi.Report.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,6 +47,8 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserServiceImpl>();
 builder.Services.AddScoped<IOccurrenceRepository, OccurrenceRepository>();
 builder.Services.AddScoped<IOccurrenceService, OccurrenceServiceImpl>();
+builder.Services.AddScoped<IReportRepository, ReportRepository>();
+builder.Services.AddScoped<IReportService, ReportServiceImpl>();
 
 builder.Services.AddDbContext<UserContext>(options =>
     options.UseNpgsql(
@@ -53,6 +56,11 @@ builder.Services.AddDbContext<UserContext>(options =>
     ));
 
 builder.Services.AddDbContext<OccurrenceContext>(options =>
+    options.UseNpgsql(
+        $"Host={postgresHost};Username={pgUsername};Password={pgPassword};Database=readytohelp_db"
+    ));
+
+builder.Services.AddDbContext<readytohelpapi.Report.Data.ReportContext>(options =>
     options.UseNpgsql(
         $"Host={postgresHost};Username={pgUsername};Password={pgPassword};Database=readytohelp_db"
     ));

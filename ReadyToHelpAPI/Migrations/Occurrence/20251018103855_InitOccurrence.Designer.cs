@@ -12,8 +12,8 @@ using readytohelpapi.Occurrence.Data;
 namespace ReadyToHelpAPI.Migrations.Occurrence
 {
     [DbContext(typeof(OccurrenceContext))]
-    [Migration("20251016222617_InitialOccurrence")]
-    partial class InitialOccurrence
+    [Migration("20251018103855_InitOccurrence")]
+    partial class InitOccurrence
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

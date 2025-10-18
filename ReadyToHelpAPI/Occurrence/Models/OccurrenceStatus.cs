@@ -6,6 +6,7 @@ namespace readytohelpapi.Occurrence.Models;
 
 public enum OccurrenceStatus
 {
+    WAITING,
     ACTIVE,
     IN_PROGRESS,
     RESOLVED,

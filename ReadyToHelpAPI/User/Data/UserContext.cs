@@ -29,7 +29,7 @@ public class UserContext : DbContext
     {
         modelBuilder.Entity<Models.User>(entity =>
         {
-            entity.ToTable("Users");
+            entity.ToTable("users");
             entity.HasKey(u => u.Id);
             entity.Property(u => u.Name).HasMaxLength(100).IsRequired();
             entity.Property(u => u.Email).HasMaxLength(120).IsRequired();

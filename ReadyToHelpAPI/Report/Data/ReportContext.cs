@@ -27,7 +27,7 @@ public class ReportContext : DbContext
 
         modelBuilder.Entity<Report>(b =>
         {
-            b.ToTable("Reports");
+            b.ToTable("reports");
             b.HasKey(r => r.Id);
 
             b.Property(r => r.Title).IsRequired().HasMaxLength(200);
