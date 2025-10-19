@@ -74,6 +74,8 @@ public class ReportServiceImpl : IReportService
 
     private Occurrence? FindNearbyOccurrenceOfSameType(Report newReport, double radiusMeters)
     {
+        if (newReport?.Location is null) return null;
+
         var sameTypeOccurrences = occurrenceService.GetOccurrencesByType(newReport.Type);
         if (sameTypeOccurrences == null || sameTypeOccurrences.Count == 0) return null;
 
