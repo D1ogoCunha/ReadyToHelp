@@ -3,482 +3,482 @@ using readytohelpapi.User.Models;
 using readytohelpapi.User.Services;
 using Xunit;
 
-namespace readytohelpapi.User.Tests
+namespace readytohelpapi.User.Tests;
+
+/// <summary>
+///  This class contains all unit tests related to the user repository.
+/// </summary>
+public class TestUserRepositoryTest : IClassFixture<DbFixture>
 {
-    /// <summary>
-    ///  This class contains all unit tests related to the user repository.
-    /// </summary>
-    public class TestUserRepositoryTest : IClassFixture<DbFixture>
-    {
-        private readonly DbFixture fixture;
-        private readonly UserContext _userContext;
-        private readonly IUserRepository _userRepository;
+    private readonly DbFixture fixture;
+    private readonly UserContext _userContext;
+    private readonly IUserRepository _userRepository;
 
     /// <summary>
     ///  Initializes a new instance of the <see cref="TestUserRepositoryTest"/> class.
     /// </summary>
-        public TestUserRepositoryTest(DbFixture fixture)
+    public TestUserRepositoryTest(DbFixture fixture)
+    {
+        this.fixture = fixture;
+        this.fixture.ResetDatabase();
+        _userContext = this.fixture.Context;
+        _userRepository = new UserRepository(_userContext);
+    }
+
+    /// <summary>
+    /// Tests if a user can be retrieved by ID when the user exists.
+    /// </summary>
+    [Fact]
+    public void GetUserById_ShouldReturnUser_WhenUserExists()
+    {
+        var user = new Models.User
         {
-            this.fixture = fixture;
-            this.fixture.ResetDatabase();
-            _userContext = this.fixture.Context;
-            _userRepository = new UserRepository(_userContext);
-        }
+            Name = "John Doe",
+            Email = "john@example.com",
+            Password = "pwd",
+            Profile = Profile.CITIZEN,
+        };
+        _userContext.Users.Add(user);
+        _userContext.SaveChanges();
 
-        /// <summary>
-        /// Tests if a user can be retrieved by ID when the user exists.
-        /// </summary>
-        [Fact]
-        public void GetUserById_ShouldReturnUser_WhenUserExists()
+        var result = _userRepository.GetUserById(user.Id);
+
+        Assert.NotNull(result);
+        Assert.Equal("John Doe", result.Name);
+    }
+
+    /// <summary>
+    /// Tests if null is returned when trying to retrieve a user by ID that does not exist.
+    /// </summary>
+    [Fact]
+    public void GetUserById_ShouldReturnNull_WhenUserDoesNotExist()
+    {
+        var result = this._userRepository.GetUserById(999);
+        Assert.Null(result);
+    }
+
+    /// <summary>
+    /// Tests if a user can be retrieved by email when the full email matches.
+    /// </summary>
+    [Fact]
+    public void GetUserByEmail_ShouldReturnUser_WhenFullEmailMatches()
+    {
+        var user = new Models.User
         {
-            var user = new Models.User
-            {
-                Name = "John Doe",
-                Email = "john@example.com",
-                Password = "pwd",
-                Profile = Profile.CITIZEN,
-            };
-            _userContext.Users.Add(user);
-            _userContext.SaveChanges();
+            Name = "Alice",
+            Email = "alice@example.com",
+            Password = "pwd",
+            Profile = Profile.CITIZEN,
+        };
+        _userContext.Users.Add(user);
+        _userContext.SaveChanges();
 
-            var result = _userRepository.GetUserById(user.Id);
+        var result = _userRepository.GetUserByEmail("alice@example.com");
 
-            Assert.NotNull(result);
-            Assert.Equal("John Doe", result.Name);
-        }
-        
-        /// <summary>
-        /// Tests if null is returned when trying to retrieve a user by ID that does not exist.
-        /// </summary>
-        [Fact]
-        public void GetUserById_ShouldReturnNull_WhenUserDoesNotExist()
+        Assert.NotNull(result);
+        Assert.Equal("alice@example.com", result.Email);
+    }
+
+
+    /// <summary>
+    /// Tests if null is returned when trying to retrieve a user by email that does not exist.
+    /// </summary>
+    [Fact]
+    public void GetUserByEmail_ShouldReturnNull_WhenNoMatch()
+    {
+        var result = _userRepository.GetUserByEmail("noone@example.com");
+        Assert.Null(result);
+    }
+
+    /// <summary>
+    /// Tests if null is returned when trying to retrieve a user by ID with invalid input (zero).
+    /// </summary>
+    [Fact]
+    public void GetUserById_WithZeroId_ReturnsNull()
+    {
+        var result = _userRepository.GetUserById(0);
+        Assert.Null(result);
+    }
+
+    /// <summary>
+    /// Tests if null is returned when trying to retrieve a user by ID with invalid input (negative).
+    /// </summary>
+    [Fact]
+    public void GetUserById_WithNegativeId_ReturnsNull()
+    {
+        var result = _userRepository.GetUserById(-5);
+        Assert.Null(result);
+    }
+
+    /// <summary>
+    /// Tests if null is returned when trying to retrieve a user by email with invalid input (null).
+    /// </summary>
+    [Fact]
+    public void GetUserByEmail_WithNull_ReturnsNull()
+    {
+        var result = _userRepository.GetUserByEmail(null!);
+        Assert.Null(result);
+    }
+
+    /// <summary>
+    /// Tests if null is returned when trying to retrieve a user by email with invalid input (empty string).
+    /// </summary>
+    [Fact]
+    public void GetUserByEmail_WithEmptyString_ReturnsNull()
+    {
+        var result = _userRepository.GetUserByEmail("");
+        Assert.Null(result);
+    }
+
+    /// <summary>
+    /// Tests if null is returned when trying to retrieve a user by email with invalid input (whitespace).
+    /// </summary>
+    [Fact]
+    public void GetUserByEmail_WithWhitespace_ReturnsNull()
+    {
+        var result = _userRepository.GetUserByEmail("   ");
+        Assert.Null(result);
+    }
+
+    /// <summary>
+    /// Tests if a user can be retrieved by email in a case-insensitive manner.
+    /// </summary>
+    [Fact]
+    public void GetUserByEmail_CaseInsensitive_ReturnsUser()
+    {
+        var user = new Models.User
         {
-            var result = this._userRepository.GetUserById(999);
-            Assert.Null(result);
-        }
+            Name = "Case Test",
+            Email = "CaseSensitive@Example.COM",
+            Password = "pwd",
+            Profile = Profile.CITIZEN,
+        };
+        _userContext.Users.Add(user);
+        _userContext.SaveChanges();
 
-        /// <summary>
-        /// Tests if a user can be retrieved by email when the full email matches.
-        /// </summary>
-        [Fact]
-        public void GetUserByEmail_ShouldReturnUser_WhenFullEmailMatches()
+        var result = _userRepository.GetUserByEmail("casesensitive@example.com");
+
+        Assert.NotNull(result);
+        Assert.Equal(user.Id, result.Id);
+    }
+
+
+    /// <summary>
+    /// Tests if an empty list is returned when trying to retrieve users by name with invalid input (null).
+    /// </summary>
+    [Fact]
+    public void GetUserByName_WithNull_ReturnsEmptyList()
+    {
+        var result = _userRepository.GetUserByName(null!);
+        Assert.Empty(result);
+    }
+
+    /// <summary>
+    /// Tests if an empty list is returned when trying to retrieve users by name with invalid input (empty string).
+    /// </summary>
+    [Fact]
+    public void GetUserByName_WithEmptyString_ReturnsEmptyList()
+    {
+        var result = _userRepository.GetUserByName("");
+        Assert.Empty(result);
+    }
+
+    /// <summary>
+    /// Tests if an empty list is returned when trying to retrieve users by name with invalid input (whitespace).
+    /// </summary>
+    [Fact]
+    public void GetUserByName_WithWhitespace_ReturnsEmptyList()
+    {
+        var result = _userRepository.GetUserByName("   ");
+        Assert.Empty(result);
+    }
+
+    /// <summary>
+    /// Tests if users can be retrieved by name when there are partial matches.
+    /// </summary>
+    [Fact]
+    public void GetUserByName_ShouldReturnList_WhenNamePartialMatches()
+    {
+        var u1 = new Models.User
         {
-            var user = new Models.User
-            {
-                Name = "Alice",
-                Email = "alice@example.com",
-                Password = "pwd",
-                Profile = Profile.CITIZEN,
-            };
-            _userContext.Users.Add(user);
-            _userContext.SaveChanges();
-
-            var result = _userRepository.GetUserByEmail("alice@example.com");
-
-            Assert.NotNull(result);
-            Assert.Equal("alice@example.com", result.Email);
-        }
-
-
-        /// <summary>
-        /// Tests if null is returned when trying to retrieve a user by email that does not exist.
-        /// </summary>
-        [Fact]
-        public void GetUserByEmail_ShouldReturnNull_WhenNoMatch()
+            Name = "Johnny Appleseed",
+            Email = "j1@example.com",
+            Password = "p",
+            Profile = Profile.CITIZEN,
+        };
+        var u2 = new Models.User
         {
-            var result = _userRepository.GetUserByEmail("noone@example.com");
-            Assert.Null(result);
-        }
+            Name = "John Smith",
+            Email = "j2@example.com",
+            Password = "p",
+            Profile = Profile.CITIZEN,
+        };
+        _userContext.Users.AddRange(u1, u2);
+        _userContext.SaveChanges();
 
-        /// <summary>
-        /// Tests if null is returned when trying to retrieve a user by ID with invalid input (zero).
-        /// </summary>
-        [Fact]
-        public void GetUserById_WithZeroId_ReturnsNull()
+        var result = _userRepository.GetUserByName("John");
+
+        Assert.NotEmpty(result);
+        Assert.Contains(
+            result,
+            u => u.Name.Contains("John", StringComparison.OrdinalIgnoreCase)
+        );
+    }
+
+    /// <summary>
+    /// Tests if all users can be retrieved when no filters are applied.
+    /// </summary>
+    [Fact]
+    public void GetAllUsers_ShouldReturnFilteredUsers_WhenFilteredByName()
+    {
+        var user = new Models.User
         {
-            var result = _userRepository.GetUserById(0);
-            Assert.Null(result);
-        }
+            Name = "Jane Smith",
+            Email = "jane.smith@example.com",
+            Password = "pwd",
+            Profile = Profile.CITIZEN,
+        };
+        _userContext.Users.Add(user);
+        _userContext.SaveChanges();
 
-        /// <summary>
-        /// Tests if null is returned when trying to retrieve a user by ID with invalid input (negative).
-        /// </summary>
-        [Fact]
-        public void GetUserById_WithNegativeId_ReturnsNull()
+        var result = _userRepository.GetAllUsers(1, 10, "Name", "asc", "jane");
+
+        Assert.Single(result);
+        Assert.Equal("Jane Smith", result[0].Name);
+    }
+
+    /// <summary>
+    /// Tests if users are returned sorted by name in descending order.
+    /// </summary>
+    [Fact]
+    public void GetAllUsers_ShouldReturnSortedUsers_ByNameDesc()
+    {
+        var a = new Models.User
         {
-            var result = _userRepository.GetUserById(-5);
-            Assert.Null(result);
-        }
-
-        /// <summary>
-        /// Tests if null is returned when trying to retrieve a user by email with invalid input (null).
-        /// </summary>
-        [Fact]
-        public void GetUserByEmail_WithNull_ReturnsNull()
+            Name = "Alpha",
+            Email = "a@example.com",
+            Password = "p",
+            Profile = Profile.CITIZEN,
+        };
+        var z = new Models.User
         {
-            var result = _userRepository.GetUserByEmail(null!);
-            Assert.Null(result);
-        }
+            Name = "Zulu",
+            Email = "z@example.com",
+            Password = "p",
+            Profile = Profile.CITIZEN,
+        };
+        _userContext.Users.AddRange(a, z);
+        _userContext.SaveChanges();
 
-        /// <summary>
-        /// Tests if null is returned when trying to retrieve a user by email with invalid input (empty string).
-        /// </summary>
-        [Fact]
-        public void GetUserByEmail_WithEmptyString_ReturnsNull()
+        var result = _userRepository.GetAllUsers(1, 10, "Name", "desc", string.Empty);
+
+        Assert.True(result.Count >= 2);
+        Assert.Equal("Zulu", result.First().Name);
+    }
+
+    /// <summary>
+    /// Tests if users can be filtered by email.
+    /// </summary>
+    [Fact]
+    public void GetAllUsers_FilterByEmail_ReturnsMatchingUsers()
+    {
+        var user1 = new Models.User
         {
-            var result = _userRepository.GetUserByEmail("");
-            Assert.Null(result);
-        }
-
-        /// <summary>
-        /// Tests if null is returned when trying to retrieve a user by email with invalid input (whitespace).
-        /// </summary>
-        [Fact]
-        public void GetUserByEmail_WithWhitespace_ReturnsNull()
+            Name = "User One",
+            Email = "specific@domain.com",
+            Password = "pwd",
+            Profile = Profile.CITIZEN,
+        };
+        var user2 = new Models.User
         {
-            var result = _userRepository.GetUserByEmail("   ");
-            Assert.Null(result);
-        }
+            Name = "User Two",
+            Email = "other@example.com",
+            Password = "pwd",
+            Profile = Profile.CITIZEN,
+        };
+        _userContext.Users.AddRange(user1, user2);
+        _userContext.SaveChanges();
 
-        /// <summary>
-        /// Tests if a user can be retrieved by email in a case-insensitive manner.
-        /// </summary>
-        [Fact]
-        public void GetUserByEmail_CaseInsensitive_ReturnsUser()
+        var result = _userRepository.GetAllUsers(1, 10, "Name", "asc", "specific@domain");
+
+        Assert.Single(result);
+        Assert.Equal("specific@domain.com", result[0].Email);
+    }
+
+    /// <summary>
+    /// Tests if a valid user can be created successfully.
+    /// </summary>
+    [Fact]
+    public void Create_ValidUser_ReturnsCreatedUser()
+    {
+        var newUser = new Models.User
         {
-            var user = new Models.User
-            {
-                Name = "Case Test",
-                Email = "CaseSensitive@Example.COM",
-                Password = "pwd",
-                Profile = Profile.CITIZEN,
-            };
-            _userContext.Users.Add(user);
-            _userContext.SaveChanges();
+            Name = "Bob",
+            Email = "bob@example.com",
+            Password = "secret",
+            Profile = Profile.CITIZEN,
+        };
 
-            var result = _userRepository.GetUserByEmail("casesensitive@example.com");
+        var created = _userRepository.Create(newUser);
 
-            Assert.NotNull(result);
-            Assert.Equal(user.Id, result.Id);
-        }
+        Assert.NotNull(created);
+        Assert.True(created.Id > 0);
+        Assert.Equal("bob@example.com", created.Email);
+    }
 
+    /// <summary>
+    /// Tests if creating a null user throws an ArgumentNullException.
+    /// </summary>
+    [Fact]
+    public void Create_NullUser_ThrowsArgumentNullException()
+    {
+        Assert.Throws<ArgumentNullException>(() => _userRepository.Create(null!));
+    }
 
-        /// <summary>
-        /// Tests if an empty list is returned when trying to retrieve users by name with invalid input (null).
-        /// </summary>
-        [Fact]
-        public void GetUserByName_WithNull_ReturnsEmptyList()
+    /// <summary>
+    /// Tests if creating a user with a duplicate email throws a DbUpdateException.
+    /// </summary>
+    [Fact]
+    public void Create_DuplicateEmail_ThrowsDbUpdateException()
+    {
+        var user1 = new Models.User
         {
-            var result = _userRepository.GetUserByName(null!);
-            Assert.Empty(result);
-        }
+            Name = "Original",
+            Email = "duplicate@example.com",
+            Password = "pwd",
+            Profile = Profile.CITIZEN,
+        };
+        _userContext.Users.Add(user1);
+        _userContext.SaveChanges();
 
-        /// <summary>
-        /// Tests if an empty list is returned when trying to retrieve users by name with invalid input (empty string).
-        /// </summary>
-        [Fact]
-        public void GetUserByName_WithEmptyString_ReturnsEmptyList()
+        var user2 = new Models.User
         {
-            var result = _userRepository.GetUserByName("");
-            Assert.Empty(result);
-        }
+            Name = "Duplicate",
+            Email = "duplicate@example.com",
+            Password = "pwd",
+            Profile = Profile.CITIZEN,
+        };
 
-        /// <summary>
-        /// Tests if an empty list is returned when trying to retrieve users by name with invalid input (whitespace).
-        /// </summary>
-        [Fact]
-        public void GetUserByName_WithWhitespace_ReturnsEmptyList()
+        Assert.Throws<Microsoft.EntityFrameworkCore.DbUpdateException>(() =>
+            _userRepository.Create(user2)
+        );
+    }
+
+    /// <summary>
+    /// Tests if an existing user can be updated successfully.
+    /// </summary>
+    [Fact]
+    public void Update_ExistingUser_ReturnsUpdatedUser()
+    {
+        var user = new Models.User
         {
-            var result = _userRepository.GetUserByName("   ");
-            Assert.Empty(result);
-        }
+            Name = "UpdateMe",
+            Email = "up@example.com",
+            Password = "pwd",
+            Profile = Profile.CITIZEN,
+        };
+        _userContext.Users.Add(user);
+        _userContext.SaveChanges();
 
-        /// <summary>
-        /// Tests if users can be retrieved by name when there are partial matches.
-        /// </summary>
-        [Fact]
-        public void GetUserByName_ShouldReturnList_WhenNamePartialMatches()
+        user.Email = "updated@example.com";
+        var updated = _userRepository.Update(user);
+
+        Assert.NotNull(updated);
+        Assert.Equal("updated@example.com", updated.Email);
+    }
+
+    /// <summary>
+    /// Tests if updating a non-existing user throws a DbUpdateException.
+    /// </summary>
+    [Fact]
+    public void Update_NonExistingUser_ThrowsDbUpdateException()
+    {
+        var user = new Models.User
         {
-            var u1 = new Models.User
-            {
-                Name = "Johnny Appleseed",
-                Email = "j1@example.com",
-                Password = "p",
-                Profile = Profile.CITIZEN,
-            };
-            var u2 = new Models.User
-            {
-                Name = "John Smith",
-                Email = "j2@example.com",
-                Password = "p",
-                Profile = Profile.CITIZEN,
-            };
-            _userContext.Users.AddRange(u1, u2);
-            _userContext.SaveChanges();
+            Id = 99999,
+            Name = "Ghost User",
+            Email = "ghost@example.com",
+            Password = "pwd",
+            Profile = Profile.CITIZEN,
+        };
 
-            var result = _userRepository.GetUserByName("John");
+        Assert.Throws<Microsoft.EntityFrameworkCore.DbUpdateException>(() =>
+            _userRepository.Update(user)
+        );
+    }
 
-            Assert.NotEmpty(result);
-            Assert.Contains(
-                result,
-                u => u.Name.Contains("John", StringComparison.OrdinalIgnoreCase)
-            );
-        }
+    /// <summary>
+    /// Tests if updating a null user throws an ArgumentNullException.
+    /// </summary>
+    [Fact]
+    public void Update_NullUser_ThrowsArgumentNullException()
+    {
+        Assert.Throws<ArgumentNullException>(() => _userRepository.Update(null!));
+    }
 
-        /// <summary>
-        /// Tests if all users can be retrieved when no filters are applied.
-        /// </summary>
-        [Fact]
-        public void GetAllUsers_ShouldReturnFilteredUsers_WhenFilteredByName()
+    /// <summary>
+    /// Tests if multiple fields of a user can be updated successfully.
+    /// </summary>
+    [Fact]
+    public void Update_ChangesMultipleFields_SavesCorrectly()
+    {
+        var user = new Models.User
         {
-            var user = new Models.User
-            {
-                Name = "Jane Smith",
-                Email = "jane.smith@example.com",
-                Password = "pwd",
-                Profile = Profile.CITIZEN,
-            };
-            _userContext.Users.Add(user);
-            _userContext.SaveChanges();
+            Name = "Original Name",
+            Email = "original@example.com",
+            Password = "oldpwd",
+            Profile = Profile.CITIZEN,
+        };
+        _userContext.Users.Add(user);
+        _userContext.SaveChanges();
 
-            var result = _userRepository.GetAllUsers(1, 10, "Name", "asc", "jane");
+        user.Name = "Updated Name";
+        user.Email = "updated@example.com";
+        user.Password = "newpwd";
+        user.Profile = Profile.ADMIN;
 
-            Assert.Single(result);
-            Assert.Equal("Jane Smith", result[0].Name);
-        }
+        var updated = _userRepository.Update(user);
 
-        /// <summary>
-        /// Tests if users are returned sorted by name in descending order.
-        /// </summary>
-        [Fact]
-        public void GetAllUsers_ShouldReturnSortedUsers_ByNameDesc()
+        Assert.Equal("Updated Name", updated.Name);
+        Assert.Equal("updated@example.com", updated.Email);
+        Assert.Equal("newpwd", updated.Password);
+        Assert.Equal(Profile.ADMIN, updated.Profile);
+    }
+
+
+    /// <summary>
+    /// Tests if an existing user can be deleted successfully.
+    /// </summary>
+    [Fact]
+    public void Delete_ExistingUser_ReturnsDeletedUser()
+    {
+        var user = new Models.User
         {
-            var a = new Models.User
-            {
-                Name = "Alpha",
-                Email = "a@example.com",
-                Password = "p",
-                Profile = Profile.CITIZEN,
-            };
-            var z = new Models.User
-            {
-                Name = "Zulu",
-                Email = "z@example.com",
-                Password = "p",
-                Profile = Profile.CITIZEN,
-            };
-            _userContext.Users.AddRange(a, z);
-            _userContext.SaveChanges();
+            Name = "ToDelete",
+            Email = "del@example.com",
+            Password = "pwd",
+            Profile = Profile.CITIZEN,
+        };
+        _userContext.Users.Add(user);
+        _userContext.SaveChanges();
 
-            var result = _userRepository.GetAllUsers(1, 10, "Name", "desc", string.Empty);
+        var deleted = _userRepository.Delete(user.Id);
 
-            Assert.True(result.Count >= 2);
-            Assert.Equal("Zulu", result.First().Name);
-        }
+        Assert.NotNull(deleted);
+        Assert.Equal(user.Id, deleted.Id);
 
-        /// <summary>
-        /// Tests if users can be filtered by email.
-        /// </summary>
-        [Fact]
-        public void GetAllUsers_FilterByEmail_ReturnsMatchingUsers()
-        {
-            var user1 = new Models.User
-            {
-                Name = "User One",
-                Email = "specific@domain.com",
-                Password = "pwd",
-                Profile = Profile.CITIZEN,
-            };
-            var user2 = new Models.User
-            {
-                Name = "User Two",
-                Email = "other@example.com",
-                Password = "pwd",
-                Profile = Profile.CITIZEN,
-            };
-            _userContext.Users.AddRange(user1, user2);
-            _userContext.SaveChanges();
+        var after = _userRepository.GetUserById(user.Id);
+        Assert.Null(after);
+    }
 
-            var result = _userRepository.GetAllUsers(1, 10, "Name", "asc", "specific@domain");
-
-            Assert.Single(result);
-            Assert.Equal("specific@domain.com", result[0].Email);
-        }
-
-        /// <summary>
-        /// Tests if a valid user can be created successfully.
-        /// </summary>
-        [Fact]
-        public void Create_ValidUser_ReturnsCreatedUser()
-        {
-            var newUser = new Models.User
-            {
-                Name = "Bob",
-                Email = "bob@example.com",
-                Password = "secret",
-                Profile = Profile.CITIZEN,
-            };
-
-            var created = _userRepository.Create(newUser);
-
-            Assert.NotNull(created);
-            Assert.True(created.Id > 0);
-            Assert.Equal("bob@example.com", created.Email);
-        }
-
-        /// <summary>
-        /// Tests if creating a null user throws an ArgumentNullException.
-        /// </summary>
-        [Fact]
-        public void Create_NullUser_ThrowsArgumentNullException()
-        {
-            Assert.Throws<ArgumentNullException>(() => _userRepository.Create(null!));
-        }
-
-        /// <summary>
-        /// Tests if creating a user with a duplicate email throws a DbUpdateException.
-        /// </summary>
-        [Fact]
-        public void Create_DuplicateEmail_ThrowsDbUpdateException()
-        {
-            var user1 = new Models.User
-            {
-                Name = "Original",
-                Email = "duplicate@example.com",
-                Password = "pwd",
-                Profile = Profile.CITIZEN,
-            };
-            _userContext.Users.Add(user1);
-            _userContext.SaveChanges();
-
-            var user2 = new Models.User
-            {
-                Name = "Duplicate",
-                Email = "duplicate@example.com",
-                Password = "pwd",
-                Profile = Profile.CITIZEN,
-            };
-
-            Assert.Throws<Microsoft.EntityFrameworkCore.DbUpdateException>(() =>
-                _userRepository.Create(user2)
-            );
-        }
-
-        /// <summary>
-        /// Tests if an existing user can be updated successfully.
-        /// </summary>
-        [Fact]
-        public void Update_ExistingUser_ReturnsUpdatedUser()
-        {
-            var user = new Models.User
-            {
-                Name = "UpdateMe",
-                Email = "up@example.com",
-                Password = "pwd",
-                Profile = Profile.CITIZEN,
-            };
-            _userContext.Users.Add(user);
-            _userContext.SaveChanges();
-
-            user.Email = "updated@example.com";
-            var updated = _userRepository.Update(user);
-
-            Assert.NotNull(updated);
-            Assert.Equal("updated@example.com", updated.Email);
-        }
-
-        /// <summary>
-        /// Tests if updating a non-existing user throws a DbUpdateException.
-        /// </summary>
-        [Fact]
-        public void Update_NonExistingUser_ThrowsDbUpdateException()
-        {
-            var user = new Models.User
-            {
-                Id = 99999,
-                Name = "Ghost User",
-                Email = "ghost@example.com",
-                Password = "pwd",
-                Profile = Profile.CITIZEN,
-            };
-
-            Assert.Throws<Microsoft.EntityFrameworkCore.DbUpdateException>(() =>
-                _userRepository.Update(user)
-            );
-        }
-
-        /// <summary>
-        /// Tests if updating a null user throws an ArgumentNullException.
-        /// </summary>
-        [Fact]
-        public void Update_NullUser_ThrowsArgumentNullException()
-        {
-            Assert.Throws<ArgumentNullException>(() => _userRepository.Update(null!));
-        }
-
-        /// <summary>
-        /// Tests if multiple fields of a user can be updated successfully.
-        /// </summary>
-        [Fact]
-        public void Update_ChangesMultipleFields_SavesCorrectly()
-        {
-            var user = new Models.User
-            {
-                Name = "Original Name",
-                Email = "original@example.com",
-                Password = "oldpwd",
-                Profile = Profile.CITIZEN,
-            };
-            _userContext.Users.Add(user);
-            _userContext.SaveChanges();
-
-            user.Name = "Updated Name";
-            user.Email = "updated@example.com";
-            user.Password = "newpwd";
-            user.Profile = Profile.ADMIN;
-
-            var updated = _userRepository.Update(user);
-
-            Assert.Equal("Updated Name", updated.Name);
-            Assert.Equal("updated@example.com", updated.Email);
-            Assert.Equal("newpwd", updated.Password);
-            Assert.Equal(Profile.ADMIN, updated.Profile);
-        }
-
-
-        /// <summary>
-        /// Tests if an existing user can be deleted successfully.
-        /// </summary>
-        [Fact]
-        public void Delete_ExistingUser_ReturnsDeletedUser()
-        {
-            var user = new Models.User
-            {
-                Name = "ToDelete",
-                Email = "del@example.com",
-                Password = "pwd",
-                Profile = Profile.CITIZEN,
-            };
-            _userContext.Users.Add(user);
-            _userContext.SaveChanges();
-
-            var deleted = _userRepository.Delete(user.Id);
-
-            Assert.NotNull(deleted);
-            Assert.Equal(user.Id, deleted.Id);
-
-            var after = _userRepository.GetUserById(user.Id);
-            Assert.Null(after);
-        }
-
-        /// <summary>
-        /// Tests if deleting a non-existing user returns null.
-        /// </summary>
-        [Fact]
-        public void Delete_NonExisting_ReturnsNull()
-        {
-            var result = _userRepository.Delete(999999);
-            Assert.Null(result);
-        }
+    /// <summary>
+    /// Tests if deleting a non-existing user returns null.
+    /// </summary>
+    [Fact]
+    public void Delete_NonExisting_ReturnsNull()
+    {
+        var result = _userRepository.Delete(999999);
+        Assert.Null(result);
     }
 }
+

@@ -35,12 +35,11 @@ public class Occurrence
     /// <param name="reportCount">The report count of the occurrence.</param>
     /// <param name="reportId">The report identifier associated with the occurrence.</param>
     /// <param name="responsibleEntityId">The responsible entity identifier associated with the occurrence.</param>
-    public Occurrence(int id, string title, string description, OccurrenceType type, OccurrenceStatus status, PriorityLevel priority, double proximityRadius, DateTime endDateTime, int reportCount, int reportId, int responsibleEntityId)
+    public Occurrence(int id, string title, string description, OccurrenceType type, OccurrenceStatus status, PriorityLevel priority, double proximityRadius, DateTime endDateTime, int reportCount, int reportId, int responsibleEntityId, GeoPoint location)
     {
         Id = id;
         Title = title;
         Description = description;
-        //Location = location;
         Type = type;
         Status = status;
         Priority = priority;
@@ -50,6 +49,7 @@ public class Occurrence
         ReportCount = reportCount;
         ReportId = reportId;
         ResponsibleEntityId = responsibleEntityId;
+        Location = location;
     }
 
     /// <summary>
