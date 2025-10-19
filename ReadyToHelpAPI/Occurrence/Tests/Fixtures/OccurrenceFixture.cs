@@ -1,4 +1,5 @@
 using readytohelpapi.Occurrence.Models;
+using GeoPointModel = readytohelpapi.GeoPoint.Models.GeoPoint;
 
 namespace readytohelpapi.Occurrence.Tests.Fixtures;
 
@@ -16,7 +17,10 @@ public static class OccurrenceFixture
         DateTime? endDateTime = null,
         int reportCount = 0,
         int reportId = 0,
-        int responsibleEntityId = 0)
+        int responsibleEntityId = 0,
+        double latitude = 0,
+        double longitude = 0
+    )
     {
         o ??= new Models.Occurrence();
         if (id.HasValue) o.Id = id.Value;
@@ -26,10 +30,16 @@ public static class OccurrenceFixture
         o.Status = status;
         o.Priority = priority;
         o.ProximityRadius = proximityRadius;
-        o.EndDateTime = endDateTime ?? default;
+        o.EndDateTime = endDateTime ?? DateTime.UtcNow.AddHours(1);
         o.ReportCount = reportCount;
         o.ReportId = reportId;
         o.ResponsibleEntityId = responsibleEntityId;
+        o.Location = new GeoPointModel
+        {
+            Latitude = latitude,
+            Longitude = longitude
+        };
+
         return o;
     }
 }
