@@ -69,7 +69,7 @@ public class UserServiceImpl : IUserService
     /// <exception cref="ArgumentException">Thrown when the user has invalid properties.</exception>
     /// <exception cref="KeyNotFoundException">Thrown when the user is not found.</exception>
     /// <exception cref="InvalidOperationException">Thrown when an error occurs while updating the user.</exception>
-     public User Update(User user)
+    public User Update(User user)
     {
         if (user == null)
             throw new ArgumentNullException(nameof(user), "User cannot be null");
@@ -214,7 +214,7 @@ public class UserServiceImpl : IUserService
         }
     }
 
-  
+
 
     /// <summary>
     ///   Gets a user by email.

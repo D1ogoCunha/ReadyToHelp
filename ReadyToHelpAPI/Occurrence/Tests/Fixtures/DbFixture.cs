@@ -13,7 +13,7 @@ public class DbFixture : IDisposable
         var postgresHost = Environment.GetEnvironmentVariable("POSTGRES_HOST") ?? "localhost";
         var postgresPort = Environment.GetEnvironmentVariable("POSTGRES_PORT") ?? "5432";
         var postgresUser = Environment.GetEnvironmentVariable("POSTGRES_USERNAME") ?? "readytohelp";
-        var postgresPwd  = Environment.GetEnvironmentVariable("POSTGRES_PASSWORD") ?? "readytohelppwd";
+        var postgresPwd = Environment.GetEnvironmentVariable("POSTGRES_PASSWORD") ?? "readytohelppwd";
 
         _databaseName = $"occ_tests_{Guid.NewGuid():N}";
 

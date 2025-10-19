@@ -100,7 +100,7 @@ public class TestReportApiController : IClassFixture<DbFixture>
         Assert.Equal(500, status.StatusCode);
     }
 
-        [Fact]
+    [Fact]
     public void GetById_InvalidId_ReturnsBadRequest()
     {
         var result = controller.GetById(0);

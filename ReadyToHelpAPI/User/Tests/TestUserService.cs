@@ -253,7 +253,7 @@ namespace readytohelpapi.User.Tests
 
             Assert.Throws<KeyNotFoundException>(() => userService.Update(user));
         }
-        
+
         /// <summary>
         ///   Tests the Update method when the repository throws an exception.
         /// </summary>
@@ -436,7 +436,7 @@ namespace readytohelpapi.User.Tests
         [Fact]
         public void GetAllUsers_InvalidPageNumber_ThrowsArgumentException()
         {
-            var ex = Assert.Throws<ArgumentException>(() => 
+            var ex = Assert.Throws<ArgumentException>(() =>
                 userService.GetAllUsers(0, 10, "Name", "asc", ""));
             Assert.Contains("Page number", ex.Message, StringComparison.OrdinalIgnoreCase);
         }
@@ -447,7 +447,7 @@ namespace readytohelpapi.User.Tests
         [Fact]
         public void GetAllUsers_InvalidPageSize_ThrowsArgumentException()
         {
-            var ex = Assert.Throws<ArgumentException>(() => 
+            var ex = Assert.Throws<ArgumentException>(() =>
                 userService.GetAllUsers(1, 0, "Name", "asc", ""));
             Assert.Contains("Page size", ex.Message, StringComparison.OrdinalIgnoreCase);
         }
@@ -458,7 +458,7 @@ namespace readytohelpapi.User.Tests
         [Fact]
         public void GetAllUsers_PageSizeTooLarge_ThrowsArgumentException()
         {
-            var ex = Assert.Throws<ArgumentException>(() => 
+            var ex = Assert.Throws<ArgumentException>(() =>
                 userService.GetAllUsers(1, 1001, "Name", "asc", ""));
             Assert.Contains("Page size", ex.Message, StringComparison.OrdinalIgnoreCase);
         }
@@ -469,7 +469,7 @@ namespace readytohelpapi.User.Tests
         [Fact]
         public void GetAllUsers_EmptySortBy_ThrowsArgumentException()
         {
-            var ex = Assert.Throws<ArgumentException>(() => 
+            var ex = Assert.Throws<ArgumentException>(() =>
                 userService.GetAllUsers(1, 10, "", "asc", ""));
             Assert.Contains("Sort field", ex.Message, StringComparison.OrdinalIgnoreCase);
         }
@@ -480,7 +480,7 @@ namespace readytohelpapi.User.Tests
         [Fact]
         public void GetAllUsers_InvalidSortOrder_ThrowsArgumentException()
         {
-            var ex = Assert.Throws<ArgumentException>(() => 
+            var ex = Assert.Throws<ArgumentException>(() =>
                 userService.GetAllUsers(1, 10, "Name", "invalid", ""));
             Assert.Contains("Sort order", ex.Message, StringComparison.OrdinalIgnoreCase);
         }
@@ -525,11 +525,11 @@ namespace readytohelpapi.User.Tests
         [Fact]
         public void GetAllUsers_RepositoryThrows_ExceptionPropagated()
         {
-            mockRepo.Setup(r => r.GetAllUsers(It.IsAny<int>(), It.IsAny<int>(), 
+            mockRepo.Setup(r => r.GetAllUsers(It.IsAny<int>(), It.IsAny<int>(),
                 It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
                 .Throws(new Exception("DB error"));
 
-            Assert.Throws<InvalidOperationException>(() => 
+            Assert.Throws<InvalidOperationException>(() =>
                 userService.GetAllUsers(1, 10, "Name", "asc", ""));
         }
 
@@ -561,5 +561,5 @@ namespace readytohelpapi.User.Tests
             Assert.Equal(Profile.CITIZEN, result.Profile);
         }
 
-    }   
+    }
 }
