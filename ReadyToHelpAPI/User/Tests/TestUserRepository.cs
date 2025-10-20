@@ -336,35 +336,6 @@ public class TestUserRepositoryTest : IClassFixture<DbFixture>
     }
 
     /// <summary>
-    /// Tests if creating a user with a duplicate email throws a DbUpdateException.
-    /// </summary>
-    [Fact]
-    public void Create_DuplicateEmail_ThrowsDbUpdateException()
-    {
-        var user1 = new Models.User
-        {
-            Name = "Original",
-            Email = "duplicate@example.com",
-            Password = "pwd",
-            Profile = Profile.CITIZEN,
-        };
-        _userContext.Users.Add(user1);
-        _userContext.SaveChanges();
-
-        var user2 = new Models.User
-        {
-            Name = "Duplicate",
-            Email = "duplicate@example.com",
-            Password = "pwd",
-            Profile = Profile.CITIZEN,
-        };
-
-        Assert.Throws<Microsoft.EntityFrameworkCore.DbUpdateException>(() =>
-            _userRepository.Create(user2)
-        );
-    }
-
-    /// <summary>
     /// Tests if an existing user can be updated successfully.
     /// </summary>
     [Fact]

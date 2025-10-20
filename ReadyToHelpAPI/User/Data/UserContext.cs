@@ -1,8 +1,7 @@
-﻿using readytohelpapi.User.Models;
+﻿namespace readytohelpapi.User.Data;
+
 using Microsoft.EntityFrameworkCore;
 using readytohelpapi.User.Models;
-
-namespace readytohelpapi.User.Data;
 
 /// <summary>
 ///     Represents the database context for user-related operations.
@@ -20,22 +19,4 @@ public class UserContext : DbContext
     ///     Gets or sets the Users DbSet.
     /// </summary>
     public DbSet<Models.User> Users { get; set; }
-
-    /// <summary>
-    ///     Configures the model for the database context.
-    /// </summary>
-    /// <param name="modelBuilder">The model builder.</param>
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<Models.User>(entity =>
-        {
-            entity.ToTable("users");
-            entity.HasKey(u => u.Id);
-            entity.Property(u => u.Name).HasMaxLength(100).IsRequired();
-            entity.Property(u => u.Email).HasMaxLength(120).IsRequired();
-            entity.Property(u => u.Password).HasMaxLength(200).IsRequired();
-            entity.Property(u => u.Profile).HasConversion<string>().HasMaxLength(20);
-            entity.HasIndex(u => u.Email).IsUnique();
-        });
-    }
 }
