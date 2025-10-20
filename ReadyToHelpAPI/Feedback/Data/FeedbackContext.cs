@@ -10,3 +10,4 @@ public class FeedbackContext : DbContext
 
     public DbSet<Feedback> Feedbacks { get; set; }
 }
+
