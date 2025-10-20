@@ -20,33 +20,4 @@ public class ReportContext : DbContext
     ///     Gets or sets the Reports DbSet.
     /// </summary>
     public DbSet<Report> Reports { get; set; }
-
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
-        base.OnModelCreating(modelBuilder);
-
-        modelBuilder.Entity<Report>(b =>
-        {
-            b.ToTable("reports");
-            b.HasKey(r => r.Id);
-
-            b.Property(r => r.Title).IsRequired().HasMaxLength(200);
-            b.Property(r => r.Description).IsRequired().HasMaxLength(1000);
-            b.Property(r => r.ReportDateTime)
-             .HasDefaultValueSql("NOW() AT TIME ZONE 'UTC'")
-             .ValueGeneratedOnAdd();
-            b.Property(r => r.UserId).IsRequired();
-
-            b.OwnsOne(r => r.Location, nb =>
-            {
-                nb.Property(p => p.Latitude).HasColumnName("Latitude");
-                nb.Property(p => p.Longitude).HasColumnName("Longitude");
-            });
-
-            b.HasIndex(r => new { r.UserId, r.ReportDateTime });
-
-            b.Ignore(r => r.Status);
-            b.Ignore(r => r.Priority);
-        });
-    }
 }

@@ -6,13 +6,10 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using readytohelpapi.Authentication.Service;
-using readytohelpapi.Feedback.Data;
+using readytohelpapi.Common.Data;
 using readytohelpapi.Feedback.Services;
-using readytohelpapi.Occurrence.Data;
 using readytohelpapi.Occurrence.Services;
-using readytohelpapi.Report.Data;
 using readytohelpapi.Report.Services;
-using readytohelpapi.User.Data;
 using readytohelpapi.User.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -56,25 +53,7 @@ builder.Services.AddScoped<IReportService, ReportServiceImpl>();
 builder.Services.AddScoped<IFeedbackRepository, FeedbackRepository>();
 builder.Services.AddScoped<IFeedbackService, FeedbackServiceImpl>();
 
-builder.Services.AddDbContext<UserContext>(options =>
-    options.UseNpgsql(
-        $"Host={postgresHost};Username={pgUsername};Password={pgPassword};Database=readytohelp_db"
-    )
-);
-
-builder.Services.AddDbContext<OccurrenceContext>(options =>
-    options.UseNpgsql(
-        $"Host={postgresHost};Username={pgUsername};Password={pgPassword};Database=readytohelp_db"
-    )
-);
-
-builder.Services.AddDbContext<ReportContext>(options =>
-    options.UseNpgsql(
-        $"Host={postgresHost};Username={pgUsername};Password={pgPassword};Database=readytohelp_db"
-    )
-);
-
-builder.Services.AddDbContext<FeedbackContext>(options =>
+builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(
         $"Host={postgresHost};Username={pgUsername};Password={pgPassword};Database=readytohelp_db"
     )
