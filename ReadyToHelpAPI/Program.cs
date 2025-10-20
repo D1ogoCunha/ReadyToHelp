@@ -1,16 +1,19 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Text;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using readytohelpapi.Authentication.Service;
+using readytohelpapi.Feedback.Data;
+using readytohelpapi.Feedback.Services;
+using readytohelpapi.Occurrence.Data;
+using readytohelpapi.Occurrence.Services;
+using readytohelpapi.Report.Data;
+using readytohelpapi.Report.Services;
 using readytohelpapi.User.Data;
 using readytohelpapi.User.Services;
-using readytohelpapi.Authentication.Service;
-using System.IdentityModel.Tokens.Jwt;
-using Microsoft.AspNetCore.Builder;
-using readytohelpapi.Occurrence.Services;
-using readytohelpapi.Occurrence.Data;
-using readytohelpapi.Report.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,7 +23,8 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // Enable string enum conversion for JSON
-builder.Services.AddControllers()
+builder
+    .Services.AddControllers()
     .AddJsonOptions(opts =>
     {
         opts.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
@@ -29,13 +33,13 @@ builder.Services.AddControllers()
 // Configure CORS
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAllOrigins",
+    options.AddPolicy(
+        "AllowAllOrigins",
         builder =>
         {
-            builder.AllowAnyOrigin()
-                   .AllowAnyMethod()
-                   .AllowAnyHeader();
-        });
+            builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+        }
+    );
 });
 
 var postgresHost = Environment.GetEnvironmentVariable("POSTGRES_HOST") ?? "localhost";
@@ -49,55 +53,69 @@ builder.Services.AddScoped<IOccurrenceRepository, OccurrenceRepository>();
 builder.Services.AddScoped<IOccurrenceService, OccurrenceServiceImpl>();
 builder.Services.AddScoped<IReportRepository, ReportRepository>();
 builder.Services.AddScoped<IReportService, ReportServiceImpl>();
+builder.Services.AddScoped<IFeedbackRepository, FeedbackRepository>();
+builder.Services.AddScoped<IFeedbackService, FeedbackServiceImpl>();
 
 builder.Services.AddDbContext<UserContext>(options =>
     options.UseNpgsql(
         $"Host={postgresHost};Username={pgUsername};Password={pgPassword};Database=readytohelp_db"
-    ));
+    )
+);
 
 builder.Services.AddDbContext<OccurrenceContext>(options =>
     options.UseNpgsql(
         $"Host={postgresHost};Username={pgUsername};Password={pgPassword};Database=readytohelp_db"
-    ));
+    )
+);
 
-builder.Services.AddDbContext<readytohelpapi.Report.Data.ReportContext>(options =>
+builder.Services.AddDbContext<ReportContext>(options =>
     options.UseNpgsql(
         $"Host={postgresHost};Username={pgUsername};Password={pgPassword};Database=readytohelp_db"
-    ));
+    )
+);
+
+builder.Services.AddDbContext<FeedbackContext>(options =>
+    options.UseNpgsql(
+        $"Host={postgresHost};Username={pgUsername};Password={pgPassword};Database=readytohelp_db"
+    )
+);
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
-var jwtSecret = builder.Configuration["Jwt:Secret"] ?? throw new InvalidOperationException("Jwt:Secret not configured");
+var jwtSecret =
+    builder.Configuration["Jwt:Secret"]
+    ?? throw new InvalidOperationException("Jwt:Secret not configured");
 var jwtIssuer = builder.Configuration["Jwt:Issuer"];
 var jwtAudience = builder.Configuration["Jwt:Audience"];
 var keyBytes = Encoding.UTF8.GetBytes(jwtSecret);
 
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters
+builder
+    .Services.AddAuthentication(options =>
     {
-        ValidateIssuer = true,
-        ValidIssuer = jwtIssuer,
-        ValidateAudience = true,
-        ValidAudience = jwtAudience,
-        ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(keyBytes),
-        ValidateLifetime = true,
-        ClockSkew = TimeSpan.Zero
-    };
-    options.Events = new JwtBearerEvents
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
     {
-        OnAuthenticationFailed = context =>
+        options.TokenValidationParameters = new TokenValidationParameters
         {
-            Console.WriteLine($"JWT auth failed: {context.Exception.Message}");
-            return Task.CompletedTask;
-        }
-    };
-});
+            ValidateIssuer = true,
+            ValidIssuer = jwtIssuer,
+            ValidateAudience = true,
+            ValidAudience = jwtAudience,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(keyBytes),
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero,
+        };
+        options.Events = new JwtBearerEvents
+        {
+            OnAuthenticationFailed = context =>
+            {
+                Console.WriteLine($"JWT auth failed: {context.Exception.Message}");
+                return Task.CompletedTask;
+            },
+        };
+    });
 
 builder.Services.AddAuthorization();
 
@@ -120,4 +138,3 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
-
