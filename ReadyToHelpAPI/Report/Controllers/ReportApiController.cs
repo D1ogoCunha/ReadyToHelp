@@ -18,24 +18,37 @@ public class ReportApiController : ControllerBase
     }
 
     [HttpPost]
-    public ActionResult<object> Create([FromBody, Bind("Title,Description,UserId,Type,Priority,Location")] Report request)
+    public IActionResult Create([FromBody, Bind("Title,Description,UserId,Type,Priority,Location")] Report request)
     {
-        var (createdReport, createdOccurrence) = reportService.Create(request);
+        if (request is null) return BadRequest("Report body is required.");
 
-        var response = new
+        try
         {
-            reportId = createdReport.Id,
-            occurrenceId = createdOccurrence.Id,
-            report = createdReport,
-            occurrence = createdOccurrence
-        };
+            var (createdReport, createdOccurrence) = reportService.Create(request);
+            var response = new
+            {
+                reportId = createdReport.Id,
+                occurrenceId = createdOccurrence.Id,
+                report = createdReport,
+                occurrence = createdOccurrence
+            };
 
-        return CreatedAtAction(nameof(GetById), new { id = createdReport.Id }, response);
+            return CreatedAtAction(nameof(GetById), new { id = createdReport.Id }, response);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
     }
 
     [HttpGet("{id:int}")]
-    public ActionResult<Report> GetById([FromRoute] int id)
+    public IActionResult GetById([FromRoute] int id)
     {
+        if (id <= 0) return BadRequest("Invalid id.");
         var report = reportRepository.GetById(id);
         if (report is null) return NotFound();
         return Ok(report);
