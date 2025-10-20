@@ -45,7 +45,7 @@ lint:
   stage: lint
   script:
     - dotnet tool install -g dotnet-format
-    - $HOME/.dotnet/tools/dotnet-format ReadyToHelpAPI.sln --verify-no-changes
+    - $HOME/.dotnet/tools/dotnet-format ReadyToHelpAPI.sln --check
   allow_failure: true
   only:
     - branches
@@ -53,12 +53,20 @@ lint:
 
 test:
   stage: test
+  image: mcr.microsoft.com/dotnet/sdk:8.0
   services:
     - name: postgres:15
       alias: postgres
+  variables:
+    POSTGRES_USER: readytohelp
+    POSTGRES_PASSWORD: readytohelppwd
+    POSTGRES_DB: readytohelp_db
+    POSTGRES_HOST: postgres
+    POSTGRES_PORT: 5432
+    ASPNETCORE_ENVIRONMENT: Testing
   script:
     - ./wait-for-it.sh postgres:5432 -- echo "PostgreSQL is up"
-    - dotnet test ReadyToHelpAPI.sln --collect:"XPlat Code Coverage"
+    - dotnet test ReadyToHelpAPI.sln --collect:"XPlat Code Coverage" --logger:"trx;LogFileName=TestResults.trx"
   artifacts:
     paths:
       - TestResults/
