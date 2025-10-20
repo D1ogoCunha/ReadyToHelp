@@ -27,7 +27,7 @@ namespace readytohelpapi.Feedback.Services
         /// </summary>
         /// <returns>A collection of all feedbacks.</returns>
         IEnumerable<Feedback> GetAllFeedbacks();
-        
+
         /// <summary>
         ///  Gets feedbacks by occurrence ID.
         /// </summary>

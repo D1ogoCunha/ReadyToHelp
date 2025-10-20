@@ -45,7 +45,7 @@ public class UserRepository : IUserRepository
         }
     }
 
-        /// <summary>
+    /// <summary>
     ///   Updates a user in the repository.
     /// </summary>
     /// <param name="user">The user to update.</param>

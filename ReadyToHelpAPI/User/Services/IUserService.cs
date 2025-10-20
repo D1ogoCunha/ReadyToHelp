@@ -60,7 +60,7 @@ public interface IUserService
     /// <param name="email">The email of the user.</param>
     /// <returns>The user entity if found; otherwise, null.</returns>
     Models.User? GetUserByEmail(string email);
-    
+
     /// <summary>
     /// Registers for a new user in the mobile app, forces the user was a CITIZEN.
     /// </summary>

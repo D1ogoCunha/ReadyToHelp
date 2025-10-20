@@ -108,5 +108,5 @@ public class AuthApiController : ControllerBase
 
         return Ok(newToken);
     }
-    
+
 }

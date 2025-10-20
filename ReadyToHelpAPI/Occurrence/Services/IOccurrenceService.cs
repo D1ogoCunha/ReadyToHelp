@@ -80,5 +80,5 @@ public interface IOccurrenceService
     /// <param name="priority">The priority level of the occurrence.</param>
     /// <returns>A list of occurrences of the specified priority level.</returns>
     List<Occurrence> GetOccurrencesByPriority(PriorityLevel priority);
-    
+
 }

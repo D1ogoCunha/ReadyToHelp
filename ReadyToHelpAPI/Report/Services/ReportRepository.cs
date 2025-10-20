@@ -32,7 +32,7 @@ public class ReportRepository : IReportRepository
         {
             if (report.ReportDateTime == default)
                 report.ReportDateTime = DateTime.UtcNow;
-                
+
             var created = reportContext.Reports.Add(report).Entity;
             reportContext.SaveChanges();
             return created;

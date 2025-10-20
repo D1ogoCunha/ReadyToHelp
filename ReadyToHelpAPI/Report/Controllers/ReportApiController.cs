@@ -16,7 +16,7 @@ public class ReportApiController : ControllerBase
         this.reportService = reportService;
         this.reportRepository = reportRepository;
     }
- 
+
     [HttpPost]
     public ActionResult<object> Create([FromBody, Bind("Title,Description,UserId,Type,Priority,Location")] Report request)
     {

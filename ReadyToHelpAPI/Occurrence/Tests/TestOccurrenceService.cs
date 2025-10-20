@@ -6,10 +6,10 @@ using Xunit;
 
 namespace readytohelpapi.Occurrence.Tests;
 
-    /// <summary>
-    ///  This class contains unit tests related to the occurrence service.
-    /// </summary>
-    public class TestOccurrenceServiceTest
+/// <summary>
+///  This class contains unit tests related to the occurrence service.
+/// </summary>
+public class TestOccurrenceServiceTest
 {
     private readonly Mock<IOccurrenceRepository> mockRepo;
     private readonly IOccurrenceService service;
