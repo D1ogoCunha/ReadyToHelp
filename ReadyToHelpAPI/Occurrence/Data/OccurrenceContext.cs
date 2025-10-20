@@ -53,8 +53,8 @@ public class OccurrenceContext : DbContext
 
             entity.OwnsOne(o => o.Location, nb =>
             {
-                  nb.Property(p => p.Latitude).HasColumnName("Latitude");
-                  nb.Property(p => p.Longitude).HasColumnName("Longitude");
+                nb.Property(p => p.Latitude).HasColumnName("Latitude");
+                nb.Property(p => p.Longitude).HasColumnName("Longitude");
             });
         });
     }
