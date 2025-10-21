@@ -1,18 +1,18 @@
 namespace readytohelpapi.Report.Tests;
 
-using readytohelpapi.Report.Data;
-using readytohelpapi.Report.Models;
 using readytohelpapi.Report.Services;
 using readytohelpapi.Report.Tests.Fixtures;
 using readytohelpapi.Occurrence.Models;
 using readytohelpapi.GeoPoint.Models;
 using Xunit;
-
+using readytohelpapi.Common.Data;
+using readytohelpapi.User.Models;
+using readytohelpapi.User.Tests.Fixtures;
 
 public class TestReportRepository : IClassFixture<DbFixture>
 {
     private readonly DbFixture fixture;
-    private readonly ReportContext ctx;
+    private readonly AppDbContext ctx;
     private readonly IReportRepository repo;
 
     public TestReportRepository(DbFixture fixture)
@@ -26,10 +26,16 @@ public class TestReportRepository : IClassFixture<DbFixture>
     [Fact]
     public void Create_Valid_ReturnsCreated()
     {
+        var user = UserFixture.CreateOrUpdateUser(
+            email: $"test-{Guid.NewGuid():N}@example.com"
+        );
+        ctx.Users.Add(user);
+        ctx.SaveChanges();
+
         var report = ReportFixture.CreateOrUpdate(
             title: "Buraco",
             description: "Buraco na estrada",
-            userId: 123,
+            userId: user.Id,
             type: OccurrenceType.ROAD_DAMAGE,
             priority: PriorityLevel.LOW,
             location: new GeoPoint { Latitude = 41.15, Longitude = -8.61 }
@@ -51,7 +57,14 @@ public class TestReportRepository : IClassFixture<DbFixture>
     [Fact]
     public void GetById_WhenExists_ReturnsEntity()
     {
-        var toAdd = ReportFixture.CreateOrUpdate(title: "Teste Get", userId: 1);
+        var user = UserFixture.CreateOrUpdateUser(
+            email: $"test-{Guid.NewGuid():N}@example.com"
+        );
+        ctx.Users.Add(user);
+        ctx.SaveChanges();
+
+
+        var toAdd = ReportFixture.CreateOrUpdate(title: "Teste Get", userId: user.Id);
         ctx.Reports.Add(toAdd);
         ctx.SaveChanges();
 

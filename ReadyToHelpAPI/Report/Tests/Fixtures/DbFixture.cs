@@ -2,7 +2,7 @@ namespace readytohelpapi.Report.Tests;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using readytohelpapi.Report.Data;
+using readytohelpapi.Common.Data;
 
 /// <summary>
 ///   Provides a test database fixture for report tests.
@@ -28,19 +28,22 @@ public class DbFixture : IDisposable
         databaseName = $"report_test_db_{Guid.NewGuid():N}";
 
         var services = new ServiceCollection()
-            .AddDbContext<ReportContext>(opts =>
-                opts.UseNpgsql($"Host={host};Port={port};Database={databaseName};Username={user};Password={pwd}")
+            .AddDbContext<AppDbContext>(opts =>
+                opts.UseNpgsql(
+                    $"Host={host};Port={port};Database={databaseName};Username={user};Password={pwd}",
+                    npgsqlOptions => npgsqlOptions.UseNetTopologySuite()
+                )
             )
             .BuildServiceProvider();
 
-        Context = services.GetRequiredService<ReportContext>();
+        Context = services.GetRequiredService<AppDbContext>();
         Context.Database.EnsureCreated();
     }
 
     /// <summary>
-    ///  Gets the ReportContext instance for database operations in tests.
+    ///  Gets the AppDbContext instance for database operations in tests.
     /// </summary>
-    public ReportContext Context { get; }
+    public AppDbContext Context { get; }
 
     /// <summary>
     ///  Resets the database by clearing tracked entities and removing all reports.

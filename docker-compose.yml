@@ -16,7 +16,7 @@ services:
       - r2h_network
 
   postgres:
-    image: postgres:15
+    image: postgis/postgis:15-3.3
     restart: unless-stopped
     environment:
       POSTGRES_USER: readytohelp
@@ -31,6 +31,7 @@ services:
 
 volumes:
   postgres_data:
+
 
 networks:
   r2h_network:

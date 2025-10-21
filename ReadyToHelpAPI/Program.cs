@@ -55,7 +55,8 @@ builder.Services.AddScoped<IFeedbackService, FeedbackServiceImpl>();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(
-        $"Host={postgresHost};Username={pgUsername};Password={pgPassword};Database=readytohelp_db"
+        $"Host={postgresHost};Username={pgUsername};Password={pgPassword};Database=readytohelp_db",
+        npgsqlOptions => npgsqlOptions.UseNetTopologySuite()
     )
 );
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);

@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using readytohelpapi.User.Data;
+using readytohelpapi.Common.Data;
 
 namespace readytohelpapi.User.Tests;
 
@@ -27,21 +27,22 @@ public class DbFixture : IDisposable
         _databaseName = $"test_db_{Guid.NewGuid():N}";
 
         var serviceProvider = new ServiceCollection()
-            .AddDbContext<UserContext>(options =>
+            .AddDbContext<AppDbContext>(options =>
                 options.UseNpgsql(
-                    $"Host={postgresHost};Port={postgresPort};Database={_databaseName};Username={postgresUser};Password={postgresPwd}"
+                    $"Host={postgresHost};Port={postgresPort};Database={_databaseName};Username={postgresUser};Password={postgresPwd}",
+                    npgsqlOptions => npgsqlOptions.UseNetTopologySuite()
                 )
             )
             .BuildServiceProvider();
 
-        this.Context = serviceProvider.GetRequiredService<UserContext>();
+        this.Context = serviceProvider.GetRequiredService<AppDbContext>();
         this.Context.Database.EnsureCreated();
     }
 
     /// <summary>
-    ///   Gets the UserContext instance for database operations in tests.
+    ///   Gets the AppDbContext instance for database operations in tests.
     /// </summary>
-    public UserContext Context { get; }
+    public AppDbContext Context { get; }
 
     /// <summary>
     ///  Disposes of the database context and deletes the test database.
