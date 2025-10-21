@@ -1,11 +1,11 @@
 namespace readytohelpapi.Report.Controllers;
 
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using readytohelpapi.Common.Data;
 using readytohelpapi.Report.Services;
 using readytohelpapi.Report.Models;
 using readytohelpapi.Report.DTOs;
-using readytohelpapi.Common.Data;
-using Microsoft.EntityFrameworkCore;
 
 [ApiController]
 [Route("api/reports")]
@@ -15,7 +15,10 @@ public class ReportApiController : ControllerBase
     private readonly IReportRepository reportRepository;
     private readonly AppDbContext context;
 
-    public ReportApiController(IReportService reportService, IReportRepository reportRepository, AppDbContext context)
+    public ReportApiController(
+        IReportService reportService,
+        IReportRepository reportRepository,
+        AppDbContext context)
     {
         this.reportService = reportService;
         this.reportRepository = reportRepository;
@@ -23,8 +26,11 @@ public class ReportApiController : ControllerBase
     }
 
     [HttpPost]
-    public IActionResult Create([FromBody] CreateReportDto dto)
+    public IActionResult Create([FromBody] CreateReportDto? dto)
     {
+        if (dto == null)
+            return BadRequest(new { error = "invalid_request", detail = "Request body is required." });
+
         try
         {
             var report = new Report
@@ -43,7 +49,6 @@ public class ReportApiController : ControllerBase
 
             var (createdReport, occurrence) = reportService.Create(report);
 
-            // Busca a entidade responsável se houver
             ResponsibleEntityContactDto? responsibleDto = null;
             if (occurrence.ResponsibleEntityId > 0)
             {
