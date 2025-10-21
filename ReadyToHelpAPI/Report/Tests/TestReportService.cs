@@ -8,16 +8,18 @@ using readytohelpapi.Report.Tests.Fixtures;
 using readytohelpapi.Occurrence.Services;
 using readytohelpapi.Occurrence.Models;
 using readytohelpapi.GeoPoint.Models;
+using readytohelpapi.ResponsibleEntity.Services;
 
 public class TestReportService
 {
     private readonly Mock<IReportRepository> mockRepo = new();
     private readonly Mock<IOccurrenceService> mockOccSvc = new();
+    private readonly Mock<IResponsibleEntityService> mockRespEntSvc = new();
     private readonly IReportService service;
 
     public TestReportService()
     {
-        service = new ReportServiceImpl(mockRepo.Object, mockOccSvc.Object);
+        service = new ReportServiceImpl(mockRepo.Object, mockOccSvc.Object, mockRespEntSvc.Object);
     }
 
     private static GeoPoint Pt(double lat = 41.3678, double lon = -8.2012) => new GeoPoint { Latitude = lat, Longitude = lon };
@@ -71,6 +73,7 @@ public class TestReportService
         var input = ReportFixture.CreateOrUpdate(title: "Buraco", description: "desc", userId: 1, location: Pt());
         var createdReport = ReportFixture.CreateOrUpdate(id: 100, title: input.Title, description: input.Description, userId: input.UserId, location: input.Location);
 
+        mockRespEntSvc.Setup(s => s.FindResponsibleEntity(input.Type, input.Location!.Latitude, input.Location.Longitude)).Returns((ResponsibleEntity.Models.ResponsibleEntity?)null);
         mockOccSvc.Setup(s => s.GetOccurrencesByType(input.Type)).Returns(new List<Occurrence>());
         mockRepo.Setup(r => r.Create(It.IsAny<ReportModel>())).Returns(createdReport);
 
@@ -92,6 +95,7 @@ public class TestReportService
             o.Status == OccurrenceStatus.WAITING &&
             o.ReportCount == 1 &&
             o.ReportId == 100 &&
+            o.ResponsibleEntityId == 0 &&
             o.Location != null &&
             Math.Abs(o.Location!.Latitude - input.Location!.Latitude) < 1e-9 &&
             Math.Abs(o.Location!.Longitude - input.Location!.Longitude) < 1e-9
@@ -107,15 +111,15 @@ public class TestReportService
         var existingOcc = new Occurrence
         {
             Id = 10,
-            ReportId = 999, // âncora
+            ReportId = 999,
             ReportCount = 1,
             Status = OccurrenceStatus.WAITING,
             Type = input.Type
         };
 
+        mockRespEntSvc.Setup(s => s.FindResponsibleEntity(input.Type, input.Location!.Latitude, input.Location.Longitude)).Returns((ResponsibleEntity.Models.ResponsibleEntity?)null);
         mockOccSvc.Setup(s => s.GetOccurrencesByType(input.Type)).Returns(new List<Occurrence> { existingOcc });
 
-        // Âncora com mesma localização (distância 0 <= 50)
         var anchorReport = ReportFixture.CreateOrUpdate(id: 999, title: "anchor", description: "a", userId: 1, location: Pt(41.3678, -8.2012));
         mockRepo.Setup(r => r.GetById(999)).Returns(anchorReport);
 
@@ -142,14 +146,15 @@ public class TestReportService
         {
             Id = 22,
             ReportId = 1000,
-            ReportCount = 2, // vai para 3
+            ReportCount = 2,
             Status = OccurrenceStatus.WAITING,
             Type = input.Type
         };
 
+        mockRespEntSvc.Setup(s => s.FindResponsibleEntity(input.Type, input.Location!.Latitude, input.Location.Longitude)).Returns((ResponsibleEntity.Models.ResponsibleEntity?)null);
         mockOccSvc.Setup(s => s.GetOccurrencesByType(input.Type)).Returns(new List<Occurrence> { existingOcc });
 
-        var anchorReport = ReportFixture.CreateOrUpdate(id: 1000, location: Pt()); // mesma localização
+        var anchorReport = ReportFixture.CreateOrUpdate(id: 1000, location: Pt());
         mockRepo.Setup(r => r.GetById(1000)).Returns(anchorReport);
 
         mockRepo.Setup(r => r.Create(It.IsAny<ReportModel>())).Returns(createdReport);
@@ -178,6 +183,7 @@ public class TestReportService
             Type = input.Type
         };
 
+        mockRespEntSvc.Setup(s => s.FindResponsibleEntity(input.Type, input.Location!.Latitude, input.Location.Longitude)).Returns((ResponsibleEntity.Models.ResponsibleEntity?)null);
         mockOccSvc.Setup(s => s.GetOccurrencesByType(input.Type)).Returns(new List<Occurrence> { existingOcc });
         var anchorReport = ReportFixture.CreateOrUpdate(id: 2000, location: Pt());
         mockRepo.Setup(r => r.GetById(2000)).Returns(anchorReport);

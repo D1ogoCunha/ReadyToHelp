@@ -4,21 +4,22 @@ using readytohelpapi.GeoPoint.Miscellaneous;
 using readytohelpapi.Occurrence.Models;
 using readytohelpapi.Occurrence.Services;
 using readytohelpapi.Report.Models;
-
-
+using readytohelpapi.ResponsibleEntity.Services;
 
 public class ReportServiceImpl : IReportService
 {
     private readonly IReportRepository reportRepository;
     private readonly IOccurrenceService occurrenceService;
+    private readonly IResponsibleEntityService responsibleEntityService;
 
     private const double DefaultProximityRadiusMeters = 50d;
     private const int triggerActivate = 3;
 
-    public ReportServiceImpl(IReportRepository reportRepository, IOccurrenceService occurrenceService)
+    public ReportServiceImpl(IReportRepository reportRepository, IOccurrenceService occurrenceService, IResponsibleEntityService responsibleEntityService)
     {
         this.reportRepository = reportRepository;
         this.occurrenceService = occurrenceService;
+        this.responsibleEntityService = responsibleEntityService;
     }
 
     public (Report report, Occurrence occurrence) Create(Report report)
@@ -33,6 +34,12 @@ public class ReportServiceImpl : IReportService
             throw new ArgumentException("UserId must be greater than zero.", nameof(report.UserId));
         if (report.Location is null)
             throw new ArgumentException("Location is required.", nameof(report.Location));
+
+        var responsibleEntity = responsibleEntityService.FindResponsibleEntity(
+            report.Type,
+            report.Location.Latitude,
+            report.Location.Longitude
+        );
 
         var duplicatedOccurence = FindNearbyOccurrenceOfSameType(report, DefaultProximityRadiusMeters);
 
@@ -63,7 +70,7 @@ public class ReportServiceImpl : IReportService
             EndDateTime = default,
             ReportCount = 1,
             ReportId = createdReport.Id,
-            ResponsibleEntityId = 0,
+            ResponsibleEntityId = responsibleEntity?.Id ?? 0,
             Location = report.Location
         };
 

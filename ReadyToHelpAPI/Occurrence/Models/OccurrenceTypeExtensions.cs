@@ -24,21 +24,18 @@ public static class OccurrenceTypeExtensions
 
         { OccurrenceType.PUBLIC_LIGHTING, ResponsibleEntityType.CAMARA_MUNICIPAL },
         { OccurrenceType.SANITATION, ResponsibleEntityType.CAMARA_MUNICIPAL },
+        { OccurrenceType.ROAD_DAMAGE, ResponsibleEntityType.CAMARA_MUNICIPAL },
+        { OccurrenceType.ROAD_OBSTRUCTION, ResponsibleEntityType.CAMARA_MUNICIPAL },
+        { OccurrenceType.TRAFFIC_LIGHT_FAILURE, ResponsibleEntityType.CAMARA_MUNICIPAL },
+        { OccurrenceType.ELECTRICAL_NETWORK, ResponsibleEntityType.CAMARA_MUNICIPAL },
+        { OccurrenceType.VEHICLE_BREAKDOWN, ResponsibleEntityType.CAMARA_MUNICIPAL },
 
-        { OccurrenceType.ROAD_DAMAGE, ResponsibleEntityType.INFRAESTRUTURAS },
-        { OccurrenceType.ROAD_OBSTRUCTION, ResponsibleEntityType.INFRAESTRUTURAS },
-        { OccurrenceType.TRAFFIC_LIGHT_FAILURE, ResponsibleEntityType.INFRAESTRUTURAS },
-        { OccurrenceType.ELECTRICAL_NETWORK, ResponsibleEntityType.INFRAESTRUTURAS },
-        { OccurrenceType.VEHICLE_BREAKDOWN, ResponsibleEntityType.INFRAESTRUTURAS },
-
-        { OccurrenceType.LOST_ANIMAL, ResponsibleEntityType.SERVICOS_VETERINARIOS },
-        { OccurrenceType.INJURED_ANIMAL, ResponsibleEntityType.SERVICOS_VETERINARIOS },
-
-        { OccurrenceType.POLLUTION, ResponsibleEntityType.AMBIENTE },
+        { OccurrenceType.LOST_ANIMAL, ResponsibleEntityType.SERVICOS_ANIMAL_AMBIENTAL },
+        { OccurrenceType.INJURED_ANIMAL, ResponsibleEntityType.SERVICOS_ANIMAL_AMBIENTAL },
+        { OccurrenceType.POLLUTION, ResponsibleEntityType.SERVICOS_ANIMAL_AMBIENTAL },
 
         { OccurrenceType.MEDICAL_EMERGENCY, ResponsibleEntityType.INEM },
-
-        { OccurrenceType.WORK_ACCIDENT, ResponsibleEntityType.ACT }
+        { OccurrenceType.WORK_ACCIDENT, ResponsibleEntityType.INEM },
     };
 
     /// <summary>

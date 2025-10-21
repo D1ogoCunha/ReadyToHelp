@@ -134,6 +134,7 @@ public class AppDbContext : DbContext
         {
             entity.ToTable("responsible_entities");
             entity.HasKey(re => re.Id).HasName("PK_responsible_entities");
+            entity.Property(re => re.Name).IsRequired().HasMaxLength(200);
             entity.Property(re => re.Email).IsRequired().HasMaxLength(200);
             entity.Property(re => re.ContactPhone).HasMaxLength(500);
             entity.Property(re => re.Address).HasMaxLength(500);
