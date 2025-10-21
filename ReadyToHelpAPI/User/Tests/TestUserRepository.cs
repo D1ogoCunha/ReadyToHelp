@@ -1,6 +1,7 @@
-using readytohelpapi.User.Data;
+using readytohelpapi.Common.Data;
 using readytohelpapi.User.Models;
 using readytohelpapi.User.Services;
+using NetTopologySuite.Geometries;
 using Xunit;
 
 namespace readytohelpapi.User.Tests;
@@ -11,7 +12,7 @@ namespace readytohelpapi.User.Tests;
 public class TestUserRepositoryTest : IClassFixture<DbFixture>
 {
     private readonly DbFixture fixture;
-    private readonly UserContext _userContext;
+    private readonly AppDbContext _userContext;
     private readonly IUserRepository _userRepository;
 
     /// <summary>

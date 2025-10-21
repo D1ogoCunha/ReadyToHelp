@@ -1,24 +1,24 @@
 namespace readytohelpapi.User.Services;
 
-using readytohelpapi.User.Data;
 using readytohelpapi.User.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using readytohelpapi.Common.Data;
 
 /// <summary>
 ///     Implements the user repository operations.
 /// </summary>
 public class UserRepository : IUserRepository
 {
-    private readonly UserContext userContext;
+    private readonly AppDbContext userContext;
 
     /// <summary>
     ///    Initializes a new instance of the <see cref="UserRepository"/> class.
     /// </summary>
     /// <param name="context">The user database context.</param>
-    public UserRepository(UserContext context)
+    public UserRepository(AppDbContext context)
     {
         userContext = context;
     }

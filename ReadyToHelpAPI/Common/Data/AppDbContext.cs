@@ -5,17 +5,36 @@ using readytohelpapi.User.Models;
 using readytohelpapi.Occurrence.Models;
 using readytohelpapi.Report.Models;
 using readytohelpapi.Feedback.Models;
+using readytohelpapi.ResponsibleEntity.Models;
 
 /// <summary>
-///  Defines the ap
+///  Defines the application database context.
 /// </summary>
 public class AppDbContext : DbContext
 {
-    public AppDbContext(DbContextOptions options) : base(options) { }
+    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+    public AppDbContext() { }
+
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        if (!optionsBuilder.IsConfigured)
+        {
+            var host = Environment.GetEnvironmentVariable("POSTGRES_HOST") ?? "localhost";
+            var user = Environment.GetEnvironmentVariable("POSTGRES_USERNAME")
+                      ?? Environment.GetEnvironmentVariable("POSTGRES_USER")
+                      ?? "readytohelp";
+            var pwd = Environment.GetEnvironmentVariable("POSTGRES_PASSWORD") ?? "readytohelppwd";
+            var db = Environment.GetEnvironmentVariable("POSTGRES_DB") ?? "readytohelp_db";
+            var conn = $"Host={host};Port=5432;Database={db};Username={user};Password={pwd}";
+
+            optionsBuilder.UseNpgsql(conn, o => o.UseNetTopologySuite());
+        }
+    }
     public DbSet<User> Users { get; set; }
     public DbSet<Occurrence> Occurrences { get; set; }
     public DbSet<Report> Reports { get; set; }
     public DbSet<Feedback> Feedbacks { get; set; }
+    public DbSet<ResponsibleEntity> ResponsibleEntities { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -109,6 +128,17 @@ public class AppDbContext : DbContext
 
             entity.HasIndex(f => f.OccurrenceId);
             entity.HasIndex(f => f.UserId);
+        });
+
+        modelBuilder.Entity<ResponsibleEntity>(entity =>
+        {
+            entity.ToTable("responsible_entities");
+            entity.HasKey(re => re.Id).HasName("PK_responsible_entities");
+            entity.Property(re => re.Email).IsRequired().HasMaxLength(200);
+            entity.Property(re => re.ContactPhone).HasMaxLength(500);
+            entity.Property(re => re.Address).HasMaxLength(500);
+            entity.Property(re => re.Type).HasConversion<string>().HasMaxLength(100);
+            entity.Property(re => re.GeoArea).IsRequired();
         });
     }
 }

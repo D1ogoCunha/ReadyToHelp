@@ -3,7 +3,7 @@ namespace readytohelpapi.Feedback.Services;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
-using readytohelpapi.Feedback.Data;
+using readytohelpapi.Common.Data;
 using readytohelpapi.Feedback.Models;
 
 /// <summary>
@@ -11,13 +11,13 @@ using readytohelpapi.Feedback.Models;
 /// </summary>
 public class FeedbackRepository : IFeedbackRepository
 {
-    private readonly FeedbackContext context;
+    private readonly AppDbContext context;
 
     /// <summary>
     ///  Initializes a new instance of the <see cref="FeedbackRepository"/> class.
     /// </summary>
     /// <param name="context">The feedback database context.</param>
-    public FeedbackRepository(FeedbackContext context)
+    public FeedbackRepository(AppDbContext context)
     {
         this.context = context;
     }

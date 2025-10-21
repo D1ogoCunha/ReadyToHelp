@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using readytohelpapi.Occurrence.Data;
+using readytohelpapi.Common.Data;
 
 namespace readytohelpapi.Occurrence.Tests;
 
@@ -18,17 +18,19 @@ public class DbFixture : IDisposable
         _databaseName = $"occ_tests_{Guid.NewGuid():N}";
 
         var sp = new ServiceCollection()
-            .AddDbContext<OccurrenceContext>(options =>
+            .AddDbContext<AppDbContext>(options =>
                 options.UseNpgsql(
-                    $"Host={postgresHost};Port={postgresPort};Database={_databaseName};Username={postgresUser};Password={postgresPwd}"
-                ))
+                    $"Host={postgresHost};Port={postgresPort};Database={_databaseName};Username={postgresUser};Password={postgresPwd}",
+                    npgsqlOptions => npgsqlOptions.UseNetTopologySuite()
+                )
+            )
             .BuildServiceProvider();
 
-        Context = sp.GetRequiredService<OccurrenceContext>();
+        Context = sp.GetRequiredService<AppDbContext>();
         Context.Database.EnsureCreated();
     }
 
-    public OccurrenceContext Context { get; }
+    public AppDbContext Context { get; }
 
     public void ResetDatabase()
     {

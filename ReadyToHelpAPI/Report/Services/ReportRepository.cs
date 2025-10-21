@@ -1,7 +1,7 @@
 namespace readytohelpapi.Report.Services;
 
 using Microsoft.EntityFrameworkCore;
-using readytohelpapi.Report.Data;
+using readytohelpapi.Common.Data;
 using readytohelpapi.Report.Models;
 
 /// <summary>
@@ -9,13 +9,13 @@ using readytohelpapi.Report.Models;
 /// </summary>
 public class ReportRepository : IReportRepository
 {
-    private readonly ReportContext reportContext;
+    private readonly AppDbContext reportContext;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="ReportRepository" /> class.
     /// </summary>
     /// <param name="context">The database context.</param>
-    public ReportRepository(ReportContext context)
+    public ReportRepository(AppDbContext context)
     {
         reportContext = context;
     }

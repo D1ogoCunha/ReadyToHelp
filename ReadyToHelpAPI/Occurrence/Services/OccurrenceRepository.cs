@@ -1,24 +1,24 @@
 namespace readytohelpapi.Occurrence.Services;
 
-using readytohelpapi.Occurrence.Data;
 using readytohelpapi.Occurrence.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using readytohelpapi.Common.Data;
 
 /// <summary>
 ///    Implements the occurrence repository for managing occurrence data.
 /// </summary>
 public class OccurrenceRepository : IOccurrenceRepository
 {
-    private readonly OccurrenceContext occurrenceContext;
+    private readonly AppDbContext occurrenceContext;
 
     /// <summary>
     ///    Initializes a new instance of the <see cref="OccurrenceRepository"/> class.
     /// </summary>
     /// <param name="context">The occurrence database context.</param>
-    public OccurrenceRepository(OccurrenceContext context)
+    public OccurrenceRepository(AppDbContext context)
     {
         occurrenceContext = context;
     }
