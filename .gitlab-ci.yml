@@ -26,7 +26,7 @@ before_script:
 setup-database:
   stage: setup
   services:
-    - name: postgres:15
+    - name: postgis/postgis:15-3.3
       alias: postgres
   script:
     - ./wait-for-it.sh postgres:5432 -- echo "PostgreSQL pronto"
@@ -55,7 +55,7 @@ test:
   stage: test
   image: mcr.microsoft.com/dotnet/sdk:8.0
   services:
-    - name: postgres:15
+    - name: postgis/postgis:15-3.3
       alias: postgres
   variables:
     POSTGRES_USER: readytohelp
