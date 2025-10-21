@@ -2,7 +2,6 @@ namespace readytohelpapi.Feedback.Services;
 
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.EntityFrameworkCore;
 using readytohelpapi.Common.Data;
 using readytohelpapi.Feedback.Models;
 
@@ -39,36 +38,27 @@ public class FeedbackRepository : IFeedbackRepository
     /// </summary>
     /// <param name="id">The ID of the feedback.</param>
     /// <returns>The feedback with the specified ID, or null if not found.</returns>
-    public Feedback? GetFeedbackById(int id) =>
-        context
-            .Feedbacks.Include(f => f.Occurrence)
-            .Include(f => f.User)
-            .FirstOrDefault(f => f.Id == id);
+    public Feedback? GetFeedbackById(int id) => context.Feedbacks.FirstOrDefault(f => f.Id == id);
 
     /// <summary>
     ///   Gets all feedbacks from the database.
     /// </summary>
     /// <returns>A collection of all feedbacks.</returns>
-    public IEnumerable<Feedback> GetAllFeedbacks() =>
-        context.Feedbacks.Include(f => f.User).Include(f => f.Occurrence).ToList();
+    public List<Feedback> GetAllFeedbacks() => context.Feedbacks.ToList();
 
     /// <summary>
     ///   Gets feedbacks by occurrence ID.
     /// </summary>
     /// <param name="occurrenceId">The ID of the occurrence.</param>
     /// <returns>A collection of feedbacks for the specified occurrence.</returns>
-    public IEnumerable<Feedback> GetFeedbacksByOccurrenceId(int occurrenceId) =>
-        context
-            .Feedbacks.Where(f => f.OccurrenceId == occurrenceId)
-            .Include(f => f.User)
-            .ToList();
+    public List<Feedback> GetFeedbacksByOccurrenceId(int occurrenceId) =>
+        context.Feedbacks.Where(f => f.OccurrenceId == occurrenceId).ToList();
 
     /// <summary>
     ///   Gets feedbacks by user ID.
     /// </summary>
     /// <param name="userId">The ID of the user.</param>
     /// <returns>A collection of feedbacks for the specified user.</returns>
-    public IEnumerable<Feedback> GetFeedbacksByUserId(int userId) =>
-        context.Feedbacks.Where(f => f.UserId == userId).Include(f => f.Occurrence).ToList();
+    public List<Feedback> GetFeedbacksByUserId(int userId) =>
+        context.Feedbacks.Where(f => f.UserId == userId).ToList();
 }
-

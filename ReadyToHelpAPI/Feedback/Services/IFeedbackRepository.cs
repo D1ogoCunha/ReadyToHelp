@@ -25,22 +25,20 @@ public interface IFeedbackRepository
     /// <summary>
     ///  Gets all feedbacks.
     /// </summary>
-    /// <returns>A collection of all feedbacks.</returns>
-    IEnumerable<Feedback> GetAllFeedbacks();
+    /// <returns>All feedbacks.</returns>
+    List<Feedback> GetAllFeedbacks();
 
     /// <summary>
     ///  Gets feedbacks by occurrence ID.
     /// </summary>
     /// <param name="occurrenceId">The ID of the occurrence.</param>
-    /// <returns>A collection of feedback for the specified occurrence.</returns>
-    IEnumerable<Feedback> GetFeedbacksByOccurrenceId(int occurrenceId);
+    /// <returns>The feedbacks for the specified occurrence.</returns>
+    List<Feedback> GetFeedbacksByOccurrenceId(int occurrenceId);
 
     /// <summary>
     ///  Gets feedbacks by user ID.
     /// </summary>
     /// <param name="userId">The ID of the user.</param>
-    /// <returns>A collection of feedback for the specified user.</returns>
-    IEnumerable<Feedback> GetFeedbacksByUserId(int userId);
-
+    /// <returns>The feedback for the specified user.</returns>
+    List<Feedback> GetFeedbacksByUserId(int userId);
 }
-
