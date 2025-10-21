@@ -735,12 +735,14 @@ public class TestOccurrenceServiceTest
             {
                 new Models.Occurrence { Id = 3, Title = "Active", Description = "d", Type = OccurrenceType.FOREST_FIRE, Priority = PriorityLevel.HIGH, ProximityRadius = 20, Status = OccurrenceStatus.ACTIVE, Location = new GeoPointModel { Latitude = 41, Longitude = -8 } }
             };
-        mockRepo.Setup(r => r.GetOccurrencesByStatus(OccurrenceStatus.ACTIVE)).Returns(list);
+        mockRepo.Setup(r => r.GetAllActiveOccurrences(1, 50, null, null, null)).Returns(list);
 
-        var result = service.GetAllActiveOccurrences();
+        var result = service.GetAllActiveOccurrences(1, 50, null, null, null);
 
         Assert.Single(result);
-        Assert.Equal(OccurrenceStatus.ACTIVE, result[0].Status);
+        Assert.All(result, o => Assert.True(
+            o.Status == OccurrenceStatus.ACTIVE || o.Status == OccurrenceStatus.IN_PROGRESS
+        ));
     }
 
     /// <summary>

@@ -432,25 +432,27 @@ public class TestOccurrenceApiController : IClassFixture<DbFixture>
     [Fact]
     public void GetAllActiveOccurrences_ReturnsOkWithList()
     {
-        var list = new List<Models.Occurrence> { OccurrenceFixture.CreateOrUpdateOccurrence(id: 41, status: OccurrenceStatus.ACTIVE) };
-        mockOccurrenceService.Setup(s => s.GetAllActiveOccurrences()).Returns(list);
+        var list = new List<Models.Occurrence> { OccurrenceFixture.CreateOrUpdateOccurrence(id: 41, status: OccurrenceStatus.ACTIVE, latitude: 1, longitude: 2) };
+        mockOccurrenceService.Setup(s => s.GetAllActiveOccurrences(1, 50, null, null, null)).Returns(list);
 
-        var result = controller.GetAllActive();
+        var result = controller.GetAllActive(1, 50, null, null, null);
         var ok = Assert.IsType<OkObjectResult>(result.Result);
-        Assert.Equal(list, ok.Value);
+        var value = Assert.IsType<List<OccurrenceMapDto>>(ok.Value);
+        Assert.Single(value);
+        Assert.Equal(41, value[0].Id);
+        Assert.Equal(1, value[0].Latitude);
+        Assert.Equal(2, value[0].Longitude);
     }
 
     /// <summary>
-    ///   Tests GetAllActive returning an empty list.
+    ///   Tests GetAllActive returning an empty list -> NotFound.
     /// </summary>
     [Fact]
-    public void GetAllActiveOccurrences_Empty_ReturnsOkWithEmptyList()
+    public void GetAllActiveOccurrences_Empty_ReturnsNotFound()
     {
-        mockOccurrenceService.Setup(s => s.GetAllActiveOccurrences()).Returns(new List<Models.Occurrence>());
-        var result = controller.GetAllActive();
-        var ok = Assert.IsType<OkObjectResult>(result.Result);
-        var value = Assert.IsType<List<Models.Occurrence>>(ok.Value);
-        Assert.Empty(value);
+        mockOccurrenceService.Setup(s => s.GetAllActiveOccurrences(1, 50, null, null, null)).Returns(new List<Models.Occurrence>());
+        var result = controller.GetAllActive(1, 50, null, null, null);
+        Assert.IsType<NotFoundObjectResult>(result.Result);
     }
 
     /// <summary>
@@ -459,8 +461,9 @@ public class TestOccurrenceApiController : IClassFixture<DbFixture>
     [Fact]
     public void GetAllActiveOccurrences_ServiceThrowsGeneric_ReturnsInternalServerError()
     {
-        mockOccurrenceService.Setup(s => s.GetAllActiveOccurrences())
-                   .Throws(new Exception("db"));
+        mockOccurrenceService.Setup(s => s.GetAllActiveOccurrences(
+            It.IsAny<int>(), It.IsAny<int>(), It.IsAny<OccurrenceType?>(), It.IsAny<PriorityLevel?>(), It.IsAny<int?>()
+        )).Throws(new Exception("db"));
         var result = controller.GetAllActive();
         var status = Assert.IsType<ObjectResult>(result.Result);
         Assert.Equal(500, status.StatusCode);

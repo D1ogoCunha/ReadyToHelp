@@ -156,12 +156,42 @@ public class OccurrenceApiController : ControllerBase
     /// Gets all active occurrences.
     /// </summary>
     [HttpGet("active")]
-    public ActionResult<List<Occurrence>> GetAllActive()
+    public ActionResult<List<OccurrenceMapDto>> GetAllActive(
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 50,
+        [FromQuery] OccurrenceType? type = null,
+        [FromQuery] PriorityLevel? priority = null,
+        [FromQuery] int? responsibleEntityId = null)
     {
         try
         {
-            var occurrences = occurrenceService.GetAllActiveOccurrences();
-            return Ok(occurrences);
+            var occurrences = occurrenceService.GetAllActiveOccurrences(pageNumber, pageSize, type, priority, responsibleEntityId);
+
+            if (occurrences == null || occurrences.Count == 0)
+                return NotFound(new { error = "no_active_occurrences" });
+
+            var result = occurrences
+                .Where(o => o.Location != null)
+                .Select(o => new OccurrenceMapDto
+                {
+                    Id = o.Id,
+                    Title = o.Title,
+                    Type = o.Type,
+                    Latitude = o.Location!.Latitude,
+                    Longitude = o.Location!.Longitude,
+                    Status = o.Status,
+                    Priority = o.Priority
+                })
+                .ToList();
+
+            if (result.Count == 0)
+                return NotFound(new { error = "no_active_occurrences_with_valid_location" });
+
+            return Ok(result);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { error = ex.Message });
         }
         catch (Exception ex)
         {
