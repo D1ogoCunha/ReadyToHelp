@@ -9,9 +9,6 @@ public enum ResponsibleEntityType
     PROTECAO_CIVIL,
     POLICIA,
     CAMARA_MUNICIPAL,
-    INFRAESTRUTURAS,
-    SERVICOS_VETERINARIOS,
-    AMBIENTE,
-    INEM,
-    ACT
+    SERVICOS_ANIMAL_AMBIENTAL,
+    INEM
 }

@@ -10,6 +10,7 @@ using readytohelpapi.Common.Data;
 using readytohelpapi.Feedback.Services;
 using readytohelpapi.Occurrence.Services;
 using readytohelpapi.Report.Services;
+using readytohelpapi.ResponsibleEntity.Services;
 using readytohelpapi.User.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -52,6 +53,7 @@ builder.Services.AddScoped<IReportRepository, ReportRepository>();
 builder.Services.AddScoped<IReportService, ReportServiceImpl>();
 builder.Services.AddScoped<IFeedbackRepository, FeedbackRepository>();
 builder.Services.AddScoped<IFeedbackService, FeedbackServiceImpl>();
+builder.Services.AddScoped<IResponsibleEntityService, ResponsibleEntityService>();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(
