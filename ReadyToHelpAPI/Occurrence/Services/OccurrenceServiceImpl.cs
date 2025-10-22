@@ -228,9 +228,20 @@ public class OccurrenceServiceImpl : IOccurrenceService
     /// <summary>
     ///  Retrieves all active occurrences.
     /// </summary>
-    public List<Occurrence> GetAllActiveOccurrences()
+    public List<Occurrence> GetAllActiveOccurrences(int pageNumber, int pageSize, OccurrenceType? type, PriorityLevel? priority, int? responsibleEntityId)
     {
-        return this.occurrenceRepository.GetOccurrencesByStatus(OccurrenceStatus.ACTIVE);
+        if (pageNumber <= 0)
+            throw new ArgumentException("Page number must be greater than zero.", nameof(pageNumber));
+        if (pageSize <= 0 || pageSize > 1000)
+            throw new ArgumentException("Page size must be between 1 and 1000.", nameof(pageSize));
+        if (type.HasValue && !Enum.IsDefined(typeof(OccurrenceType), type.Value))
+            throw new ArgumentOutOfRangeException(nameof(type), "Invalid occurrence type");
+        if (priority.HasValue && !Enum.IsDefined(typeof(PriorityLevel), priority.Value))
+            throw new ArgumentOutOfRangeException(nameof(priority), "Invalid priority level");
+        if (responsibleEntityId.HasValue && responsibleEntityId.Value < 0)
+            throw new ArgumentOutOfRangeException(nameof(responsibleEntityId), "ResponsibleEntityId cannot be negative");
+
+        return occurrenceRepository.GetAllActiveOccurrences(pageNumber, pageSize, type, priority, responsibleEntityId);
     }
 
     /// <summary>

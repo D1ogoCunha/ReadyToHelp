@@ -206,15 +206,33 @@ public class OccurrenceRepository : IOccurrenceRepository
     }
 
     /// <summary>
-    ///   Retrieves all active occurrences.
+    ///   Retrieves all occurrences with status ACTIVE or IN_PROGRESS with pagination and optional filters.
     /// </summary>
-    /// <returns>A list of active occurrences.</returns>
-    public List<Occurrence> GetAllActiveOccurrences()
+    public List<Occurrence> GetAllActiveOccurrences(int pageNumber, int pageSize, OccurrenceType? type, PriorityLevel? priority, int? responsibleEntityId)
     {
-        return occurrenceContext.Occurrences
+        if (pageNumber <= 0) pageNumber = 1;
+        if (pageSize <= 0) pageSize = 10;
+        if (pageSize > 1000) pageSize = 1000;
+
+        var query = occurrenceContext.Occurrences
             .AsNoTracking()
-            .Where(o => o.Status == OccurrenceStatus.ACTIVE)
-            .ToList();
+            .Where(o => o.Status == OccurrenceStatus.ACTIVE || o.Status == OccurrenceStatus.IN_PROGRESS);
+
+        if (type.HasValue)
+            query = query.Where(o => o.Type == type.Value);
+
+        if (priority.HasValue)
+            query = query.Where(o => o.Priority == priority.Value);
+
+        if (responsibleEntityId.HasValue)
+            query = query.Where(o => o.ResponsibleEntityId == responsibleEntityId.Value);
+
+        query = query
+            .OrderByDescending(o => o.Priority)
+            .ThenByDescending(o => o.CreationDateTime);
+
+        var skip = (pageNumber - 1) * pageSize;
+        return query.Skip(skip).Take(pageSize).ToList();
     }
 
     /// <summary>

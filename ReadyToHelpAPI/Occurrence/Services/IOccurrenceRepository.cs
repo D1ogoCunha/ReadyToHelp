@@ -76,10 +76,15 @@ public interface IOccurrenceRepository
     List<Occurrence> GetOccurrencesByPriority(PriorityLevel priority);
 
     /// <summary>
-    ///     Retrieves all occurrences with status ACTIVE.
+    ///     Retrieves ACTIVE or IN_PROGRESS occurrences with pagination and optional filters.
     /// </summary>
-    /// <returns>A list of active occurrences.</returns>
-    List<Occurrence> GetAllActiveOccurrences();
+    /// <param name="pageNumber">Page number (1-based).</param>
+    /// <param name="pageSize">Page size (1..1000).</param>
+    /// <param name="type">Optional occurrence type filter.</param>
+    /// <param name="priority">Optional priority filter.</param>
+    /// <param name="responsibleEntityId">Optional responsible entity filter.</param>
+    /// <returns>Filtered, paginated occurrences.</returns>
+    List<Occurrence> GetAllActiveOccurrences(int pageNumber, int pageSize, OccurrenceType? type, PriorityLevel? priority, int? responsibleEntityId);
 
     /// <summary>
     ///     Retrieves an occurrence by reportId.

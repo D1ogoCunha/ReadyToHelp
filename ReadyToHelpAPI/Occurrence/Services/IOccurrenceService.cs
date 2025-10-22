@@ -69,10 +69,9 @@ public interface IOccurrenceService
     List<Occurrence> GetOccurrencesByType(OccurrenceType type);
 
     /// <summary>
-    ///     Retrieves all occurrences with status ACTIVE.
+    /// Retrieves ACTIVE or IN_PROGRESS occurrences with pagination and optional filters.
     /// </summary>
-    /// <returns>A list of occurrences with status ACTIVE.</returns>
-    List<Occurrence> GetAllActiveOccurrences();
+    List<Occurrence> GetAllActiveOccurrences(int pageNumber, int pageSize, OccurrenceType? type, PriorityLevel? priority, int? responsibleEntityId);
 
     /// <summary>
     ///     Retrieves all occurrences by the specified priority level.

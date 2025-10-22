@@ -469,10 +469,12 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
         });
         _occurrenceContext.SaveChanges();
 
-        var list = _occurrenceRepository.GetAllActiveOccurrences();
+        var list = _occurrenceRepository.GetAllActiveOccurrences(1, 100, null, null, null);
 
         Assert.NotEmpty(list);
-        Assert.All(list, o => Assert.Equal(OccurrenceStatus.ACTIVE, o.Status));
+        Assert.All(list, o => Assert.True(
+            o.Status == OccurrenceStatus.ACTIVE || o.Status == OccurrenceStatus.IN_PROGRESS
+        ));
     }
 
     /// <summary>
