@@ -219,7 +219,63 @@ public class TestOccurrenceServiceTest
         Assert.Equal(10, result.Id);
     }
 
-    // UPDATE
+    /// <summary>
+    ///  Tests Create allows null ReportId.
+    /// </summary>
+    [Fact]
+    public void Create_AllowsNullReportId()
+    {
+        var input = new Models.Occurrence
+        {
+            Title = "Ok",
+            Description = "Desc",
+            Type = OccurrenceType.FLOOD,
+            Status = OccurrenceStatus.WAITING,
+            Priority = PriorityLevel.MEDIUM,
+            ProximityRadius = 25,
+            ReportCount = 0,
+            ReportId = null,
+            ResponsibleEntityId = 0,
+            Location = new GeoPointModel { Latitude = 40.1, Longitude = -8.1 }
+        };
+
+        var created = new Models.Occurrence { Id = 11, Title = "Ok", ReportId = null };
+        mockRepo.Setup(r => r.Create(It.IsAny<Models.Occurrence>())).Returns(created);
+
+        var result = service.Create(input);
+
+        Assert.Equal(11, result.Id);
+        Assert.Null(result.ReportId);
+    }
+
+    /// <summary>
+    ///  Tests Update allows null ReportId.
+    /// </summary>
+    [Fact]
+    public void Update_AllowsNullReportId()
+    {
+        var input = new Models.Occurrence
+        {
+            Id = 5,
+            Title = "t",
+            Description = "d",
+            Type = OccurrenceType.FLOOD,
+            Status = OccurrenceStatus.ACTIVE,
+            Priority = PriorityLevel.LOW,
+            ProximityRadius = 10,
+            ReportCount = 0,
+            ReportId = null,
+            ResponsibleEntityId = 0,
+            Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
+        };
+
+        mockRepo.Setup(r => r.Update(It.IsAny<Models.Occurrence>())).Returns(input);
+
+        var result = service.Update(input);
+
+        Assert.Equal(5, result.Id);
+        Assert.Null(result.ReportId);
+    }
 
     /// <summary>
     ///  Tests Update with a null occurrence.

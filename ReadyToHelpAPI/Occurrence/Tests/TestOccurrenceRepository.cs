@@ -79,6 +79,33 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
     }
 
     /// <summary>
+    /// Tests that a valid occurrence with null ReportId can be created successfully.
+    /// </summary>
+    [Fact]
+    public void Create_ValidOccurrence_WithNullReportId_ReturnsCreatedOccurrence()
+    {
+        var o = new Occurrence
+        {
+            Title = "No Report",
+            Description = "desc",
+            Type = OccurrenceType.FLOOD,
+            Status = OccurrenceStatus.ACTIVE,
+            Priority = PriorityLevel.LOW,
+            ProximityRadius = 100,
+            ReportCount = 0,
+            ReportId = null,
+            ResponsibleEntityId = 0,
+            Location = new GeoPointModel { Latitude = 40.0, Longitude = -8.0 }
+        };
+
+        var created = _occurrenceRepository.Create(o);
+
+        Assert.NotNull(created);
+        Assert.True(created.Id > 0);
+        Assert.Null(created.ReportId);
+    }
+
+    /// <summary>
     /// Tests retrieving an occurrence by ID when it exists.
     /// </summary>
     [Fact]

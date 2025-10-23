@@ -120,7 +120,7 @@ public class ReportServiceImpl : IReportService
 
         foreach (var occ in sameTypeOccurrences)
         {
-            var anchorReport = reportRepository.GetById(occ.ReportId);
+            var anchorReport = occ.ReportId.HasValue ? reportRepository.GetById(occ.ReportId.Value) : null;
             if (anchorReport?.Location == null) continue;
 
             var d = GeoUtils.DistanceMeters(

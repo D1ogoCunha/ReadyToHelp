@@ -105,7 +105,7 @@ public class Occurrence
     /// <summary>
     /// Gets or sets the report identifier associated with the occurrence.
     /// </summary>
-    public int ReportId { get; set; }
+    public int? ReportId { get; set; }
 
     /// <summary>
     /// Gets or sets the responsible entity identifier associated with the occurrence.

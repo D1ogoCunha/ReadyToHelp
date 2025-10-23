@@ -22,9 +22,9 @@ public class OccurrenceApiController : ControllerBase
     }
 
     /// <summary>
-    /// Creates a new occurrence. Only ADMIN can call.
+    /// Creates a new occurrence. Only ADMIN or MANAGER can call.
     /// </summary>
-    //[Authorize(Roles = "ADMIN")]
+    //[Authorize(Roles = "ADMIN,MANAGER")]
     [HttpPost]
     public ActionResult Create([FromBody] Occurrence occurrence)
     {

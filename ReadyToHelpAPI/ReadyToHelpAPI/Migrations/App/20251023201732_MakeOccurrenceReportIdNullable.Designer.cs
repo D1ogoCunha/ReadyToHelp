@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NetTopologySuite.Geometries;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -12,9 +13,11 @@ using readytohelpapi.Common.Data;
 namespace ReadyToHelpAPI.ReadyToHelpAPI.Migrations.App
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251023201732_MakeOccurrenceReportIdNullable")]
+    partial class MakeOccurrenceReportIdNullable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -41,7 +44,13 @@ namespace ReadyToHelpAPI.ReadyToHelpAPI.Migrations.App
                     b.Property<int>("OccurrenceId")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("OccurrenceId1")
+                        .HasColumnType("integer");
+
                     b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("UserId1")
                         .HasColumnType("integer");
 
                     b.HasKey("Id")
@@ -49,7 +58,11 @@ namespace ReadyToHelpAPI.ReadyToHelpAPI.Migrations.App
 
                     b.HasIndex("OccurrenceId");
 
+                    b.HasIndex("OccurrenceId1");
+
                     b.HasIndex("UserId");
+
+                    b.HasIndex("UserId1");
 
                     b.ToTable("feedback", (string)null);
                 });
@@ -232,12 +245,24 @@ namespace ReadyToHelpAPI.ReadyToHelpAPI.Migrations.App
                         .IsRequired()
                         .HasConstraintName("FK_feedback_occurrence");
 
+                    b.HasOne("readytohelpapi.Occurrence.Models.Occurrence", "Occurrence")
+                        .WithMany()
+                        .HasForeignKey("OccurrenceId1");
+
                     b.HasOne("readytohelpapi.User.Models.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("FK_feedback_user");
+
+                    b.HasOne("readytohelpapi.User.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId1");
+
+                    b.Navigation("Occurrence");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("readytohelpapi.Occurrence.Models.Occurrence", b =>
