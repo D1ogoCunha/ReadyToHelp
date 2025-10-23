@@ -46,7 +46,7 @@ public class OccurrenceServiceImpl : IOccurrenceService
         if (occurrence.ReportCount < 0)
             throw new ArgumentException("ReportCount cannot be negative.", nameof(occurrence.ReportCount));
 
-        if (occurrence.ReportId < 0)
+        if (occurrence.ReportId.HasValue && occurrence.ReportId < 0)
             throw new ArgumentException("ReportId cannot be negative.", nameof(occurrence.ReportId));
 
         if (occurrence.ResponsibleEntityId < 0)
@@ -105,7 +105,7 @@ public class OccurrenceServiceImpl : IOccurrenceService
         if (occurrence.ReportCount < 0)
             throw new ArgumentException("ReportCount cannot be negative.", nameof(occurrence.ReportCount));
 
-        if (occurrence.ReportId < 0)
+        if (occurrence.ReportId.HasValue && occurrence.ReportId < 0)
             throw new ArgumentException("ReportId cannot be negative.", nameof(occurrence.ReportId));
 
         if (occurrence.ResponsibleEntityId < 0)

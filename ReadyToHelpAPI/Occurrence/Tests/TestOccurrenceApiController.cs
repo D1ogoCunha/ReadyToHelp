@@ -86,6 +86,26 @@ public class TestOccurrenceApiController : IClassFixture<DbFixture>
     }
 
     /// <summary>
+    ///   Tests Create with a valid occurrence without ReportId (null).
+    /// </summary>
+    [Fact]
+    public void Create_ValidOccurrenceWithoutReportId_ReturnsCreatedAtAction()
+    {
+        var input = OccurrenceFixture.CreateOrUpdateOccurrence(id: 0, title: "T");
+        input.ReportId = null;
+
+        var created = OccurrenceFixture.CreateOrUpdateOccurrence(id: 10, title: "T");
+        created.ReportId = null;
+
+        mockOccurrenceService.Setup(s => s.Create(It.IsAny<Models.Occurrence>())).Returns(created);
+
+        var result = controller.Create(input);
+
+        var createdAt = Assert.IsType<CreatedAtActionResult>(result);
+        Assert.Equal(nameof(controller.GetById), createdAt.ActionName);
+    }
+
+    /// <summary>
     ///   Tests Update with a null occurrence.
     /// </summary>
     [Fact]
