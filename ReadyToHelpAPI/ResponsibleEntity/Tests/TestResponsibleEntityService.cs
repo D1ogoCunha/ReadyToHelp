@@ -10,6 +10,9 @@ using readytohelpapi.ResponsibleEntity.Models;
 using readytohelpapi.ResponsibleEntity.Services;
 using Xunit;
 
+/// <summary>
+/// This class contains all unit test related to the ResponsibleEntityService.
+/// </summary>
 public class TestResponsibleEntityService
 {
     private static readonly GeometryFactory Gf4326 =
@@ -18,6 +21,9 @@ public class TestResponsibleEntityService
     private readonly AppDbContext ctx;
     private readonly IResponsibleEntityService svc;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TestResponsibleEntityService"/> class.
+    /// </summary>
     public TestResponsibleEntityService()
     {
         var opts = new DbContextOptionsBuilder<AppDbContext>()
@@ -27,6 +33,13 @@ public class TestResponsibleEntityService
         svc = new ResponsibleEntityService(ctx);
     }
 
+    /// <summary>
+    /// Creates a square polygon centered at the specified longitude and latitude.
+    /// </summary>
+    /// <param name="lon">The longitude of the center.</param>
+    /// <param name="lat">The latitude of the center.</param>
+    /// <param name="halfSizeDeg">Half the size of the square in degrees (default is 0.01).</param>
+    /// <returns>A square polygon.</returns>
     private static Polygon MakeSquare(double lon, double lat, double halfSizeDeg = 0.01)
     {
         var coords = new[]
@@ -40,6 +53,9 @@ public class TestResponsibleEntityService
         return Gf4326.CreatePolygon(coords);
     }
 
+    /// <summary>
+    ///   Tests the FindResponsibleEntity method with an invalid latitude.
+    /// </summary>
     [Fact]
     public void FindResponsibleEntity_InvalidLatitude_Throws()
     {
@@ -47,6 +63,9 @@ public class TestResponsibleEntityService
             svc.FindResponsibleEntity(OccurrenceType.ROAD_DAMAGE, 123.0, -8.2));
     }
 
+    /// <summary>
+    ///   Tests the FindResponsibleEntity method with an invalid longitude.
+    /// </summary>
     [Fact]
     public void FindResponsibleEntity_InvalidLongitude_Throws()
     {
@@ -54,6 +73,9 @@ public class TestResponsibleEntityService
             svc.FindResponsibleEntity(OccurrenceType.ROAD_DAMAGE, 41.2, -999.0));
     }
 
+    /// <summary>
+    ///   Tests the FindResponsibleEntity method with no entities present.
+    /// </summary>
     [Fact]
     public void FindResponsibleEntity_NoEntities_ReturnsNull()
     {
@@ -61,6 +83,9 @@ public class TestResponsibleEntityService
         Assert.Null(res);
     }
 
+    /// <summary>
+    ///   Tests the FindResponsibleEntity method when there is a type mismatch.
+    /// </summary>
     [Fact]
     public void FindResponsibleEntity_TypeMismatch_ReturnsNull()
     {
@@ -85,6 +110,9 @@ public class TestResponsibleEntityService
         Assert.Null(res);
     }
 
+    /// <summary>
+    ///   Tests the FindResponsibleEntity method when the GeoArea is null.
+    /// </summary>
     [Fact]
     public void FindResponsibleEntity_GeoAreaNull_ReturnsNull()
     {
@@ -105,6 +133,9 @@ public class TestResponsibleEntityService
         Assert.Null(res);
     }
 
+    /// <summary>
+    ///   Tests the FindResponsibleEntity method when the point is inside the polygon.
+    /// </summary>
     [Fact]
     public void FindResponsibleEntity_PointInsidePolygon_ReturnsEntity()
     {
@@ -130,6 +161,9 @@ public class TestResponsibleEntityService
         Assert.Equal("Ent A", res!.Name);
     }
 
+    /// <summary>
+    ///   Tests the FindResponsibleEntity method when the point is outside the polygon.
+    /// </summary>
     [Fact]
     public void FindResponsibleEntity_PointOutsidePolygon_ReturnsNull()
     {
@@ -151,6 +185,9 @@ public class TestResponsibleEntityService
         Assert.Null(res);
     }
 
+    /// <summary>
+    ///   Tests the FindResponsibleEntity method with a MultiPolygon that matches.
+    /// </summary>
     [Fact]
     public void FindResponsibleEntity_MultiPolygon_Matches_ReturnsEntity()
     {

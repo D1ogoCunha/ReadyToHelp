@@ -5,8 +5,6 @@ using readytohelpapi.User.Models;
 using readytohelpapi.User.Services;
 using Xunit;
 
-
-
 /// <summary>
 ///  This class contains all unit tests related to the user service.
 /// </summary>
