@@ -12,6 +12,7 @@ using readytohelpapi.Occurrence.Services;
 using readytohelpapi.Report.Services;
 using readytohelpapi.ResponsibleEntity.Services;
 using readytohelpapi.User.Services;
+using readytohelpapi.Notifications;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,6 +41,10 @@ builder.Services.AddCors(options =>
     );
 });
 
+var notifierUrl = Environment.GetEnvironmentVariable("NOTIFIER_URL")
+                 ?? builder.Configuration["Notifier:BaseUrl"]
+                 ?? "http://localhost:5088";
+
 var postgresHost = Environment.GetEnvironmentVariable("POSTGRES_HOST") ?? "localhost";
 var pgUsername = Environment.GetEnvironmentVariable("POSTGRES_USERNAME") ?? "readytohelp";
 var pgPassword = Environment.GetEnvironmentVariable("POSTGRES_PASSWORD") ?? "readytohelppwd";
@@ -54,6 +59,13 @@ builder.Services.AddScoped<IReportService, ReportServiceImpl>();
 builder.Services.AddScoped<IFeedbackRepository, FeedbackRepository>();
 builder.Services.AddScoped<IFeedbackService, FeedbackServiceImpl>();
 builder.Services.AddScoped<IResponsibleEntityService, ResponsibleEntityService>();
+
+builder.Services.AddHttpClient<INotifierClient, NotifierClient>(c =>
+{
+    c.BaseAddress = new Uri(notifierUrl);
+    c.Timeout = TimeSpan.FromSeconds(10);
+    c.DefaultRequestHeaders.UserAgent.ParseAdd("ReadyToHelpAPI-NotifierClient/1.0");
+});
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(
