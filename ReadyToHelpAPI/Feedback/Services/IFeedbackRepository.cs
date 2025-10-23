@@ -41,4 +41,18 @@ public interface IFeedbackRepository
     /// <param name="userId">The ID of the user.</param>
     /// <returns>The feedback for the specified user.</returns>
     List<Feedback> GetFeedbacksByUserId(int userId);
+
+    /// <summary>
+    ///  Checks if a user exists by user ID.
+    /// </summary>
+    /// <param name="userId">The ID of the user.</param>
+    /// <returns>True if the user exists, otherwise false.</returns>
+    bool UserExists(int userId);
+
+    /// <summary>
+    ///  Checks if an occurrence exists by occurrence ID.
+    /// </summary>
+    /// <param name="occurrenceId">The ID of the occurrence.</param>
+    /// <returns>True if the occurrence exists, otherwise false.</returns>
+    bool OccurrenceExists(int occurrenceId);
 }

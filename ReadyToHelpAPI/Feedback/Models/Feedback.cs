@@ -1,8 +1,6 @@
 namespace readytohelpapi.Feedback.Models;
 
 using System.ComponentModel.DataAnnotations;
-using readytohelpapi.Occurrence.Models;
-using readytohelpapi.User.Models;
 
 /// <summary>
 /// Represents feedback provided by a user for a specific occurrence.

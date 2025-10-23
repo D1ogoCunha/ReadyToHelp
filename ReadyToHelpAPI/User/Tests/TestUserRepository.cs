@@ -1,13 +1,12 @@
 using readytohelpapi.Common.Data;
 using readytohelpapi.User.Models;
 using readytohelpapi.User.Services;
-using NetTopologySuite.Geometries;
 using Xunit;
 
 namespace readytohelpapi.User.Tests;
 
 /// <summary>
-///  This class contains all unit tests related to the user repository.
+///  This class contains all integration tests related to the user repository.
 /// </summary>
 public class TestUserRepositoryTest : IClassFixture<DbFixture>
 {

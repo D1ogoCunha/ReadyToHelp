@@ -7,7 +7,7 @@ using readytohelpapi.Feedback.Models;
 using readytohelpapi.Feedback.Services;
 
 /// <summary>
-/// Controller for managing feedback.
+/// Controller for managing feedbacks.
 /// </summary>
 [ApiController]
 [Route("api/feedback")]
@@ -31,6 +31,10 @@ public class FeedbackApiController : ControllerBase
     [HttpPost]
     public IActionResult Create([FromBody] Feedback feedback)
     {
+        if (feedback == null)
+        {
+            return BadRequest(new { error = "Feedback is null" });
+        }
         try
         {
             var created = service.Create(feedback);

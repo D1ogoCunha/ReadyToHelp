@@ -2,7 +2,6 @@ namespace readytohelpapi.Feedback.Services;
 
 using System;
 using System.Collections.Generic;
-using readytohelpapi.Common.Data;
 using readytohelpapi.Feedback.Models;
 
 /// <summary>
@@ -11,17 +10,14 @@ using readytohelpapi.Feedback.Models;
 public class FeedbackServiceImpl : IFeedbackService
 {
     private readonly IFeedbackRepository repo;
-    private readonly AppDbContext context;
 
     /// <summary>
     ///   Initializes a new instance of the <see cref="FeedbackServiceImpl"/> class.
     /// </summary>
     /// <param name="repo">The feedback repository.</param>
-    /// <param name="context">The application database context.</param>
-    public FeedbackServiceImpl(IFeedbackRepository repo, AppDbContext context)
+    public FeedbackServiceImpl(IFeedbackRepository repo)
     {
         this.repo = repo ?? throw new ArgumentNullException(nameof(repo));
-        this.context = context ?? throw new ArgumentNullException(nameof(context));
     }
 
     /// <summary>
@@ -34,15 +30,13 @@ public class FeedbackServiceImpl : IFeedbackService
         if (feedback == null)
             throw new ArgumentNullException(nameof(feedback));
 
-        var user = this.context.Users.Find(feedback.UserId);
-        if (user == null)
+        if (!repo.UserExists(feedback.UserId))
             throw new ArgumentException(
                 $"User with id {feedback.UserId} does not exist",
                 nameof(feedback.UserId)
             );
 
-        var occurrence = this.context.Occurrences.Find(feedback.OccurrenceId);
-        if (occurrence == null)
+        if (!repo.OccurrenceExists(feedback.OccurrenceId))
             throw new ArgumentException(
                 $"Occurrence with id {feedback.OccurrenceId} does not exist",
                 nameof(feedback.OccurrenceId)
@@ -81,8 +75,7 @@ public class FeedbackServiceImpl : IFeedbackService
         if (occurrenceId <= 0)
             throw new ArgumentException("Id must be a positive integer", nameof(occurrenceId));
 
-        var occurrence = this.context.Occurrences.Find(occurrenceId);
-        if (occurrence == null)
+        if (!repo.OccurrenceExists(occurrenceId))
             throw new ArgumentException(
                 $"Occurrence with id {occurrenceId} does not exist",
                 nameof(occurrenceId)
@@ -101,8 +94,7 @@ public class FeedbackServiceImpl : IFeedbackService
         if (userId <= 0)
             throw new ArgumentException("Id must be a positive integer", nameof(userId));
 
-        var user = this.context.Users.Find(userId);
-        if (user == null)
+        if (!repo.UserExists(userId))
             throw new ArgumentException($"User with id {userId} does not exist", nameof(userId));
 
         return repo.GetFeedbacksByUserId(userId);
