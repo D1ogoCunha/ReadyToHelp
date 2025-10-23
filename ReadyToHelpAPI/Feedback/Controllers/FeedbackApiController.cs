@@ -1,12 +1,13 @@
 namespace readytohelpapi.Feedback.Controllers;
 
 using System;
+using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using readytohelpapi.Feedback.Models;
 using readytohelpapi.Feedback.Services;
 
 /// <summary>
-/// Controller for managing feedback.
+/// Controller for managing feedbacks.
 /// </summary>
 [ApiController]
 [Route("api/feedback")]
@@ -30,6 +31,10 @@ public class FeedbackApiController : ControllerBase
     [HttpPost]
     public IActionResult Create([FromBody] Feedback feedback)
     {
+        if (feedback == null)
+        {
+            return BadRequest(new { error = "Feedback is null" });
+        }
         try
         {
             var created = service.Create(feedback);
@@ -52,24 +57,108 @@ public class FeedbackApiController : ControllerBase
     }
 
     /// <summary>
-    /// Get feedback by id.
+    /// Get all feedbacks.
+    /// </summary>
+    [HttpGet]
+    public IActionResult GetAll()
+    {
+        try
+        {
+            var list = service.GetAllFeedbacks();
+            if (list == null || !list.Any())
+                return NotFound(new { error = "No feedbacks found" });
+
+            return Ok(list);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Get feedbacks by userId.
+    /// </summary>
+    [HttpGet("user/{userId:int}")]
+    public IActionResult GetByUserId(int userId)
+    {
+        try
+        {
+            var list = service.GetFeedbacksByUserId(userId);
+            if (list == null || !list.Any())
+                return NotFound(new { error = $"No feedbacks found for user {userId}" });
+
+            return Ok(list);
+        }
+        catch (ArgumentException ex)
+        {
+            if (
+                !string.IsNullOrEmpty(ex.Message)
+                && ex.Message.Contains("does not exist", StringComparison.OrdinalIgnoreCase)
+            )
+                return NotFound(new { error = ex.Message });
+
+            return BadRequest(new { error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Get feedback by feedbackId.
     /// </summary>
     [HttpGet("{id:int}")]
     public IActionResult GetById(int id)
     {
-        var fb = service.GetFeedbackById(id);
-        if (fb == null)
-            return NotFound();
-        return Ok(fb);
+        try
+        {
+            var fb = service.GetFeedbackById(id);
+            if (fb == null)
+                return NotFound(new { error = $"Feedback with id {id} does not exist" });
+
+            return Ok(fb);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = ex.Message });
+        }
     }
 
     /// <summary>
-    /// Get feedbacks for a given occurrence.
+    /// Get feedbacks by occurrenceId.
     /// </summary>
     [HttpGet("occurrence/{occurrenceId:int}")]
     public IActionResult GetByOccurrenceId(int occurrenceId)
     {
-        var list = service.GetFeedbacksByOccurrenceId(occurrenceId);
-        return Ok(list);
+        try
+        {
+            var list = service.GetFeedbacksByOccurrenceId(occurrenceId);
+            if (list == null || !list.Any())
+                return NotFound(
+                    new { error = $"No feedbacks found for occurrence {occurrenceId}" }
+                );
+
+            return Ok(list);
+        }
+        catch (ArgumentException ex)
+        {
+            if (
+                !string.IsNullOrEmpty(ex.Message)
+                && ex.Message.Contains("does not exist", StringComparison.OrdinalIgnoreCase)
+            )
+                return NotFound(new { error = ex.Message });
+
+            return BadRequest(new { error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = ex.Message });
+        }
     }
 }

@@ -1,8 +1,6 @@
 namespace readytohelpapi.Feedback.Models;
 
 using System.ComponentModel.DataAnnotations;
-using readytohelpapi.Occurrence.Models;
-using readytohelpapi.User.Models;
 
 /// <summary>
 /// Represents feedback provided by a user for a specific occurrence.
@@ -35,15 +33,4 @@ public class Feedback
     /// Gets or sets a value indicating whether the user confirms the occurrence.
     /// </summary>
     public bool IsConfirmed { get; set; }
-
-    /// <summary>
-    /// Gets or sets the navigation property for the occurrence associated with the feedback.
-    /// </summary>
-    public Occurrence? Occurrence { get; set; }
-
-    /// <summary>
-    /// Gets or sets the navigation property for the user who provided the feedback.
-    /// </summary>
-    public User? User { get; set; }
 }
-
