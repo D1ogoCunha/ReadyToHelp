@@ -101,11 +101,10 @@ public class TestReportApiController : IClassFixture<DbFixture>
             Longitude = -9.149
         };
 
-        // Criar polígono válido
         var geometryFactory = new NetTopologySuite.Geometries.GeometryFactory(
-            new NetTopologySuite.Geometries.PrecisionModel(),
-            4326
-        );
+             new NetTopologySuite.Geometries.PrecisionModel(),
+             4326
+         );
 
         var coordinates = new[]
         {
@@ -116,7 +115,8 @@ public class TestReportApiController : IClassFixture<DbFixture>
             new NetTopologySuite.Geometries.Coordinate(-9.158, 38.715)
         };
 
-        var polygon = geometryFactory.CreatePolygon(coordinates);
+        var poly = geometryFactory.CreatePolygon(coordinates);
+        var multi = geometryFactory.CreateMultiPolygon(new[] { poly });
 
         var entity = new ResponsibleEntity.Models.ResponsibleEntity
         {
@@ -126,7 +126,7 @@ public class TestReportApiController : IClassFixture<DbFixture>
             Address = "Rua X, Lisboa",
             ContactPhone = 213456789,
             Type = ResponsibleEntity.Models.ResponsibleEntityType.BOMBEIROS,
-            GeoArea = polygon
+            GeoArea = multi
         };
 
         context.ResponsibleEntities.Add(entity);

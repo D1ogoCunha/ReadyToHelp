@@ -5,7 +5,7 @@ using readytohelpapi.Common.Data;
 using readytohelpapi.Report.Models;
 
 /// <summary>
-///    Repository for managing report data.
+///  Repository for managing report data.
 /// </summary>
 public class ReportRepository : IReportRepository
 {

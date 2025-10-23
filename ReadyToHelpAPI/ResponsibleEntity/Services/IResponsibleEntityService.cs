@@ -3,6 +3,9 @@ namespace readytohelpapi.ResponsibleEntity.Services;
 using readytohelpapi.Occurrence.Models;
 using readytohelpapi.ResponsibleEntity.Models;
 
+/// <summary>
+/// Defines the contract for responsible entity services.
+/// </summary>
 public interface IResponsibleEntityService
 {
     /// <summary>

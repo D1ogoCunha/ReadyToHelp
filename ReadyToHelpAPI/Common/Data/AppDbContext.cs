@@ -139,7 +139,8 @@ public class AppDbContext : DbContext
             entity.Property(re => re.ContactPhone).HasMaxLength(500);
             entity.Property(re => re.Address).HasMaxLength(500);
             entity.Property(re => re.Type).HasConversion<string>().HasMaxLength(100);
-            entity.Property(re => re.GeoArea).IsRequired();
+            entity.Property(e => e.GeoArea)
+                .HasColumnType("geometry(MultiPolygon,4326)");
         });
     }
 }

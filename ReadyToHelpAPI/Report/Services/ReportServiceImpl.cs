@@ -1,27 +1,46 @@
 namespace readytohelpapi.Report.Services;
 
 using readytohelpapi.GeoPoint.Miscellaneous;
+using readytohelpapi.Notifications;
 using readytohelpapi.Occurrence.Models;
 using readytohelpapi.Occurrence.Services;
 using readytohelpapi.Report.Models;
 using readytohelpapi.ResponsibleEntity.Services;
 
+/// <summary>
+///  Implementation of the report service.
+/// </summary>
 public class ReportServiceImpl : IReportService
 {
     private readonly IReportRepository reportRepository;
     private readonly IOccurrenceService occurrenceService;
     private readonly IResponsibleEntityService responsibleEntityService;
-
+    private readonly INotifierClient notifierClient;
     private const double DefaultProximityRadiusMeters = 50d;
     private const int triggerActivate = 3;
 
-    public ReportServiceImpl(IReportRepository reportRepository, IOccurrenceService occurrenceService, IResponsibleEntityService responsibleEntityService)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ReportServiceImpl"/> class.
+    /// </summary>
+    /// <param name="reportRepository">The report repository.</param>
+    /// <param name="occurrenceService">The occurrence service.</param>
+    /// <param name="responsibleEntityService">The responsible entity service.</param>
+    /// <param name="notifierClient">The notifier client.</param>
+    public ReportServiceImpl(IReportRepository reportRepository, IOccurrenceService occurrenceService, IResponsibleEntityService responsibleEntityService, INotifierClient notifierClient)
     {
         this.reportRepository = reportRepository;
         this.occurrenceService = occurrenceService;
         this.responsibleEntityService = responsibleEntityService;
+        this.notifierClient = notifierClient;
     }
 
+    /// <summary>
+    /// Creates a new report
+    /// Triggers occurrence creation or update as needed.
+    /// Notiofies responsible entity when occurrence is activated.
+    /// </summary>
+    /// <param name="report">The report to create.</param>
+    /// <returns>The created report the associated occurrence, that has the responsible entity.</returns>
     public (Report report, Occurrence occurrence) Create(Report report)
     {
         if (report is null)
@@ -52,6 +71,19 @@ public class ReportServiceImpl : IReportService
                 duplicatedOccurence.Status == OccurrenceStatus.WAITING)
             {
                 duplicatedOccurence.Status = OccurrenceStatus.ACTIVE;
+
+                var reqDup = new NotificationRequest
+                {
+                    Type = responsibleEntity?.Type ?? report.Type.GetResponsibleEntityType(),
+                    EntityId = responsibleEntity?.Id,
+                    EntityName = responsibleEntity?.Name,
+                    OccurrenceId = duplicatedOccurence.Id,
+                    Title = report.Title,
+                    Latitude = report.Location.Latitude,
+                    Longitude = report.Location.Longitude,
+                    Message = $"Novo relatório para ocorrência existente ({duplicatedOccurence.Id})."
+                };
+                _ = notifierClient.NotifyForNMinutesAsync(reqDup, minutes: 5);
             }
 
             occurrenceService.Update(duplicatedOccurence);

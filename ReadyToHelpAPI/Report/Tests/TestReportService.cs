@@ -9,18 +9,30 @@ using readytohelpapi.Occurrence.Services;
 using readytohelpapi.Occurrence.Models;
 using readytohelpapi.GeoPoint.Models;
 using readytohelpapi.ResponsibleEntity.Services;
+using readytohelpapi.Notifications;
 
 public class TestReportService
 {
     private readonly Mock<IReportRepository> mockRepo = new();
     private readonly Mock<IOccurrenceService> mockOccSvc = new();
     private readonly Mock<IResponsibleEntityService> mockRespEntSvc = new();
+    private readonly Mock<INotifierClient> mockNotifier = new();
     private readonly IReportService service;
 
     public TestReportService()
     {
-        service = new ReportServiceImpl(mockRepo.Object, mockOccSvc.Object, mockRespEntSvc.Object);
+        mockNotifier
+            .Setup(n => n.NotifyForNMinutesAsync(It.IsAny<NotificationRequest>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        service = new ReportServiceImpl(
+            mockRepo.Object,
+            mockOccSvc.Object,
+            mockRespEntSvc.Object,
+            mockNotifier.Object
+        );
     }
+
 
     private static GeoPoint Pt(double lat = 41.3678, double lon = -8.2012) => new GeoPoint { Latitude = lat, Longitude = lon };
 
@@ -35,6 +47,7 @@ public class TestReportService
     {
         var r = ReportFixture.CreateOrUpdate(title: "", description: "d", userId: 1, location: Pt());
         Assert.Throws<ArgumentException>(() => service.Create(r));
+        mockNotifier.Verify(n => n.NotifyForNMinutesAsync(It.IsAny<NotificationRequest>(), It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -42,6 +55,7 @@ public class TestReportService
     {
         var r = ReportFixture.CreateOrUpdate(title: "t", description: "", userId: 1, location: Pt());
         Assert.Throws<ArgumentException>(() => service.Create(r));
+        mockNotifier.Verify(n => n.NotifyForNMinutesAsync(It.IsAny<NotificationRequest>(), It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -49,6 +63,7 @@ public class TestReportService
     {
         var r = ReportFixture.CreateOrUpdate(title: "t", description: "d", userId: 0, location: Pt());
         Assert.Throws<ArgumentException>(() => service.Create(r));
+        mockNotifier.Verify(n => n.NotifyForNMinutesAsync(It.IsAny<NotificationRequest>(), It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -65,6 +80,7 @@ public class TestReportService
         };
 
         Assert.Throws<ArgumentException>(() => service.Create(r));
+        mockNotifier.Verify(n => n.NotifyForNMinutesAsync(It.IsAny<NotificationRequest>(), It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -100,6 +116,8 @@ public class TestReportService
             Math.Abs(o.Location!.Latitude - input.Location!.Latitude) < 1e-9 &&
             Math.Abs(o.Location!.Longitude - input.Location!.Longitude) < 1e-9
         )), Times.Once);
+
+        mockNotifier.Verify(n => n.NotifyForNMinutesAsync(It.IsAny<NotificationRequest>(), It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -134,6 +152,10 @@ public class TestReportService
 
         mockOccSvc.Verify(s => s.Update(It.Is<Occurrence>(o => o.Id == existingOcc.Id && o.ReportCount == 2)), Times.Once);
         mockOccSvc.Verify(s => s.Create(It.IsAny<Occurrence>()), Times.Never);
+
+        mockNotifier.Verify(n => n.NotifyForNMinutesAsync(It.IsAny<NotificationRequest>(), It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
+
+        mockNotifier.Verify(n => n.NotifyForNMinutesAsync(It.IsAny<NotificationRequest>(), It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -166,6 +188,15 @@ public class TestReportService
         Assert.Equal(OccurrenceStatus.ACTIVE, occ.Status);
         mockOccSvc.Verify(s => s.Update(It.Is<Occurrence>(o => o.Id == 22 && o.Status == OccurrenceStatus.ACTIVE && o.ReportCount == 3)), Times.Once);
         mockOccSvc.Verify(s => s.Create(It.IsAny<Occurrence>()), Times.Never);
+
+        mockNotifier.Verify(n => n.NotifyForNMinutesAsync(
+            It.Is<NotificationRequest>(r =>
+                r.OccurrenceId == existingOcc.Id &&
+                r.Title == input.Title &&
+                Math.Abs(r.Latitude - input.Location!.Latitude) < 1e-9 &&
+                Math.Abs(r.Longitude - input.Location!.Longitude) < 1e-9),
+            It.Is<int>(m => m == 5),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -196,5 +227,7 @@ public class TestReportService
         Assert.Equal(6, occ.ReportCount);
         Assert.Equal(OccurrenceStatus.ACTIVE, occ.Status);
         mockOccSvc.Verify(s => s.Update(It.Is<Occurrence>(o => o.Id == 33 && o.ReportCount == 6 && o.Status == OccurrenceStatus.ACTIVE)), Times.Once);
+
+        mockNotifier.Verify(n => n.NotifyForNMinutesAsync(It.IsAny<NotificationRequest>(), It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }

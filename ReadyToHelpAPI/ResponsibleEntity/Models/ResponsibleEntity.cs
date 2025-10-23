@@ -10,5 +10,5 @@ public class ResponsibleEntity
     public string Address { get; set; }
     public int ContactPhone { get; set; }
     public ResponsibleEntityType Type { get; set; }
-    public Polygon? GeoArea { get; set; }
+    public Geometry? GeoArea { get; set; }
 }
