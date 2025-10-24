@@ -48,14 +48,33 @@ public class OccurrenceApiController : ControllerBase
     /// <summary>
     /// Gets an occurrence by its ID.
     /// </summary>
+    [Authorize]
     [HttpGet("{id:int}")]
-    public ActionResult GetById(int id)
+    [HttpGet("/api/occurrences/{id:int}")]
+    public ActionResult<OccurrenceDetailsDto> GetById(int id)
     {
         try
         {
-            var occurrence = occurrenceService.GetOccurrenceById(id);
-            if (occurrence == null) return NotFound();
-            return Ok(occurrence);
+            var o = occurrenceService.GetOccurrenceById(id);
+            if (o == null) return NotFound();
+
+            var dto = new OccurrenceDetailsDto
+            {
+                Id = o.Id,
+                Title = o.Title,
+                Description = o.Description,
+                Type = o.Type,
+                Status = o.Status,
+                Priority = o.Priority,
+                Latitude = o.Location?.Latitude ?? 0,
+                Longitude = o.Location?.Longitude ?? 0,
+                CreationDateTime = o.CreationDateTime,
+                EndDateTime = o.EndDateTime == default ? null : o.EndDateTime,
+                ResponsibleEntityId = o.ResponsibleEntityId > 0 ? o.ResponsibleEntityId : null,
+                ReportCount = o.ReportCount
+            };
+
+            return Ok(dto);
         }
         catch (ArgumentException ex)
         {

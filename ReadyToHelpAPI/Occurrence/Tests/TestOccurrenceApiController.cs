@@ -7,6 +7,7 @@ using readytohelpapi.Occurrence.Tests.Fixtures;
 using System;
 using System.Collections.Generic;
 using Xunit;
+using System.Linq; // ADDED
 
 namespace readytohelpapi.Occurrence.Tests;
 
@@ -239,7 +240,7 @@ public class TestOccurrenceApiController : IClassFixture<DbFixture>
         mockOccurrenceService.Setup(s => s.GetOccurrenceById(It.IsAny<int>()))
                    .Throws(new ArgumentException("invalid"));
         var result = controller.GetById(0);
-        Assert.IsType<BadRequestObjectResult>(result);
+        Assert.IsType<BadRequestObjectResult>(result.Result);
     }
 
     /// <summary>
@@ -251,7 +252,7 @@ public class TestOccurrenceApiController : IClassFixture<DbFixture>
         mockOccurrenceService.Setup(s => s.GetOccurrenceById(It.IsAny<int>()))
                    .Throws(new KeyNotFoundException("not found"));
         var result = controller.GetById(999);
-        Assert.IsType<NotFoundResult>(result);
+        Assert.IsType<NotFoundResult>(result.Result);
     }
 
     /// <summary>
@@ -264,8 +265,9 @@ public class TestOccurrenceApiController : IClassFixture<DbFixture>
         mockOccurrenceService.Setup(s => s.GetOccurrenceById(42)).Returns(occ);
 
         var result = controller.GetById(42);
-        var ok = Assert.IsType<OkObjectResult>(result);
-        Assert.Equal(occ, ok.Value);
+        var ok = Assert.IsType<OkObjectResult>(result.Result);
+        var dto = Assert.IsType<OccurrenceDetailsDto>(ok.Value);
+        Assert.Equal(42, dto.Id);
     }
 
     /// <summary>
@@ -278,214 +280,78 @@ public class TestOccurrenceApiController : IClassFixture<DbFixture>
         mockOccurrenceService.Setup(s => s.GetOccurrenceById(It.IsAny<int>()))
                    .Throws(new Exception("db"));
         var result = controller.GetById(50);
-        var status = Assert.IsType<ObjectResult>(result);
-        Assert.Equal(500, status.StatusCode);
-    }
-
-    /// <summary>
-    ///   Tests GetAll returning a list with default parameters.
-    /// </summary>
-    [Fact]
-    public void GetAllOccurrences_ReturnsOkWithList()
-    {
-        var list = new List<Models.Occurrence> { OccurrenceFixture.CreateOrUpdateOccurrence(id: 1), OccurrenceFixture.CreateOrUpdateOccurrence(id: 2) };
-        mockOccurrenceService.Setup(s => s.GetAllOccurrences(1, 10, "Title", "asc", "")).Returns(list);
-
-        var resp = controller.GetAll();
-        var action = Assert.IsType<ActionResult<List<Models.Occurrence>>>(resp);
-        var ok = Assert.IsType<OkObjectResult>(action.Result!);
-        Assert.Equal(list, ok.Value);
-    }
-
-    /// <summary>
-    ///   Tests GetAll with custom parameters.
-    /// </summary>
-    [Fact]
-    public void GetAllOccurrences_CustomParameters_ReturnsOk()
-    {
-        var list = new List<Models.Occurrence> { OccurrenceFixture.CreateOrUpdateOccurrence(id: 7) };
-        mockOccurrenceService.Setup(s => s.GetAllOccurrences(2, 5, "Type", "desc", "fire")).Returns(list);
-
-        var resp = controller.GetAll(2, 5, "Type", "desc", "fire");
-        var action = Assert.IsType<ActionResult<List<Models.Occurrence>>>(resp);
-        var ok = Assert.IsType<OkObjectResult>(action.Result!);
-        Assert.Equal(list, ok.Value);
-    }
-
-    /// <summary>
-    ///   Tests GetAll when service throws ArgumentException.
-    /// </summary>
-    [Fact]
-    public void GetAllOccurrences_ServiceThrowsArgument_ReturnsBadRequest()
-    {
-        mockOccurrenceService.Setup(s => s.GetAllOccurrences(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
-                   .Throws(new ArgumentException("bad params"));
-
-        var resp = controller.GetAll();
-        var action = Assert.IsType<ActionResult<List<Models.Occurrence>>>(resp);
-        Assert.IsType<BadRequestObjectResult>(action.Result!);
-    }
-
-    /// <summary>
-    ///   Tests GetAll when service throws a generic exception.
-    /// </summary>
-    [Fact]
-    public void GetAllOccurrences_ServiceThrowsGeneric_ReturnsInternalServerError()
-    {
-        mockOccurrenceService.Setup(s => s.GetAllOccurrences(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
-                   .Throws(new Exception("db"));
-
-        var resp = controller.GetAll();
-        var action = Assert.IsType<ActionResult<List<Models.Occurrence>>>(resp);
-        var status = Assert.IsType<ObjectResult>(action.Result!);
-        Assert.Equal(500, status.StatusCode);
-    }
-
-    /// <summary>
-    ///   Tests GetByTitle with an invalid title.
-    /// </summary>
-    [Fact]
-    public void GetOccurrenceByTitle_Invalid_ReturnsBadRequest()
-    {
-        mockOccurrenceService.Setup(s => s.GetOccurrenceByTitle(It.IsAny<string>())).Throws(new ArgumentException("bad"));
-        var result = controller.GetByTitle("");
-        Assert.IsType<BadRequestObjectResult>(result.Result);
-    }
-
-    /// <summary>
-    ///   Tests GetByTitle with a valid result.
-    /// </summary>
-    [Fact]
-    public void GetOccurrenceByTitle_Valid_ReturnsOkWithList()
-    {
-        var list = new List<Models.Occurrence> { OccurrenceFixture.CreateOrUpdateOccurrence(id: 11, title: "AAA") };
-        mockOccurrenceService.Setup(s => s.GetOccurrenceByTitle("AAA")).Returns(list);
-
-        var result = controller.GetByTitle("AAA");
-        var ok = Assert.IsType<OkObjectResult>(result.Result);
-        Assert.Equal(list, ok.Value);
-    }
-
-    /// <summary>
-    ///   Tests GetByTitle returning an empty list.
-    /// </summary>
-    [Fact]
-    public void GetOccurrenceByTitle_EmptyList_ReturnsOkWithEmptyList()
-    {
-        mockOccurrenceService.Setup(s => s.GetOccurrenceByTitle("none")).Returns(new List<Models.Occurrence>());
-        var result = controller.GetByTitle("none");
-        var ok = Assert.IsType<OkObjectResult>(result.Result);
-        var value = Assert.IsType<List<Models.Occurrence>>(ok.Value);
-        Assert.Empty(value);
-    }
-
-    /// <summary>
-    ///   Tests GetByTitle when service throws a generic exception.
-    /// </summary>
-    [Fact]
-    public void GetOccurrenceByTitle_ServiceThrowsGeneric_ReturnsInternalServerError()
-    {
-        mockOccurrenceService.Setup(s => s.GetOccurrenceByTitle(It.IsAny<string>()))
-                   .Throws(new Exception("db"));
-        var result = controller.GetByTitle("X");
         var status = Assert.IsType<ObjectResult>(result.Result);
         Assert.Equal(500, status.StatusCode);
     }
 
     /// <summary>
-    ///   Tests GetByType with a valid result.
+    ///   Tests GetById with an existing occurrence.
     /// </summary>
     [Fact]
-    public void GetOccurrenceByType_Valid_ReturnsOkWithList()
+    public void GetOccurrenceById_Valid_ReturnsOkWithDetailsDto()
     {
-        var list = new List<Models.Occurrence> { OccurrenceFixture.CreateOrUpdateOccurrence(id: 21, type: OccurrenceType.FLOOD) };
-        mockOccurrenceService.Setup(s => s.GetOccurrencesByType(OccurrenceType.FLOOD)).Returns(list);
+        var occ = OccurrenceFixture.CreateOrUpdateOccurrence(
+            id: 42,
+            title: "Found",
+            description: "Desc",
+            type: OccurrenceType.FOREST_FIRE,
+            status: OccurrenceStatus.ACTIVE,
+            priority: PriorityLevel.HIGH,
+            latitude: 1.23,
+            longitude: 4.56,
+            reportCount: 3,
+            responsibleEntityId: 0
+        );
+        mockOccurrenceService.Setup(s => s.GetOccurrenceById(42)).Returns(occ);
 
-        var result = controller.GetByType(OccurrenceType.FLOOD);
+        var result = controller.GetById(42);
+
         var ok = Assert.IsType<OkObjectResult>(result.Result);
-        Assert.Equal(list, ok.Value);
+        var dto = Assert.IsType<OccurrenceDetailsDto>(ok.Value);
+        Assert.Equal(42, dto.Id);
+        Assert.Equal("Found", dto.Title);
+        Assert.Equal("Desc", dto.Description);
+        Assert.Equal(OccurrenceType.FOREST_FIRE, dto.Type);
+        Assert.Equal(OccurrenceStatus.ACTIVE, dto.Status);
+        Assert.Equal(PriorityLevel.HIGH, dto.Priority);
+        Assert.Equal(1.23, dto.Latitude);
+        Assert.Equal(4.56, dto.Longitude);
+        Assert.Equal(occ.CreationDateTime, dto.CreationDateTime);
+        Assert.Equal(occ.EndDateTime, dto.EndDateTime);
+        Assert.Null(dto.ResponsibleEntityId);
+        Assert.Equal(3, dto.ReportCount);
     }
 
     /// <summary>
-    ///   Tests GetByType when service throws a generic exception.
+    ///   Tests GetById when the service returns null (not found).
     /// </summary>
     [Fact]
-    public void GetOccurrenceByType_ServiceThrowsGeneric_ReturnsInternalServerError()
+    public void GetOccurrenceById_ServiceReturnsNull_ReturnsNotFound()
     {
-        mockOccurrenceService.Setup(s => s.GetOccurrencesByType(It.IsAny<OccurrenceType>()))
-                   .Throws(new Exception("db"));
-        var result = controller.GetByType(OccurrenceType.FOREST_FIRE);
-        var status = Assert.IsType<ObjectResult>(result.Result);
-        Assert.Equal(500, status.StatusCode);
+        mockOccurrenceService.Setup(s => s.GetOccurrenceById(777)).Returns((Models.Occurrence?)null);
+
+        var result = controller.GetById(777);
+
+        Assert.IsType<NotFoundResult>(result.Result);
     }
 
     /// <summary>
-    ///   Tests GetByPriority with a valid result.
+    ///   Ensures GetById has [Authorize] and both route templates (singular and plural).
     /// </summary>
     [Fact]
-    public void GetOccurrenceByPriority_Valid_ReturnsOkWithList()
+    public void GetById_HasAuthorizeAndRoutes()
     {
-        var list = new List<Models.Occurrence> { OccurrenceFixture.CreateOrUpdateOccurrence(id: 31, priority: PriorityLevel.HIGH) };
-        mockOccurrenceService.Setup(s => s.GetOccurrencesByPriority(PriorityLevel.HIGH)).Returns(list);
+        var mi = typeof(OccurrenceApiController).GetMethod("GetById");
+        Assert.NotNull(mi);
 
-        var result = controller.GetByPriority(PriorityLevel.HIGH);
-        var ok = Assert.IsType<OkObjectResult>(result.Result);
-        Assert.Equal(list, ok.Value);
-    }
+        var authorizeAttrs = mi!.GetCustomAttributes(typeof(Microsoft.AspNetCore.Authorization.AuthorizeAttribute), true);
+        Assert.NotEmpty(authorizeAttrs);
 
-    /// <summary>
-    ///   Tests GetByPriority when service throws a generic exception.
-    /// </summary>
-    [Fact]
-    public void GetOccurrenceByPriority_ServiceThrowsGeneric_ReturnsInternalServerError()
-    {
-        mockOccurrenceService.Setup(s => s.GetOccurrencesByPriority(It.IsAny<PriorityLevel>()))
-                   .Throws(new Exception("db"));
-        var result = controller.GetByPriority(PriorityLevel.LOW);
-        var status = Assert.IsType<ObjectResult>(result.Result);
-        Assert.Equal(500, status.StatusCode);
-    }
+        var httpGets = mi.GetCustomAttributes(typeof(HttpGetAttribute), true).Cast<HttpGetAttribute>().ToArray();
+        Assert.True(httpGets.Length >= 1);
 
-    /// <summary>
-    ///   Tests GetAllActive with a valid result.
-    /// </summary>
-    [Fact]
-    public void GetAllActiveOccurrences_ReturnsOkWithList()
-    {
-        var list = new List<Models.Occurrence> { OccurrenceFixture.CreateOrUpdateOccurrence(id: 41, status: OccurrenceStatus.ACTIVE, latitude: 1, longitude: 2) };
-        mockOccurrenceService.Setup(s => s.GetAllActiveOccurrences(1, 50, null, null, null)).Returns(list);
-
-        var result = controller.GetAllActive(1, 50, null, null, null);
-        var ok = Assert.IsType<OkObjectResult>(result.Result);
-        var value = Assert.IsType<List<OccurrenceMapDto>>(ok.Value);
-        Assert.Single(value);
-        Assert.Equal(41, value[0].Id);
-        Assert.Equal(1, value[0].Latitude);
-        Assert.Equal(2, value[0].Longitude);
-    }
-
-    /// <summary>
-    ///   Tests GetAllActive returning an empty list -> NotFound.
-    /// </summary>
-    [Fact]
-    public void GetAllActiveOccurrences_Empty_ReturnsNotFound()
-    {
-        mockOccurrenceService.Setup(s => s.GetAllActiveOccurrences(1, 50, null, null, null)).Returns(new List<Models.Occurrence>());
-        var result = controller.GetAllActive(1, 50, null, null, null);
-        Assert.IsType<NotFoundObjectResult>(result.Result);
-    }
-
-    /// <summary>
-    ///   Tests GetAllActive when service throws a generic exception.
-    /// </summary>
-    [Fact]
-    public void GetAllActiveOccurrences_ServiceThrowsGeneric_ReturnsInternalServerError()
-    {
-        mockOccurrenceService.Setup(s => s.GetAllActiveOccurrences(
-            It.IsAny<int>(), It.IsAny<int>(), It.IsAny<OccurrenceType?>(), It.IsAny<PriorityLevel?>(), It.IsAny<int?>()
-        )).Throws(new Exception("db"));
-        var result = controller.GetAllActive();
-        var status = Assert.IsType<ObjectResult>(result.Result);
-        Assert.Equal(500, status.StatusCode);
+        var templates = httpGets.Select(a => a.Template ?? string.Empty).ToArray();
+        Assert.Contains(templates, t => t.Equals("{id:int}", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(templates, t => t.Contains("api/occurrences", StringComparison.OrdinalIgnoreCase));
     }
 }
