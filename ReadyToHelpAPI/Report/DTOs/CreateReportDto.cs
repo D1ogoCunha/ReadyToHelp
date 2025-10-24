@@ -2,6 +2,9 @@ namespace readytohelpapi.Report.DTOs;
 
 using readytohelpapi.Occurrence.Models;
 
+/// <summary>
+/// Data transfer object for creating a report.
+/// </summary>
 public class CreateReportDto
 {
     public string Title { get; set; } = string.Empty;
