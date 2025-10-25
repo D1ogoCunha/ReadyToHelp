@@ -6,13 +6,13 @@ Aplicação para reportar ocorrências (várias categorias) e permitir que utili
 - Backend: .NET 8+ (ASP.NET Core) + Entity Framework Core
 - Web: Angular
 - Mobile: Kotlin (Android)
-- BD: SQL Server / PostgreSQL (configurável)
+- Base de Dados: PostgreSQL 
 
 ## Pré-requisitos
 - Git
 - .NET SDK (8+)
 - dotnet-ef
-- SQL Server / PostgreSQL ou Docker
+- PostgreSQL ou Docker
 - Node.js + npm + Angular CLI 
 - Android Studio 
 
@@ -28,35 +28,3 @@ git push -uf origin main
 git clone https://gitlab.com/grupo_07-lds-2526/lds_25_26.git
 cd readytohelp
 ```
-
-## Backend — passos rápidos (Windows)
-1. Entrar na pasta do backend:
-```bash
-cd backend
-```
-2. Restaurar dependências e preparar ferramentas:
-```bash
-dotnet restore
-dotnet tool install --global dotnet-ef   # se necessário
-```
-3. Configurar a string de conexão
-- Editar appsettings.Development.json
-```json
-"ConnectionStrings": {
-  "DefaultConnection": "Host=localhost;Database=readytohelp;Username=postgres;Password=postgres"
-}
-```
-4. Criar e aplicar migrations:
-```bash
-dotnet ef migrations add InitialCreate --project ReadyToHelp.Api --startup-project ReadyToHelp.Api
-dotnet ef database update --project ReadyToHelp.Api --startup-project ReadyToHelp.Api
-```
-5. Executar API:
-```bash
-dotnet run --project ReadyToHelp.Api
-```
-- Swagger: http://localhost:5000/swagger (ou porta indicada no output)
-
-6. Testes:
-```bash
-dotnet test

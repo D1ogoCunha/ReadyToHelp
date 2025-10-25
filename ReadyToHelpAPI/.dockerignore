@@ -1,0 +1,11 @@
+bin/
+obj/
+**/bin/
+**/obj/
+*.log
+.vs/
+Dockerfile
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
