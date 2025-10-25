@@ -23,10 +23,7 @@ public class OccurrenceRepository : IOccurrenceRepository
         occurrenceContext = context;
     }
 
-    /// <summary>
-    ///   Creates an occurrence in the repository.
-    /// </summary>
-    /// <param name="occurrence">The occurrence object to be created.</param>
+    /// <inheritdoc />
     public Occurrence Create(Occurrence occurrence)
     {
         if (occurrence == null) throw new ArgumentNullException(nameof(occurrence));
@@ -42,11 +39,7 @@ public class OccurrenceRepository : IOccurrenceRepository
         }
     }
 
-    /// <summary>
-    /// Updates an occurrence in the repository.
-    /// </summary>
-    /// <param name="occurrence">The occurrence to update.</param>
-    /// <returns>The updated occurrence entity.</returns>
+    /// <inheritdoc />
     public Occurrence Update(Occurrence occurrence)
     {
         if (occurrence == null)
@@ -68,11 +61,7 @@ public class OccurrenceRepository : IOccurrenceRepository
         }
     }
 
-    /// <summary>
-    /// Deletes an occurrence by ID.
-    /// </summary>
-    /// <param name="id">The occurrence ID.</param>
-    /// <returns>The deleted occurrence entity if found; otherwise, null.</returns>
+    /// <inheritdoc />
     public Occurrence? Delete(int id)
     {
         var existing = occurrenceContext.Occurrences.Find(id);
@@ -89,11 +78,7 @@ public class OccurrenceRepository : IOccurrenceRepository
         }
     }
 
-    /// <summary>
-    ///   Retrieves an occurrence by ID.
-    /// </summary>
-    /// <param name="id">The occurrence ID.</param>
-    /// <returns>The occurrence with the specified ID or null.</returns>
+    /// <inheritdoc />
     public Occurrence? GetOccurrenceById(int id)
     {
         if (id <= 0) return null;
@@ -102,11 +87,7 @@ public class OccurrenceRepository : IOccurrenceRepository
             .FirstOrDefault(o => o.Id == id);
     }
 
-    /// <summary>
-    ///   Retrieves occurrences by partial or full title.
-    /// </summary>
-    /// <param name="title">The title to search for.</param>
-    /// <returns>A list of occurrences that match the title.</returns>
+    /// <inheritdoc />
     public List<Occurrence> GetOccurrenceByTitle(string title)
     {
         if (string.IsNullOrWhiteSpace(title))
@@ -119,15 +100,7 @@ public class OccurrenceRepository : IOccurrenceRepository
             .ToList();
     }
 
-    /// <summary>
-    ///   Retrieves a paginated, filtered, and sorted list of occurrences.
-    /// </summary>
-    /// <param name="pageNumber">The page number for pagination.</param>
-    /// <param name="pageSize">The number of items per page.</param>
-    /// <param name="sortBy">The field by which to sort the results.</param
-    /// <param name="sortOrder">The sort order, either "asc" or "desc".</param>
-    /// <param name="filter">The string to filter the occurrence data.</param>  
-    /// <returns>A paginated, sorted, and filtered list of occurrences.</returns>
+    /// <inheritdoc />
     public List<Occurrence> GetAllOccurrences(int pageNumber, int pageSize, string sortBy, string sortOrder, string filter)
     {
         if (pageNumber <= 0) pageNumber = 1;
@@ -166,11 +139,7 @@ public class OccurrenceRepository : IOccurrenceRepository
         return query.Skip(skip).Take(pageSize).ToList();
     }
 
-    /// <summary>
-    ///    Retrieves all occurrences by type.
-    /// </summary>
-    /// <param name="type">The type of the occurrence.</param>
-    /// <returns>A list of occurrences of the specified type.</returns>
+    /// <inheritdoc />
     public List<Occurrence> GetOccurrencesByType(OccurrenceType type)
     {
         return occurrenceContext.Occurrences
@@ -179,11 +148,7 @@ public class OccurrenceRepository : IOccurrenceRepository
             .ToList();
     }
 
-    /// <summary>
-    ///   Retrieves all occurrences by the specified status.
-    /// </summary>
-    /// <param name="status">The status of the occurrences to retrieve.</param>
-    /// <returns>A list of occurrences with the specified status.</returns>
+    /// <inheritdoc />
     public List<Occurrence> GetOccurrencesByStatus(OccurrenceStatus status)
     {
         return occurrenceContext.Occurrences
@@ -192,11 +157,7 @@ public class OccurrenceRepository : IOccurrenceRepository
             .ToList();
     }
 
-    /// <summary>
-    ///   Retrieves all occurrences by the specified priority level.
-    /// </summary>
-    /// <param name="priority">The priority level of the occurrence.</param>
-    /// <returns>A list of occurrences of the specified priority level.</returns>
+    /// <inheritdoc />
     public List<Occurrence> GetOccurrencesByPriority(PriorityLevel priority)
     {
         return occurrenceContext.Occurrences
@@ -205,9 +166,7 @@ public class OccurrenceRepository : IOccurrenceRepository
             .ToList();
     }
 
-    /// <summary>
-    ///   Retrieves all occurrences with status ACTIVE or IN_PROGRESS with pagination and optional filters.
-    /// </summary>
+    /// <inheritdoc />
     public List<Occurrence> GetAllActiveOccurrences(int pageNumber, int pageSize, OccurrenceType? type, PriorityLevel? priority, int? responsibleEntityId)
     {
         if (pageNumber <= 0) pageNumber = 1;
@@ -235,11 +194,7 @@ public class OccurrenceRepository : IOccurrenceRepository
         return query.Skip(skip).Take(pageSize).ToList();
     }
 
-    /// <summary>
-    ///     Retrieves an occurrence by reportId.
-    /// </summary>
-    /// <param name="reportId">The report identifier.</param>
-    /// <returns>The occurrence with the specified reportId or null.</returns>
+    /// <inheritdoc />
     public Occurrence? GetByReportId(int reportId)
     {
         if (reportId <= 0) return null;

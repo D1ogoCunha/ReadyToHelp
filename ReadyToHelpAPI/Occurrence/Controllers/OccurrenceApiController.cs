@@ -16,6 +16,10 @@ public class OccurrenceApiController : ControllerBase
 {
     private readonly IOccurrenceService occurrenceService;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="OccurrenceApiController"/> class.
+    /// </summary>
+    /// <param name="occurrenceService">The occurrence service.</param>
     public OccurrenceApiController(IOccurrenceService occurrenceService)
     {
         this.occurrenceService = occurrenceService;
@@ -24,30 +28,34 @@ public class OccurrenceApiController : ControllerBase
     /// <summary>
     /// Creates a new occurrence. Only ADMIN or MANAGER can call.
     /// </summary>
-    //[Authorize(Roles = "ADMIN,MANAGER")]
+    /// <param name="occurrence">The occurrence to create.</param>
+    /// <returns>The created occurrence.</returns>
+    [Authorize(Roles = "ADMIN,MANAGER")]
     [HttpPost]
-    public ActionResult Create([FromBody] Occurrence occurrence)
+    public IActionResult Create([FromBody] Occurrence occurrence)
     {
         if (occurrence is null) return BadRequest(new { error = "Occurrence payload is required." });
 
         try
         {
-            var created = occurrenceService.Create(occurrence);
+            var created = occurrenceService.CreateAdminOccurrence(occurrence);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
         catch (ArgumentException ex)
         {
-            return BadRequest(new { error = ex.Message });
+            return BadRequest(ex.Message);
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { error = "internal_server_error", detail = ex.Message });
+            return StatusCode(500, ex.Message);
         }
     }
 
     /// <summary>
     /// Gets an occurrence by its ID.
     /// </summary>
+    /// <param name="id">The ID of the occurrence to retrieve.</param>
+    /// <returns>The occurrence details if found; otherwise, a NotFound result.</returns>
     [Authorize]
     [HttpGet("{id:int}")]
     [HttpGet("/api/occurrences/{id:int}")]
@@ -119,6 +127,8 @@ public class OccurrenceApiController : ControllerBase
     /// <summary>
     /// Gets occurrences by title.
     /// </summary>
+    /// <param name="title">The title to filter by.</param>
+    /// <returns>A list of occurrences with the specified title.</returns>
     [HttpGet("title/{title}")]
     public ActionResult<List<Occurrence>> GetByTitle(string title)
     {
@@ -140,6 +150,8 @@ public class OccurrenceApiController : ControllerBase
     /// <summary>
     /// Gets occurrences by type.
     /// </summary>
+    /// <param name="type">The type of occurrence to filter by.</param>
+    /// <returns>A list of occurrences of the specified type.</returns>
     [HttpGet("type/{type}")]
     public ActionResult<List<Occurrence>> GetByType(OccurrenceType type)
     {
@@ -157,6 +169,8 @@ public class OccurrenceApiController : ControllerBase
     /// <summary>
     /// Gets occurrences by priority.
     /// </summary>
+    /// <param name="priority">The priority level to filter by.</param>
+    /// <returns>A list of occurrences with the specified priority.</returns>
     [HttpGet("priority/{priority}")]
     public ActionResult<List<Occurrence>> GetByPriority(PriorityLevel priority)
     {
@@ -220,8 +234,9 @@ public class OccurrenceApiController : ControllerBase
 
 
     /// <summary>
-    /// Updates an occurrence by ID.
+    /// Updates an existing occurrence.
     /// </summary>
+    /// <param name="occurrence">The occurrence to update.</param>
     [HttpPut]
     [Route("")]
     public IActionResult Update([FromBody] Occurrence occurrence)

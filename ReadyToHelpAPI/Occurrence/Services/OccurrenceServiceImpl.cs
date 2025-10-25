@@ -1,28 +1,30 @@
 namespace readytohelpapi.Occurrence.Services;
 
 using readytohelpapi.Occurrence.Models;
+using readytohelpapi.ResponsibleEntity.Services;
 using System;
 using System.Collections.Generic;
 
 /// <summary>
-///    Implements the occurrence service operations.
+///    Implementation of the occurrence service operations.
 /// </summary>
 public class OccurrenceServiceImpl : IOccurrenceService
 {
     private readonly IOccurrenceRepository occurrenceRepository;
+    private readonly IResponsibleEntityService responsibleEntityService;
 
     /// <summary>
     ///   Initializes a new instance of the <see cref="OccurrenceServiceImpl"/> class.
     /// </summary>
     /// <param name="occurrenceRepository">The occurrence repository instance.</param>
-    public OccurrenceServiceImpl(IOccurrenceRepository occurrenceRepository)
+    /// <param name="responsibleEntityService">The responsible entity service instance.</param>
+    public OccurrenceServiceImpl(IOccurrenceRepository occurrenceRepository, IResponsibleEntityService responsibleEntityService)
     {
         this.occurrenceRepository = occurrenceRepository;
+        this.responsibleEntityService = responsibleEntityService;
     }
 
-    /// <summary>
-    ///  Creates an occurrence.
-    /// </summary>
+    /// <inheritdoc />
     public Occurrence Create(Occurrence occurrence)
     {
         if (occurrence == null)
@@ -66,9 +68,43 @@ public class OccurrenceServiceImpl : IOccurrenceService
         }
     }
 
-    /// <summary>
-    /// Updates an occurrence.
-    /// </summary>
+    /// <inheritdoc />
+    public Occurrence CreateAdminOccurrence(Occurrence occurrence)
+    {
+        if (occurrence == null)
+            throw new ArgumentNullException(nameof(occurrence));
+        if (string.IsNullOrWhiteSpace(occurrence.Title))
+            throw new ArgumentException("Occurrence title is required.", nameof(occurrence.Title));
+        if (string.IsNullOrWhiteSpace(occurrence.Description))
+            throw new ArgumentException("Occurrence description is required.", nameof(occurrence.Description));
+        if (occurrence.Location == null)
+            throw new ArgumentException("Occurrence location is required.", nameof(occurrence.Location));
+        if (!Enum.IsDefined(typeof(OccurrenceType), occurrence.Type))
+            throw new ArgumentOutOfRangeException(nameof(occurrence.Type), "Invalid occurrence type");
+        if (occurrence.ProximityRadius <= 0)
+            throw new ArgumentException("Proximity radius must be greater than zero.", nameof(occurrence.ProximityRadius));
+
+        var responsibleEntity = responsibleEntityService.FindResponsibleEntity(
+            occurrence.Type,
+            occurrence.Location.Latitude,
+            occurrence.Location.Longitude
+        );
+        occurrence.ResponsibleEntityId = responsibleEntity?.Id ?? 0;
+
+        occurrence.ReportId = null;
+        occurrence.ReportCount = 0;
+
+        try
+        {
+            return this.occurrenceRepository.Create(occurrence);
+        }
+        catch (Exception e)
+        {
+            throw new InvalidOperationException("An error occurred while trying to create an occurrence.", e);
+        }
+    }
+
+    /// <inheritdoc />
     public Occurrence Update(Occurrence occurrence)
     {
         if (occurrence == null)
@@ -139,9 +175,7 @@ public class OccurrenceServiceImpl : IOccurrenceService
         }
     }
 
-    /// <summary>
-    /// Deletes an occurrence.
-    /// </summary>
+    /// <inheritdoc />
     public Occurrence Delete(int id)
     {
         if (id <= 0)
@@ -163,9 +197,7 @@ public class OccurrenceServiceImpl : IOccurrenceService
         }
     }
 
-    /// <summary>
-    ///   Retrieves an occurrence by ID.
-    /// </summary>
+    /// <inheritdoc />
     public Occurrence GetOccurrenceById(int id)
     {
         if (id <= 0)
@@ -178,9 +210,7 @@ public class OccurrenceServiceImpl : IOccurrenceService
         return occurrence;
     }
 
-    /// <summary>
-    ///  Retrieves occurrences by title.
-    /// </summary>
+    /// <inheritdoc />
     public List<Occurrence> GetOccurrenceByTitle(string title)
     {
         if (string.IsNullOrWhiteSpace(title))
@@ -189,9 +219,7 @@ public class OccurrenceServiceImpl : IOccurrenceService
         return this.occurrenceRepository.GetOccurrenceByTitle(title);
     }
 
-    /// <summary>
-    ///   Retrieves a paginated, filtered, and sorted list of occurrences.
-    /// </summary>
+    /// <inheritdoc />
     public List<Occurrence> GetAllOccurrences(int pageNumber, int pageSize, string sortBy, string sortOrder, string filter)
     {
         if (string.IsNullOrEmpty(sortBy))
@@ -217,17 +245,13 @@ public class OccurrenceServiceImpl : IOccurrenceService
         }
     }
 
-    /// <summary>
-    ///   Retrieves occurrences by type.
-    /// </summary>
+    /// <inheritdoc />
     public List<Occurrence> GetOccurrencesByType(OccurrenceType type)
     {
         return this.occurrenceRepository.GetOccurrencesByType(type);
     }
 
-    /// <summary>
-    ///  Retrieves all active occurrences.
-    /// </summary>
+    /// <inheritdoc />
     public List<Occurrence> GetAllActiveOccurrences(int pageNumber, int pageSize, OccurrenceType? type, PriorityLevel? priority, int? responsibleEntityId)
     {
         if (pageNumber <= 0)
@@ -244,9 +268,7 @@ public class OccurrenceServiceImpl : IOccurrenceService
         return occurrenceRepository.GetAllActiveOccurrences(pageNumber, pageSize, type, priority, responsibleEntityId);
     }
 
-    /// <summary>
-    ///  Retrieves occurrences by priority level.
-    /// </summary>
+    /// <inheritdoc />
     public List<Occurrence> GetOccurrencesByPriority(PriorityLevel priority)
     {
         return this.occurrenceRepository.GetOccurrencesByPriority(priority);

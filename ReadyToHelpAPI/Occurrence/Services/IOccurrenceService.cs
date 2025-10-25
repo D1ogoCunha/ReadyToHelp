@@ -16,6 +16,13 @@ public interface IOccurrenceService
     Occurrence Create(Occurrence occurrence);
 
     /// <summary>
+    ///     Creates an occurrence by an admin or manager.
+    /// </summary>
+    /// <param name="occurrence">The occurrence object to be created.</param>
+    /// <returns>The created occurrence entity.</returns>
+    Occurrence CreateAdminOccurrence(Occurrence occurrence);
+
+    /// <summary>
     ///     Updates an occurrence.
     /// </summary>
     /// <param name="occurrence">The occurrence object to be updated.</param>

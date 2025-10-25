@@ -7,6 +7,7 @@ using Xunit;
 using readytohelpapi.Common.Data;
 using readytohelpapi.Report.Tests.Fixtures;
 using readytohelpapi.User.Tests.Fixtures;
+using readytohelpapi.ResponsibleEntity.Models;
 
 /// <summary>
 ///  This class contains unit tests for the OccurrenceRepository.
@@ -17,6 +18,7 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
     private readonly AppDbContext _occurrenceContext;
     private readonly IOccurrenceRepository _occurrenceRepository;
     private readonly int defaultReportId;
+    private readonly int defaultResponsibleEntityId;
 
     /// <summary>
     ///  Initializes a new instance of the <see cref="TestOccurrenceRepositoryTest"/> class.
@@ -27,10 +29,11 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
         this.fixture.ResetDatabase();
         _occurrenceContext = this.fixture.Context;
         _occurrenceRepository = new OccurrenceRepository(_occurrenceContext);
-        defaultReportId = CreateHelper();
+        defaultReportId = CreateReportHelper();
+        defaultResponsibleEntityId = CreateResponsibleEntityHelper();
     }
 
-    private int CreateHelper()
+    private int CreateReportHelper()
     {
         var user = UserFixture.CreateOrUpdateUser(
             email: $"test-{Guid.NewGuid():N}@example.com"
@@ -41,7 +44,23 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
         var r = ReportFixture.CreateOrUpdate();
         _occurrenceContext.Reports.Add(r);
         _occurrenceContext.SaveChanges();
+
         return r.Id;
+    }
+
+    private int CreateResponsibleEntityHelper()
+    {
+        var re = new ResponsibleEntity
+        {
+            Name = $"Test RE {Guid.NewGuid():N}",
+            Email = "re@example.com",
+            Address = "addr",
+            ContactPhone = 123456789,
+            Type = ResponsibleEntityType.INEM
+        };
+        _occurrenceContext.Set<ResponsibleEntity>().Add(re);
+        _occurrenceContext.SaveChanges();
+        return re.Id;
     }
 
     /// <summary>
@@ -59,6 +78,7 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
             ProximityRadius = 500,
             Status = OccurrenceStatus.ACTIVE,
             ReportId = defaultReportId,
+            ResponsibleEntityId = defaultResponsibleEntityId,
             Location = new GeoPointModel { Latitude = 40.123, Longitude = -8.456 }
         };
 
@@ -94,7 +114,7 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
             ProximityRadius = 100,
             ReportCount = 0,
             ReportId = null,
-            ResponsibleEntityId = 0,
+            ResponsibleEntityId = defaultResponsibleEntityId,
             Location = new GeoPointModel { Latitude = 40.0, Longitude = -8.0 }
         };
 
@@ -120,6 +140,7 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
             ProximityRadius = 100,
             Status = OccurrenceStatus.ACTIVE,
             ReportId = defaultReportId,
+            ResponsibleEntityId = defaultResponsibleEntityId,
             Location = new GeoPointModel { Latitude = 40.1, Longitude = -8.4 }
         };
         _occurrenceContext.Occurrences.Add(o);
@@ -176,6 +197,7 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
             ProximityRadius = 5,
             Status = OccurrenceStatus.ACTIVE,
             ReportId = defaultReportId,
+            ResponsibleEntityId = defaultResponsibleEntityId,
             Location = new GeoPointModel { Latitude = 40.2, Longitude = -8.5 }
         };
         var o2 = new Models.Occurrence
@@ -187,6 +209,7 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
             ProximityRadius = 5,
             Status = OccurrenceStatus.ACTIVE,
             ReportId = defaultReportId,
+            ResponsibleEntityId = defaultResponsibleEntityId,
             Location = new GeoPointModel { Latitude = 40.3, Longitude = -8.6 }
         };
         _occurrenceContext.Occurrences.AddRange(o1, o2);
@@ -243,6 +266,7 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
             ProximityRadius = 5,
             Status = OccurrenceStatus.ACTIVE,
             ReportId = defaultReportId,
+            ResponsibleEntityId = defaultResponsibleEntityId,
             Location = new GeoPointModel { Latitude = 41, Longitude = -8 }
         };
         _occurrenceContext.Occurrences.Add(o);
@@ -270,6 +294,7 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
                 ProximityRadius = 10,
                 Status = OccurrenceStatus.ACTIVE,
                 ReportId = defaultReportId,
+                ResponsibleEntityId = defaultResponsibleEntityId,
                 Location = new GeoPointModel { Latitude = 40.0, Longitude = -8.0 }
             },
             new Models.Occurrence
@@ -281,6 +306,7 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
                 ProximityRadius = 10,
                 Status = OccurrenceStatus.ACTIVE,
                 ReportId = defaultReportId,
+                ResponsibleEntityId = defaultResponsibleEntityId,
                 Location = new GeoPointModel { Latitude = 40.0, Longitude = -8.1 }
             },
             new Models.Occurrence
@@ -292,6 +318,7 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
                 ProximityRadius = 10,
                 Status = OccurrenceStatus.ACTIVE,
                 ReportId = defaultReportId,
+                ResponsibleEntityId = defaultResponsibleEntityId,
                 Location = new GeoPointModel { Latitude = 40.0, Longitude = -8.2 }
             }
         );
@@ -322,6 +349,7 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
                 ProximityRadius = 10,
                 Status = OccurrenceStatus.ACTIVE,
                 ReportId = defaultReportId,
+                ResponsibleEntityId = defaultResponsibleEntityId,
                 Location = new GeoPointModel { Latitude = 40.0, Longitude = -8.0 }
             },
             new Models.Occurrence
@@ -333,6 +361,7 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
                 ProximityRadius = 10,
                 Status = OccurrenceStatus.ACTIVE,
                 ReportId = defaultReportId,
+                ResponsibleEntityId = defaultResponsibleEntityId,
                 Location = new GeoPointModel { Latitude = 40.0, Longitude = -8.0 }
             }
         );
@@ -350,7 +379,7 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
     [Fact]
     public void GetAllOccurrences_UnknownSortBy_DefaultsToId()
     {
-        var a = new Models.Occurrence
+        var a = new Occurrence
         {
             Title = "A",
             Description = "a",
@@ -359,9 +388,10 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
             ProximityRadius = 10,
             Status = OccurrenceStatus.ACTIVE,
             ReportId = defaultReportId,
+            ResponsibleEntityId = defaultResponsibleEntityId,
             Location = new GeoPointModel { Latitude = 39.9, Longitude = -8.0 }
         };
-        var b = new Models.Occurrence
+        var b = new Occurrence
         {
             Title = "B",
             Description = "b",
@@ -370,6 +400,7 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
             ProximityRadius = 10,
             Status = OccurrenceStatus.ACTIVE,
             ReportId = defaultReportId,
+            ResponsibleEntityId = defaultResponsibleEntityId,
             Location = new GeoPointModel { Latitude = 39.9, Longitude = -8.1 }
         };
         _occurrenceContext.Occurrences.AddRange(a, b);
@@ -401,6 +432,7 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
                 ProximityRadius = 1,
                 Status = OccurrenceStatus.ACTIVE,
                 ReportId = defaultReportId,
+                ResponsibleEntityId = defaultResponsibleEntityId,
                 Location = new GeoPointModel { Latitude = 40.0 + i * 0.001, Longitude = -8.0 }
             });
         }
@@ -421,7 +453,7 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
     public void GetOccurrencesByType_ReturnsMatchingType()
     {
         _occurrenceContext.Occurrences.AddRange(
-            new Models.Occurrence
+            new Occurrence
             {
                 Title = "Flood A",
                 Description = "d",
@@ -430,9 +462,10 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
                 ProximityRadius = 10,
                 Status = OccurrenceStatus.ACTIVE,
                 ReportId = defaultReportId,
+                ResponsibleEntityId = defaultResponsibleEntityId,
                 Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
             },
-            new Models.Occurrence
+            new Occurrence
             {
                 Title = "Fire B",
                 Description = "d",
@@ -441,6 +474,7 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
                 ProximityRadius = 10,
                 Status = OccurrenceStatus.ACTIVE,
                 ReportId = defaultReportId,
+                ResponsibleEntityId = defaultResponsibleEntityId,
                 Location = new GeoPointModel { Latitude = 41, Longitude = -8 }
             }
         );
@@ -467,6 +501,7 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
             ProximityRadius = 10,
             Status = OccurrenceStatus.ACTIVE,
             ReportId = defaultReportId,
+            ResponsibleEntityId = defaultResponsibleEntityId,
             Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
         });
         _occurrenceContext.SaveChanges();
@@ -492,6 +527,7 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
             ProximityRadius = 10,
             Status = OccurrenceStatus.ACTIVE,
             ReportId = defaultReportId,
+            ResponsibleEntityId = defaultResponsibleEntityId,
             Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
         });
         _occurrenceContext.SaveChanges();
@@ -511,7 +547,7 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
     public void GetOccurrencesByPriority_ReturnsMatchingPriority()
     {
         _occurrenceContext.Occurrences.AddRange(
-            new Models.Occurrence
+            new Occurrence
             {
                 Title = "Low P",
                 Description = "d",
@@ -520,9 +556,10 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
                 ProximityRadius = 10,
                 Status = OccurrenceStatus.ACTIVE,
                 ReportId = defaultReportId,
+                ResponsibleEntityId = defaultResponsibleEntityId,
                 Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
             },
-            new Models.Occurrence
+            new Occurrence
             {
                 Title = "High P",
                 Description = "d",
@@ -531,6 +568,7 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
                 ProximityRadius = 10,
                 Status = OccurrenceStatus.ACTIVE,
                 ReportId = defaultReportId,
+                ResponsibleEntityId = defaultResponsibleEntityId,
                 Location = new GeoPointModel { Latitude = 41, Longitude = -8 }
             }
         );
@@ -548,7 +586,7 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
     [Fact]
     public void GetByReportId_ShouldReturnOccurrence_WhenExists()
     {
-        var specificReportId = CreateHelper();
+        var specificReportId = CreateReportHelper();
 
         var created = new Occurrence
         {
@@ -559,6 +597,7 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
             ProximityRadius = 10,
             Status = OccurrenceStatus.ACTIVE,
             ReportId = specificReportId,
+            ResponsibleEntityId = defaultResponsibleEntityId,
             Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
         };
         _occurrenceContext.Occurrences.Add(created);
@@ -605,6 +644,7 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
             ProximityRadius = 10,
             Status = OccurrenceStatus.ACTIVE,
             ReportId = defaultReportId,
+            ResponsibleEntityId = defaultResponsibleEntityId,
             Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
         };
         _occurrenceContext.Occurrences.Add(o);
@@ -668,6 +708,7 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
             ProximityRadius = 10,
             Status = OccurrenceStatus.ACTIVE,
             ReportId = defaultReportId,
+            ResponsibleEntityId = defaultResponsibleEntityId,
             Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
         };
         _occurrenceContext.Occurrences.Add(o);

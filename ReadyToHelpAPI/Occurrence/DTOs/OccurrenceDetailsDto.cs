@@ -1,5 +1,8 @@
 namespace readytohelpapi.Occurrence.Models;
 
+/// <summary>
+///  Data Transfer Object for detailed occurrence information.
+/// </summary>
 public class OccurrenceDetailsDto
 {
     public int Id { get; set; }

@@ -76,11 +76,11 @@ public class AppDbContext : DbContext
                   .OnDelete(DeleteBehavior.SetNull)
                   .HasConstraintName("FK_occurrences_report");
 
-            //entity.HasOne<ResponsibleEntity>()
-            //  .WithMany()
-            // .HasForeignKey(o => o.ResponsibleEntityId)
-            // .OnDelete(DeleteBehavior.SetNull)
-            // .HasConstraintName("FK_occurrences_responsible_entity");
+            entity.HasOne<ResponsibleEntity>()
+                  .WithMany()
+                  .HasForeignKey(o => o.ResponsibleEntityId)
+                  .OnDelete(DeleteBehavior.SetNull)
+                  .HasConstraintName("FK_occurrences_responsible_entity");
         });
 
         modelBuilder.Entity<Report>(b =>

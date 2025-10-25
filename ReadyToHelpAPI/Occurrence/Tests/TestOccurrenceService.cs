@@ -3,6 +3,7 @@ using GeoPointModel = readytohelpapi.GeoPoint.Models.GeoPoint;
 using readytohelpapi.Occurrence.Models;
 using readytohelpapi.Occurrence.Services;
 using Xunit;
+using readytohelpapi.ResponsibleEntity.Services;
 
 namespace readytohelpapi.Occurrence.Tests;
 
@@ -12,6 +13,7 @@ namespace readytohelpapi.Occurrence.Tests;
 public class TestOccurrenceServiceTest
 {
     private readonly Mock<IOccurrenceRepository> mockRepo;
+    private readonly Mock<IResponsibleEntityService> mockResponsibleEntityService;
     private readonly IOccurrenceService service;
 
     /// <summary>
@@ -20,7 +22,8 @@ public class TestOccurrenceServiceTest
     public TestOccurrenceServiceTest()
     {
         mockRepo = new Mock<IOccurrenceRepository>();
-        service = new OccurrenceServiceImpl(mockRepo.Object);
+        mockResponsibleEntityService = new Mock<IResponsibleEntityService>();
+        service = new OccurrenceServiceImpl(mockRepo.Object, mockResponsibleEntityService.Object);
     }
 
     /// <summary>
@@ -818,4 +821,148 @@ public class TestOccurrenceServiceTest
         Assert.Single(result);
         Assert.Equal(PriorityLevel.HIGH, result[0].Priority);
     }
+
+    /// <summary>
+    ///  Tests CreateAdminOccurrence with null occurrence.
+    /// </summary>
+    [Fact]
+    public void CreateAdminOccurrence_NullOccurrence_ThrowsArgumentNullException()
+    {
+        Assert.Throws<ArgumentNullException>(() => service.CreateAdminOccurrence(null!));
+    }
+
+    /// <summary>
+    ///  Tests CreateAdminOccurrence with missing title.
+    /// </summary>
+    [Fact]
+    public void CreateAdminOccurrence_EmptyTitle_ThrowsArgumentException()
+    {
+        var o = new Models.Occurrence
+        {
+            Title = "",
+            Description = "desc",
+            Type = OccurrenceType.FLOOD,
+            ProximityRadius = 10,
+            Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
+        };
+
+        var ex = Assert.Throws<ArgumentException>(() => service.CreateAdminOccurrence(o));
+        Assert.Contains("title", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    ///  Tests CreateAdminOccurrence with missing description.
+    /// </summary>
+    [Fact]
+    public void CreateAdminOccurrence_EmptyDescription_ThrowsArgumentException()
+    {
+        var o = new Models.Occurrence
+        {
+            Title = "Test",
+            Description = "",
+            Type = OccurrenceType.FLOOD,
+            ProximityRadius = 10,
+            Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
+        };
+
+        Assert.Throws<ArgumentException>(() => service.CreateAdminOccurrence(o));
+    }
+
+    /// <summary>
+    ///  Tests CreateAdminOccurrence with missing location.
+    /// </summary>
+    [Fact]
+    public void CreateAdminOccurrence_NullLocation_ThrowsArgumentException()
+    {
+        var o = new Models.Occurrence
+        {
+            Title = "Test",
+            Description = "Desc",
+            Type = OccurrenceType.FLOOD,
+            ProximityRadius = 10,
+            Location = null!
+        };
+
+        Assert.Throws<ArgumentException>(() => service.CreateAdminOccurrence(o));
+    }
+
+    /// <summary>
+    ///  Tests CreateAdminOccurrence sets ResponsibleEntityId based on coordinates.
+    /// </summary>
+    [Fact]
+    public void CreateAdminOccurrence_SetsResponsibleEntityId_WhenEntityExists()
+    {
+        var occurrence = new Models.Occurrence
+        {
+            Title = "Incident",
+            Description = "Desc",
+            Type = OccurrenceType.FLOOD,
+            ProximityRadius = 50,
+            Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
+        };
+
+        mockResponsibleEntityService
+            .Setup(s => s.FindResponsibleEntity(OccurrenceType.FLOOD, 40, -8))
+            .Returns(new readytohelpapi.ResponsibleEntity.Models.ResponsibleEntity { Id = 99 });
+
+        mockRepo.Setup(r => r.Create(It.IsAny<Models.Occurrence>()))
+                .Returns((Models.Occurrence o) => { o.Id = 10; return o; });
+
+        var result = service.CreateAdminOccurrence(occurrence);
+
+        Assert.Equal(10, result.Id);
+        Assert.Equal(99, result.ResponsibleEntityId);
+        Assert.Equal(0, result.ReportCount);
+        Assert.Null(result.ReportId);
+    }
+
+    /// <summary>
+    ///  Tests CreateAdminOccurrence sets ResponsibleEntityId = 0 if none is found.
+    /// </summary>
+    [Fact]
+    public void CreateAdminOccurrence_NoResponsibleEntity_SetsResponsibleEntityIdToZero()
+    {
+        var occurrence = new Models.Occurrence
+        {
+            Title = "Incident",
+            Description = "Desc",
+            Type = OccurrenceType.FLOOD,
+            ProximityRadius = 50,
+            Location = new GeoPointModel { Latitude = 41, Longitude = -8 }
+        };
+
+        mockResponsibleEntityService
+            .Setup(s => s.FindResponsibleEntity(It.IsAny<OccurrenceType>(), It.IsAny<double>(), It.IsAny<double>()))
+            .Returns((readytohelpapi.ResponsibleEntity.Models.ResponsibleEntity?)null);
+
+        mockRepo.Setup(r => r.Create(It.IsAny<Models.Occurrence>()))
+                .Returns((Models.Occurrence o) => { o.Id = 5; return o; });
+
+        var result = service.CreateAdminOccurrence(occurrence);
+
+        Assert.Equal(5, result.Id);
+        Assert.Equal(0, result.ResponsibleEntityId); // fallback
+    }
+
+    /// <summary>
+    ///  Tests CreateAdminOccurrence wraps repository exceptions.
+    /// </summary>
+    [Fact]
+    public void CreateAdminOccurrence_RepositoryThrows_WrapsInvalidOperationException()
+    {
+        var o = new Models.Occurrence
+        {
+            Title = "t",
+            Description = "d",
+            Type = OccurrenceType.FLOOD,
+            ProximityRadius = 10,
+            Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
+        };
+
+        mockRepo.Setup(r => r.Create(It.IsAny<Models.Occurrence>()))
+                .Throws(new Exception("DB error"));
+
+        Assert.Throws<InvalidOperationException>(() => service.CreateAdminOccurrence(o));
+    }
+
 }
