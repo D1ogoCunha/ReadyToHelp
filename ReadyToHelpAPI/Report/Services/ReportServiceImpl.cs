@@ -60,37 +60,56 @@ public class ReportServiceImpl : IReportService
             report.Location.Longitude
         );
 
-        var duplicatedOccurence = FindNearbyOccurrenceOfSameType(report, DefaultProximityRadiusMeters);
-
+        var duplicatedOccurrence = FindNearbyOccurrenceOfSameType(report, DefaultProximityRadiusMeters);
         var createdReport = reportRepository.Create(report);
 
-        if (duplicatedOccurence != null)
+        if (duplicatedOccurrence != null)
         {
-            duplicatedOccurence.ReportCount += 1;
-            if (duplicatedOccurence.ReportCount >= triggerActivate &&
-                duplicatedOccurence.Status == OccurrenceStatus.WAITING)
-            {
-                duplicatedOccurence.Status = OccurrenceStatus.ACTIVE;
-
-                var reqDup = new NotificationRequest
-                {
-                    Type = responsibleEntity?.Type ?? report.Type.GetResponsibleEntityType(),
-                    EntityId = responsibleEntity?.Id,
-                    EntityName = responsibleEntity?.Name,
-                    OccurrenceId = duplicatedOccurence.Id,
-                    Title = report.Title,
-                    Latitude = report.Location.Latitude,
-                    Longitude = report.Location.Longitude,
-                    Message = $"Novo relatório para ocorrência existente ({duplicatedOccurence.Id})."
-                };
-                _ = notifierClient.NotifyForNMinutesAsync(reqDup, minutes: 5);
-            }
-
-            occurrenceService.Update(duplicatedOccurence);
-
-            return (createdReport, duplicatedOccurence);
+            return HandleDuplicateOccurrence(duplicatedOccurrence, createdReport, report, responsibleEntity);
         }
 
+        var createdOccurrence = CreateNewOccurrence(createdReport, report, responsibleEntity);
+        return (createdReport, createdOccurrence);
+    }
+
+    /// <summary>
+    /// Handles the logic for a duplicate occurrence.
+    /// </summary>
+    /// <param name="duplicatedOccurrence">The duplicated occurrence.</param>
+    /// <param name="createdReport">The created report.</param>
+    /// <param name="report">The original report.</param>
+    /// <param name="responsibleEntity">The responsible entity.</param>
+    /// <returns>The updated report and the duplicated occurrence.</returns>
+    private (Report, Occurrence) HandleDuplicateOccurrence(
+        Occurrence duplicatedOccurrence,
+        Report createdReport,
+        Report report,
+        ResponsibleEntity.Models.ResponsibleEntity? responsibleEntity)
+    {
+        duplicatedOccurrence.ReportCount += 1;
+        if (duplicatedOccurrence.ReportCount >= triggerActivate &&
+            duplicatedOccurrence.Status == OccurrenceStatus.WAITING)
+        {
+            duplicatedOccurrence.Status = OccurrenceStatus.ACTIVE;
+            NotifyResponsibleEntity(duplicatedOccurrence, report, responsibleEntity, isDuplicate: true);
+        }
+
+        occurrenceService.Update(duplicatedOccurrence);
+        return (createdReport, duplicatedOccurrence);
+    }
+
+    /// <summary>
+    /// Creates a new occurrence in case no duplicate is found.
+    /// </summary>
+    /// <param name="createdReport">The created report.</param>
+    /// <param name="report">The original report.</param>
+    /// <param name="responsibleEntity">The responsible entity.</param>
+    /// <returns>The created occurrence.</returns>
+    private Occurrence CreateNewOccurrence(
+        Report createdReport,
+        Report report,
+        ResponsibleEntity.Models.ResponsibleEntity? responsibleEntity)
+    {
         var occurrence = new Occurrence
         {
             Title = createdReport.Title,
@@ -106,11 +125,44 @@ public class ReportServiceImpl : IReportService
             Location = report.Location
         };
 
-        var createdOccurrence = occurrenceService.Create(occurrence);
-
-        return (createdReport, createdOccurrence);
+        return occurrenceService.Create(occurrence);
     }
 
+    /// <summary>
+    /// Notifies the responsible entity about the occurrence.
+    /// </summary>
+    /// <param name="occurrence">The occurrence to notify about.</param>
+    /// <param name="report">The report associated with the occurrence.</param>
+    /// <param name="responsibleEntity">The responsible entity to notify.</param>
+    /// <param name="isDuplicate">Indicates if the occurrence is a duplicate.</param>
+    private void NotifyResponsibleEntity(
+        Occurrence occurrence,
+        Report report,
+        ResponsibleEntity.Models.ResponsibleEntity? responsibleEntity,
+        bool isDuplicate)
+    {
+        var req = new NotificationRequest
+        {
+            Type = responsibleEntity?.Type ?? report.Type.GetResponsibleEntityType(),
+            EntityId = responsibleEntity?.Id,
+            EntityName = responsibleEntity?.Name,
+            OccurrenceId = occurrence.Id,
+            Title = report.Title,
+            Latitude = report.Location.Latitude,
+            Longitude = report.Location.Longitude,
+            Message = isDuplicate
+                ? $"Novo relatório para ocorrência existente ({occurrence.Id})."
+                : "Ocorrência reportada."
+        };
+        _ = notifierClient.NotifyForNMinutesAsync(req, minutes: 5);
+    }
+
+    /// <summary>
+    /// Finds a nearby occurrence of the same type within a specified radius.
+    /// </summary>
+    /// <param name="newReport">The new report to find occurrences for.</param>
+    /// <param name="radiusMeters">The radius within which to search for occurrences.</param>
+    /// <returns>The found occurrence, or null if none is found.</returns>
     private Occurrence? FindNearbyOccurrenceOfSameType(Report newReport, double radiusMeters)
     {
         if (newReport?.Location is null) return null;

@@ -2,6 +2,9 @@ namespace readytohelpapi.Report.DTOs;
 
 using readytohelpapi.Occurrence.Models;
 
+/// <summary>
+/// Data transfer object for report responses.
+/// </summary>
 public class ReportResponseDto
 {
     public int ReportId { get; set; }
@@ -10,6 +13,9 @@ public class ReportResponseDto
     public ResponsibleEntityContactDto? ResponsibleEntity { get; set; }
 }
 
+/// <summary>
+/// Data transfer object for responsible entity contact details.
+/// </summary>
 public class ResponsibleEntityContactDto
 {
     public string Name { get; set; } = string.Empty;
