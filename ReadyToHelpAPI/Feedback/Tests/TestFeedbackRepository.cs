@@ -277,7 +277,7 @@ public class TestFeedbackRepository : IClassFixture<DbFixture>
         this.context.SaveChanges();
 
         var reId = CreateResponsibleEntityHelper();
-        
+
         var occ = new Occurrence
         {
             Title = "o5",
