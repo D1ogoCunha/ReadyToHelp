@@ -345,25 +345,12 @@ public class TestOccurrenceServiceTest
         };
         Assert.Throws<ArgumentOutOfRangeException>(() => service.Update(invalidType));
 
-        var invalidPriority = new Models.Occurrence
-        {
-            Id = 1,
-            Title = "t",
-            Description = "d",
-            Type = OccurrenceType.FLOOD,
-            Priority = (PriorityLevel)999,
-            ProximityRadius = 10,
-            Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
-        };
-        Assert.Throws<ArgumentOutOfRangeException>(() => service.Update(invalidPriority));
-
         var nonPositiveRadius = new Models.Occurrence
         {
             Id = 1,
             Title = "t",
             Description = "d",
             Type = OccurrenceType.FLOOD,
-            Priority = PriorityLevel.LOW,
             ProximityRadius = 0,
             Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
         };
@@ -375,7 +362,6 @@ public class TestOccurrenceServiceTest
             Title = "t",
             Description = "d",
             Type = OccurrenceType.FLOOD,
-            Priority = PriorityLevel.LOW,
             ProximityRadius = 10,
             ReportCount = -1,
             ReportId = -2,
