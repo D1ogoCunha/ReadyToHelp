@@ -7,6 +7,9 @@ using readytohelpapi.Report.Services;
 using readytohelpapi.Report.Models;
 using readytohelpapi.Report.DTOs;
 
+/// <summary>
+/// Provides API endpoints for managing reports.
+/// </summary>
 [ApiController]
 [Route("api/reports")]
 public class ReportApiController : ControllerBase
@@ -15,6 +18,12 @@ public class ReportApiController : ControllerBase
     private readonly IReportRepository reportRepository;
     private readonly AppDbContext context;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ReportApiController"/> class.
+    /// </summary>
+    /// <param name="reportService">The report service.</param>
+    /// <param name="reportRepository">The report repository.</param>
+    /// <param name="context">The database context.</param>
     public ReportApiController(
         IReportService reportService,
         IReportRepository reportRepository,
@@ -25,6 +34,11 @@ public class ReportApiController : ControllerBase
         this.context = context;
     }
 
+    /// <summary>
+    /// Creates a new report.
+    /// </summary>
+    /// <param name="dto">The data transfer object containing report details.</param>
+    /// <returns>The created report along with occurrence details.</returns>
     [HttpPost]
     public IActionResult Create([FromBody] CreateReportDto? dto)
     {
@@ -87,6 +101,11 @@ public class ReportApiController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Retrieves a report by its ID.
+    /// </summary>
+    /// <param name="id">The ID of the report.</param>
+    /// <returns>The report if found; otherwise, a not found response.</returns>
     [HttpGet("{id:int}")]
     public IActionResult GetById([FromRoute] int id)
     {

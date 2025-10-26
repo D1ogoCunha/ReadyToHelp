@@ -116,9 +116,7 @@ public class OccurrenceServiceImpl : IOccurrenceService
         }
     }
 
-    /// <summary>
-    /// Updates an occurrence.
-    /// </summary>
+    /// <inheritdoc />
     public Occurrence Update(Occurrence occurrence)
     {
         if (occurrence == null)
@@ -178,9 +176,7 @@ public class OccurrenceServiceImpl : IOccurrenceService
         }
     }
 
-    /// <summary>
-    /// Deletes an occurrence.
-    /// </summary>
+    /// <inheritdoc />
     public Occurrence Delete(int id)
     {
         if (id <= 0)
@@ -202,9 +198,7 @@ public class OccurrenceServiceImpl : IOccurrenceService
         }
     }
 
-    /// <summary>
-    ///   Retrieves an occurrence by ID.
-    /// </summary>
+    /// <inheritdoc />
     public Occurrence GetOccurrenceById(int id)
     {
         if (id <= 0)
@@ -217,9 +211,7 @@ public class OccurrenceServiceImpl : IOccurrenceService
         return occurrence;
     }
 
-    /// <summary>
-    ///  Retrieves occurrences by title.
-    /// </summary>
+    /// <inheritdoc />
     public List<Occurrence> GetOccurrenceByTitle(string title)
     {
         if (string.IsNullOrWhiteSpace(title))
@@ -228,9 +220,7 @@ public class OccurrenceServiceImpl : IOccurrenceService
         return this.occurrenceRepository.GetOccurrenceByTitle(title);
     }
 
-    /// <summary>
-    ///   Retrieves a paginated, filtered, and sorted list of occurrences.
-    /// </summary>
+    /// <inheritdoc />
     public List<Occurrence> GetAllOccurrences(int pageNumber, int pageSize, string sortBy, string sortOrder, string filter)
     {
         if (string.IsNullOrEmpty(sortBy))
@@ -256,17 +246,13 @@ public class OccurrenceServiceImpl : IOccurrenceService
         }
     }
 
-    /// <summary>
-    ///   Retrieves occurrences by type.
-    /// </summary>
+    /// <inheritdoc />
     public List<Occurrence> GetOccurrencesByType(OccurrenceType type)
     {
         return this.occurrenceRepository.GetOccurrencesByType(type);
     }
 
-    /// <summary>
-    ///  Retrieves all active occurrences.
-    /// </summary>
+    /// <inheritdoc />
     public List<Occurrence> GetAllActiveOccurrences(int pageNumber, int pageSize, OccurrenceType? type, PriorityLevel? priority, int? responsibleEntityId)
     {
         if (pageNumber <= 0)
@@ -283,9 +269,7 @@ public class OccurrenceServiceImpl : IOccurrenceService
         return occurrenceRepository.GetAllActiveOccurrences(pageNumber, pageSize, type, priority, responsibleEntityId);
     }
 
-    /// <summary>
-    ///  Retrieves occurrences by priority level.
-    /// </summary>
+    /// <inheritdoc />
     public List<Occurrence> GetOccurrencesByPriority(PriorityLevel priority)
     {
         return this.occurrenceRepository.GetOccurrencesByPriority(priority);

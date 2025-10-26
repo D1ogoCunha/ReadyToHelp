@@ -6,7 +6,7 @@ using readytohelpapi.User.Services;
 using Xunit;
 
 /// <summary>
-///  This class contains all unit tests related to the user service.
+///  This class contains all tests related to the user service.
 /// </summary>
 public class TestUserServiceTest
 {

@@ -4,6 +4,9 @@ using readytohelpapi.GeoPoint.Models;
 using readytohelpapi.Occurrence.Models;
 using readytohelpapi.Report.Models;
 
+/// <summary>
+/// Fixture class for creating Report instances for testing.
+/// </summary>
 public static class ReportFixture
 {
     public static Report CreateOrUpdate(

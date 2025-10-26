@@ -13,7 +13,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.NetTopologySuite;
 public class ResponsibleEntityService : IResponsibleEntityService
 {
     private readonly AppDbContext _context;
-    private static readonly GeometryFactory gf =
+    private static readonly GeometryFactory geoFactory =
     NetTopologySuite.NtsGeometryServices.Instance.CreateGeometryFactory(4326);
 
     /// <summary>
@@ -25,14 +25,7 @@ public class ResponsibleEntityService : IResponsibleEntityService
         _context = context;
     }
 
-    /// <summary>
-    /// Finds the responsible entity for a given occurrence type and location.
-    /// </summary>
-    /// <param name="occurrenceType">The type of occurrence.</param>
-    /// <param name="latitude">The latitude of the occurrence.</param>
-    /// <param name="longitude">The longitude of the occurrence.</param>
-    /// <returns>The responsible entity or null if none found.</returns>
-    /// <exception cref="ArgumentOutOfRangeException">Thrown when latitude or longitude is out of range.</exception>
+    /// <inheritdoc />
     public ResponsibleEntity? FindResponsibleEntity(OccurrenceType occurrenceType, double latitude, double longitude)
     {
         if (latitude < -90 || latitude > 90)
@@ -43,7 +36,7 @@ public class ResponsibleEntityService : IResponsibleEntityService
 
         var entityType = occurrenceType.GetResponsibleEntityType();
 
-        var point = gf.CreatePoint(new Coordinate(longitude, latitude));
+        var point = geoFactory.CreatePoint(new Coordinate(longitude, latitude));
 
         var entity = _context.ResponsibleEntities
             .AsNoTracking()

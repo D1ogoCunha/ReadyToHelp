@@ -43,5 +43,8 @@ public class Report
     /// </summary>
     public int UserId { get; set; }
 
+    /// <summary>
+    ///   Gets or sets the geographical location of the report.
+    /// </summary>
     public GeoPoint Location { get; set; }
 }

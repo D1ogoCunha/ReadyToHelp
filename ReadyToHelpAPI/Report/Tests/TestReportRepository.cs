@@ -9,12 +9,19 @@ using readytohelpapi.Common.Data;
 using readytohelpapi.User.Models;
 using readytohelpapi.User.Tests.Fixtures;
 
+/// <summary>
+/// This class cointains all tests related to ReportRepository.
+/// </summary>
 public class TestReportRepository : IClassFixture<DbFixture>
 {
     private readonly DbFixture fixture;
     private readonly AppDbContext ctx;
     private readonly IReportRepository repo;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TestReportRepository"/> class.
+    /// </summary>
+    /// <param name="fixture">The database fixture.</param>
     public TestReportRepository(DbFixture fixture)
     {
         this.fixture = fixture;
@@ -23,6 +30,9 @@ public class TestReportRepository : IClassFixture<DbFixture>
         repo = new ReportRepository(ctx);
     }
 
+    /// <summary>
+    /// Tests the Create method with a valid report.
+    /// </summary>
     [Fact]
     public void Create_Valid_ReturnsCreated()
     {
@@ -47,6 +57,9 @@ public class TestReportRepository : IClassFixture<DbFixture>
         Assert.Equal("Buraco", created.Title);
     }
 
+    /// <summary>
+    /// Tests the Create method with a null report.
+    /// </summary>
     [Fact]
     public void Create_Null_ThrowsArgumentNull()
     {
@@ -74,6 +87,9 @@ public class TestReportRepository : IClassFixture<DbFixture>
         Assert.Equal("Teste Get", found.Title);
     }
 
+    /// <summary>
+    /// Tests the GetById method when the report does not exist.
+    /// </summary>
     [Fact]
     public void GetById_WhenNotExists_ReturnsNull()
     {
