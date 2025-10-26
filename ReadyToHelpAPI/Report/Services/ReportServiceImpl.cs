@@ -96,7 +96,6 @@ public class ReportServiceImpl : IReportService
             Title = createdReport.Title,
             Description = createdReport.Description,
             Type = report.Type,
-            Priority = report.Priority,
             ProximityRadius = DefaultProximityRadiusMeters,
             Status = OccurrenceStatus.WAITING,
             EndDateTime = default,

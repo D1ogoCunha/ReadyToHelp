@@ -34,11 +34,6 @@ public class Report
     public OccurrenceStatus Status { get; set; }
 
     /// <summary>
-    ///   Gets or sets the priority level of the occurrence on the report.
-    /// </summary>
-    public PriorityLevel Priority { get; set; }
-
-    /// <summary>
     ///   Gets or sets the type of occurrence reported.
     /// </summary>
     public OccurrenceType Type { get; set; }

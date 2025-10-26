@@ -56,7 +56,6 @@ public class TestFeedbackRepository : IClassFixture<DbFixture>
             Description = "report desc",
             UserId = user.Id,
             Type = OccurrenceType.ROAD_DAMAGE,
-            Priority = PriorityLevel.MEDIUM,
             Location = new GeoPoint { Latitude = 41.3678, Longitude = -8.2012 }
         };
         this.context.Reports.Add(report);
@@ -100,7 +99,6 @@ public class TestFeedbackRepository : IClassFixture<DbFixture>
             Description = "report desc",
             UserId = user.Id,
             Type = OccurrenceType.ROAD_DAMAGE,
-            Priority = PriorityLevel.MEDIUM,
             Location = new GeoPoint { Latitude = 41.3678, Longitude = -8.2012 }
         };
         this.context.Reports.Add(report);
@@ -154,7 +152,6 @@ public class TestFeedbackRepository : IClassFixture<DbFixture>
             Description = "report desc",
             UserId = user.Id,
             Type = OccurrenceType.ROAD_DAMAGE,
-            Priority = PriorityLevel.MEDIUM,
             Location = new GeoPoint { Latitude = 41.3678, Longitude = -8.2012 }
         };
         this.context.Reports.Add(report);
@@ -198,7 +195,6 @@ public class TestFeedbackRepository : IClassFixture<DbFixture>
             Description = "report desc",
             UserId = user.Id,
             Type = OccurrenceType.ROAD_DAMAGE,
-            Priority = PriorityLevel.MEDIUM,
             Location = new GeoPoint { Latitude = 41.3678, Longitude = -8.2012 }
         };
         this.context.Reports.Add(report);
@@ -244,7 +240,6 @@ public class TestFeedbackRepository : IClassFixture<DbFixture>
             Description = "report desc",
             UserId = user.Id,
             Type = OccurrenceType.ROAD_DAMAGE,
-            Priority = PriorityLevel.MEDIUM,
             Location = new GeoPoint { Latitude = 41.3678, Longitude = -8.2012 }
         };
         this.context.Reports.Add(report);
@@ -290,7 +285,6 @@ public class TestFeedbackRepository : IClassFixture<DbFixture>
             Description = "report desc",
             UserId = user.Id,
             Type = OccurrenceType.ROAD_DAMAGE,
-            Priority = PriorityLevel.MEDIUM,
             Location = new GeoPoint { Latitude = 41.3678, Longitude = -8.2012 }
         };
         this.context.Reports.Add(report);
@@ -331,7 +325,6 @@ public class TestFeedbackRepository : IClassFixture<DbFixture>
             Description = "report desc",
             UserId = user.Id,
             Type = OccurrenceType.ROAD_DAMAGE,
-            Priority = PriorityLevel.MEDIUM,
             Location = new GeoPoint { Latitude = 41.3678, Longitude = -8.2012 }
         };
         this.context.Reports.Add(report);
