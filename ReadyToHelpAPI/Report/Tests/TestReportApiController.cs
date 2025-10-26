@@ -13,6 +13,7 @@ using readytohelpapi.GeoPoint.Models;
 using readytohelpapi.Common.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
+using readytohelpapi.Occurrence.Services;
 
 /// <summary>
 /// This class contains all tests related to ReportApiController.
@@ -69,7 +70,6 @@ public class TestReportApiController : IClassFixture<DbFixture>
             Title = "Buraco",
             Description = "desc",
             Type = OccurrenceType.ROAD_DAMAGE,
-            Priority = PriorityLevel.MEDIUM,
             UserId = 1,
             Latitude = 41.3678,
             Longitude = -8.2012
@@ -83,7 +83,6 @@ public class TestReportApiController : IClassFixture<DbFixture>
             ReportCount = 1,
             Status = OccurrenceStatus.WAITING,
             Type = dto.Type,
-            Priority = dto.Priority,
             ResponsibleEntityId = 0,
             Location = Pt()
         };
@@ -115,7 +114,6 @@ public class TestReportApiController : IClassFixture<DbFixture>
             Title = "Incêndio",
             Description = "Fogo na mata",
             Type = OccurrenceType.FOREST_FIRE,
-            Priority = PriorityLevel.HIGH,
             UserId = 2,
             Latitude = 38.720,
             Longitude = -9.149
@@ -160,7 +158,6 @@ public class TestReportApiController : IClassFixture<DbFixture>
             ReportCount = 1,
             Status = OccurrenceStatus.WAITING,
             Type = dto.Type,
-            Priority = dto.Priority,
             ResponsibleEntityId = 10,
             Location = Pt()
         };
@@ -190,7 +187,6 @@ public class TestReportApiController : IClassFixture<DbFixture>
             Title = "Teste",
             Description = "desc",
             Type = OccurrenceType.FLOOD,
-            Priority = PriorityLevel.MEDIUM,
             UserId = 1,
             Latitude = 40.0,
             Longitude = -8.0
@@ -204,7 +200,6 @@ public class TestReportApiController : IClassFixture<DbFixture>
             ReportCount = 1,
             Status = OccurrenceStatus.WAITING,
             Type = dto.Type,
-            Priority = dto.Priority,
             ResponsibleEntityId = 999,
             Location = Pt()
         };
@@ -230,7 +225,6 @@ public class TestReportApiController : IClassFixture<DbFixture>
             Title = "X",
             Description = "Y",
             Type = OccurrenceType.FLOOD,
-            Priority = PriorityLevel.LOW,
             UserId = 1,
             Latitude = 41.3678,
             Longitude = -8.2012
@@ -255,7 +249,6 @@ public class TestReportApiController : IClassFixture<DbFixture>
             Title = "X",
             Description = "Y",
             Type = OccurrenceType.FLOOD,
-            Priority = PriorityLevel.LOW,
             UserId = 1,
             Latitude = 41.3678,
             Longitude = -8.2012
@@ -339,7 +332,6 @@ public class TestReportApiController : IClassFixture<DbFixture>
             Title = "Buraco",
             Description = "desc",
             Type = OccurrenceType.ROAD_DAMAGE,
-            Priority = PriorityLevel.MEDIUM,
             UserId = 1,
             Latitude = 41.3678,
             Longitude = -8.2012
@@ -353,7 +345,6 @@ public class TestReportApiController : IClassFixture<DbFixture>
             ReportCount = 1,
             Status = OccurrenceStatus.WAITING,
             Type = dto.Type,
-            Priority = dto.Priority,
             ResponsibleEntityId = 0,
             Location = Pt()
         };
@@ -388,7 +379,6 @@ public class TestReportApiController : IClassFixture<DbFixture>
             Title = "X",
             Description = "Y",
             Type = OccurrenceType.FLOOD,
-            Priority = PriorityLevel.LOW,
             UserId = 1,
             Latitude = 41.3678,
             Longitude = -8.2012
@@ -416,7 +406,6 @@ public class TestReportApiController : IClassFixture<DbFixture>
             Title = "X",
             Description = "Y",
             Type = OccurrenceType.FLOOD,
-            Priority = PriorityLevel.LOW,
             UserId = 1,
             Latitude = 41.3678,
             Longitude = -8.2012
@@ -445,7 +434,6 @@ public class TestReportApiController : IClassFixture<DbFixture>
             Title = "",
             Description = "desc",
             Type = OccurrenceType.FLOOD,
-            Priority = PriorityLevel.LOW,
             UserId = 1,
             Latitude = 40.0,
             Longitude = -8.0
@@ -470,7 +458,6 @@ public class TestReportApiController : IClassFixture<DbFixture>
             Title = "Title",
             Description = "",
             Type = OccurrenceType.FLOOD,
-            Priority = PriorityLevel.LOW,
             UserId = 1,
             Latitude = 40.0,
             Longitude = -8.0
@@ -495,7 +482,6 @@ public class TestReportApiController : IClassFixture<DbFixture>
             Title = "Title",
             Description = "desc",
             Type = OccurrenceType.FLOOD,
-            Priority = PriorityLevel.LOW,
             UserId = 0,
             Latitude = 40.0,
             Longitude = -8.0

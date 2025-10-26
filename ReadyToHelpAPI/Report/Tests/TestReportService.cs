@@ -101,7 +101,6 @@ public class TestReportService
             Description = "d",
             UserId = 1,
             Type = OccurrenceType.ROAD_DAMAGE,
-            Priority = PriorityLevel.MEDIUM,
             Location = null
         };
 
@@ -135,7 +134,6 @@ public class TestReportService
             o.Title == input.Title &&
             o.Description == input.Description &&
             o.Type == input.Type &&
-            o.Priority == input.Priority &&
             o.ProximityRadius == 50 &&
             o.Status == OccurrenceStatus.WAITING &&
             o.ReportCount == 1 &&

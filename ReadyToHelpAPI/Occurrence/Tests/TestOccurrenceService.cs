@@ -89,24 +89,6 @@ public class TestOccurrenceServiceTest
     }
 
     /// <summary>
-    ///  Tests Create with an invalid priority level.
-    /// </summary>
-    [Fact]
-    public void Create_InvalidPriority_ThrowsArgumentOutOfRangeException()
-    {
-        var o = new Models.Occurrence
-        {
-            Title = "t",
-            Description = "d",
-            Type = OccurrenceType.FLOOD,
-            Priority = (PriorityLevel)999,
-            ProximityRadius = 10,
-            Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
-        };
-        Assert.Throws<ArgumentOutOfRangeException>(() => service.Create(o));
-    }
-
-    /// <summary>
     ///  Tests Create with a non-positive proximity radius.
     /// </summary>
     [Fact]
@@ -358,23 +340,10 @@ public class TestOccurrenceServiceTest
             Title = "t",
             Description = "d",
             Type = (OccurrenceType)999,
-            Priority = PriorityLevel.LOW,
             ProximityRadius = 10,
             Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
         };
         Assert.Throws<ArgumentOutOfRangeException>(() => service.Update(invalidType));
-
-        var invalidPriority = new Models.Occurrence
-        {
-            Id = 1,
-            Title = "t",
-            Description = "d",
-            Type = OccurrenceType.FLOOD,
-            Priority = (PriorityLevel)999,
-            ProximityRadius = 10,
-            Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
-        };
-        Assert.Throws<ArgumentOutOfRangeException>(() => service.Update(invalidPriority));
 
         var nonPositiveRadius = new Models.Occurrence
         {
@@ -382,7 +351,6 @@ public class TestOccurrenceServiceTest
             Title = "t",
             Description = "d",
             Type = OccurrenceType.FLOOD,
-            Priority = PriorityLevel.LOW,
             ProximityRadius = 0,
             Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
         };
@@ -394,7 +362,6 @@ public class TestOccurrenceServiceTest
             Title = "t",
             Description = "d",
             Type = OccurrenceType.FLOOD,
-            Priority = PriorityLevel.LOW,
             ProximityRadius = 10,
             ReportCount = -1,
             ReportId = -2,
@@ -817,5 +784,126 @@ public class TestOccurrenceServiceTest
 
         Assert.Single(result);
         Assert.Equal(PriorityLevel.HIGH, result[0].Priority);
+    }
+
+    /// <summary>
+    ///  Tests Create computes priority correctly for HIGH base priority.
+    /// </summary>
+    [Fact]
+    public void Create_ComputesPriority_BaseHigh_AlwaysHigh()
+    {
+        var input = new Models.Occurrence
+        {
+            Title = "Incêndio",
+            Description = "Floresta",
+            Type = OccurrenceType.FOREST_FIRE,
+            ProximityRadius = 50,
+            ReportCount = 0,
+            Location = new GeoPointModel { Latitude = 41, Longitude = -8 }
+        };
+
+        mockRepo.Setup(r => r.Create(It.IsAny<Models.Occurrence>()))
+                .Returns<Models.Occurrence>(o => { o.Id = 1; return o; });
+
+        var created = service.Create(input);
+
+        Assert.Equal(1, created.Id);
+        Assert.Equal(PriorityLevel.HIGH, created.Priority);
+
+        created.ReportCount = 10;
+        mockRepo.Setup(r => r.Update(It.IsAny<Models.Occurrence>()))
+                .Returns<Models.Occurrence>(o => o);
+
+        var updated = service.Update(created);
+        Assert.Equal(PriorityLevel.HIGH, updated.Priority);
+    }
+
+    /// <summary>
+    /// Tests if Base MEDIUM escalates to High at 5 reports.
+    /// </summary>
+    [Fact]
+    public void ComputePriority_BaseMedium_EscalatesAt5()
+    {
+        var input = new Models.Occurrence
+        {
+            Title = "Trânsito",
+            Description = "Congestionamento",
+            Type = OccurrenceType.TRAFFIC_CONGESTION,
+            ProximityRadius = 50,
+            ReportCount = 3,
+            Location = new GeoPointModel { Latitude = 41, Longitude = -8 }
+        };
+
+        mockRepo.Setup(r => r.Create(It.IsAny<Models.Occurrence>()))
+                .Returns<Models.Occurrence>(o => { o.Id = 2; return o; });
+
+        var created = service.Create(input);
+        Assert.Equal(PriorityLevel.MEDIUM, created.Priority);
+
+        created.ReportCount = 5;
+        mockRepo.Setup(r => r.Update(It.IsAny<Models.Occurrence>()))
+                .Returns<Models.Occurrence>(o => o);
+
+        var updated = service.Update(created);
+        Assert.Equal(PriorityLevel.HIGH, updated.Priority);
+    }
+
+    /// <summary>
+    /// Tests if Base LOW escalates to Medium at 7 reports.
+    /// </summary>
+    [Fact]
+    public void ComputePriority_BaseLow_EscalatesAt7()
+    {
+        var input = new Models.Occurrence
+        {
+            Title = "Iluminação pública",
+            Description = "Lâmpada fundida",
+            Type = OccurrenceType.PUBLIC_LIGHTING,
+            ProximityRadius = 50,
+            ReportCount = 6,
+            Location = new GeoPointModel { Latitude = 41, Longitude = -8 }
+        };
+
+        mockRepo.Setup(r => r.Create(It.IsAny<Models.Occurrence>()))
+                .Returns<Models.Occurrence>(o => { o.Id = 3; return o; });
+
+        var created = service.Create(input);
+        Assert.Equal(PriorityLevel.LOW, created.Priority);
+
+        created.ReportCount = 7;
+        mockRepo.Setup(r => r.Update(It.IsAny<Models.Occurrence>()))
+                .Returns<Models.Occurrence>(o => o);
+
+        var updated = service.Update(created);
+        Assert.Equal(PriorityLevel.MEDIUM, updated.Priority);
+    }
+
+    /// <summary>
+    ///  Tests Update recomputes priority when ReportCount changes.
+    /// </summary>
+    [Fact]
+    public void Update_RecomputesPriority_When_ReportCountChanges()
+    {
+        var input = new Models.Occurrence
+        {
+            Id = 50,
+            Title = "Obstrução",
+            Description = "Via bloqueada",
+            Type = OccurrenceType.ROAD_OBSTRUCTION,
+            ProximityRadius = 30,
+            ReportCount = 1,
+            Location = new GeoPointModel { Latitude = 40.5, Longitude = -8.5 }
+        };
+
+        mockRepo.Setup(r => r.Create(It.IsAny<Models.Occurrence>()))
+                .Returns<Models.Occurrence>(o => { o.Id = 50; return o; });
+        var created = service.Create(input);
+        Assert.Equal(PriorityLevel.MEDIUM, created.Priority);
+
+        created.ReportCount = 5;
+        mockRepo.Setup(r => r.Update(It.IsAny<Models.Occurrence>()))
+                .Returns<Models.Occurrence>(o => o);
+        var updated = service.Update(created);
+        Assert.Equal(PriorityLevel.HIGH, updated.Priority);
     }
 }

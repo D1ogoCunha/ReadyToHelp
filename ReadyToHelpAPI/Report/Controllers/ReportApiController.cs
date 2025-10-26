@@ -52,7 +52,6 @@ public class ReportApiController : ControllerBase
                 Title = dto.Title,
                 Description = dto.Description,
                 Type = dto.Type,
-                Priority = dto.Priority,
                 UserId = dto.UserId,
                 Location = new GeoPoint.Models.GeoPoint
                 {

@@ -47,7 +47,6 @@ public class TestReportRepository : IClassFixture<DbFixture>
             description: "Buraco na estrada",
             userId: user.Id,
             type: OccurrenceType.ROAD_DAMAGE,
-            priority: PriorityLevel.LOW,
             location: new GeoPoint { Latitude = 41.15, Longitude = -8.61 }
         );
 

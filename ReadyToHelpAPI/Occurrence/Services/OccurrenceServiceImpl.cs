@@ -20,23 +20,63 @@ public class OccurrenceServiceImpl : IOccurrenceService
         this.occurrenceRepository = occurrenceRepository;
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    ///  Computes the base priority level based on occurrence type.
+    /// </summary>
+    private static PriorityLevel ComputeBasePriority(OccurrenceType type)
+    {
+        return type switch
+        {
+            OccurrenceType.FOREST_FIRE or OccurrenceType.URBAN_FIRE or OccurrenceType.FLOOD or OccurrenceType.LANDSLIDE
+                or OccurrenceType.ROAD_ACCIDENT or OccurrenceType.CRIME or OccurrenceType.DOMESTIC_VIOLENCE
+                or OccurrenceType.MEDICAL_EMERGENCY or OccurrenceType.WORK_ACCIDENT
+                => PriorityLevel.HIGH,
+
+            OccurrenceType.VEHICLE_BREAKDOWN or OccurrenceType.ANIMAL_ON_ROAD or OccurrenceType.ROAD_OBSTRUCTION
+                or OccurrenceType.TRAFFIC_CONGESTION or OccurrenceType.ELECTRICAL_NETWORK or OccurrenceType.SANITATION
+                or OccurrenceType.PUBLIC_DISTURBANCE or OccurrenceType.INJURED_ANIMAL or OccurrenceType.POLLUTION
+                => PriorityLevel.MEDIUM,
+
+            OccurrenceType.PUBLIC_LIGHTING or OccurrenceType.ROAD_DAMAGE or OccurrenceType.TRAFFIC_LIGHT_FAILURE
+                or OccurrenceType.LOST_ANIMAL
+                => PriorityLevel.LOW,
+
+            _ => PriorityLevel.LOW
+        };
+    }
+
+    /// <summary>
+    ///  Computes the priority level based on occurrence type and report count.
+    /// </summary>
+    private static PriorityLevel ComputePriority(OccurrenceType type, int reportCount)
+    {
+        var basePriority = ComputeBasePriority(type);
+
+        if (basePriority == PriorityLevel.HIGH)
+            return PriorityLevel.HIGH;
+
+        if (basePriority == PriorityLevel.MEDIUM)
+            return reportCount >= 5 ? PriorityLevel.HIGH : PriorityLevel.MEDIUM;
+
+        return reportCount >= 7 ? PriorityLevel.MEDIUM : PriorityLevel.LOW;
+    }
+
+    /// <summary>
+    /// Creates a new occurrence.
+    /// </summary>
     public Occurrence Create(Occurrence occurrence)
     {
         if (occurrence == null)
             throw new ArgumentNullException(nameof(occurrence));
 
         if (string.IsNullOrWhiteSpace(occurrence.Title))
-            throw new ArgumentException("Occurrence title cannot be null or empty", nameof(occurrence.Title));
+            throw new ArgumentException("Occurrence title cannot be null or empty.", nameof(occurrence.Title));
 
         if (string.IsNullOrWhiteSpace(occurrence.Description))
-            throw new ArgumentException("Occurrence description cannot be null or empty", nameof(occurrence.Description));
+            throw new ArgumentException("Occurrence description cannot be null or empty.", nameof(occurrence.Description));
 
         if (!Enum.IsDefined(typeof(OccurrenceType), occurrence.Type))
             throw new ArgumentOutOfRangeException(nameof(occurrence.Type), "Invalid occurrence type");
-
-        if (!Enum.IsDefined(typeof(PriorityLevel), occurrence.Priority))
-            throw new ArgumentOutOfRangeException(nameof(occurrence.Priority), "Invalid priority level");
 
         if (occurrence.ProximityRadius <= 0)
             throw new ArgumentException("Proximity radius must be greater than zero.", nameof(occurrence.ProximityRadius));
@@ -50,9 +90,21 @@ public class OccurrenceServiceImpl : IOccurrenceService
         if (occurrence.ResponsibleEntityId < 0)
             throw new ArgumentException("ResponsibleEntityId cannot be negative.", nameof(occurrence.ResponsibleEntityId));
 
+        if (occurrence.Location is null)
+            throw new ArgumentException("Occurrence location is required.", nameof(occurrence.Location));
+
+        if (occurrence.Location.Latitude is < -90 or > 90)
+            throw new ArgumentOutOfRangeException(nameof(occurrence.Location.Latitude), "Latitude must be between -90 and 90.");
+
+        if (occurrence.Location.Longitude is < -180 or > 180)
+            throw new ArgumentOutOfRangeException(nameof(occurrence.Location.Longitude), "Longitude must be between -180 and 180.");
+
         occurrence.CreationDateTime = DateTime.UtcNow;
+
         if (occurrence.EndDateTime != default && occurrence.EndDateTime <= occurrence.CreationDateTime)
             throw new ArgumentException("EndDateTime must be later than CreationDateTime.", nameof(occurrence.EndDateTime));
+
+        occurrence.Priority = ComputePriority(occurrence.Type, occurrence.ReportCount);
 
         try
         {
@@ -77,23 +129,10 @@ public class OccurrenceServiceImpl : IOccurrenceService
             throw new ArgumentException("Occurrence title cannot be null or empty.", nameof(occurrence.Title));
 
         if (string.IsNullOrWhiteSpace(occurrence.Description))
-            if (occurrence == null)
-                throw new ArgumentNullException(nameof(occurrence));
-
-        if (occurrence.Id <= 0)
-            throw new ArgumentException("Invalid occurrence ID.", nameof(occurrence.Id));
-
-        if (string.IsNullOrWhiteSpace(occurrence.Title))
-            throw new ArgumentException("Occurrence title cannot be null or empty.", nameof(occurrence.Title));
-
-        if (string.IsNullOrWhiteSpace(occurrence.Description))
             throw new ArgumentException("Occurrence description cannot be null or empty.", nameof(occurrence.Description));
 
         if (!Enum.IsDefined(typeof(OccurrenceType), occurrence.Type))
             throw new ArgumentOutOfRangeException(nameof(occurrence.Type), "Invalid occurrence type");
-
-        if (!Enum.IsDefined(typeof(PriorityLevel), occurrence.Priority))
-            throw new ArgumentOutOfRangeException(nameof(occurrence.Priority), "Invalid priority level");
 
         if (occurrence.ProximityRadius <= 0)
             throw new ArgumentException("Proximity radius must be greater than zero.", nameof(occurrence.ProximityRadius));
@@ -118,6 +157,8 @@ public class OccurrenceServiceImpl : IOccurrenceService
 
         if (occurrence.Location.Longitude is < -180 or > 180)
             throw new ArgumentOutOfRangeException(nameof(occurrence.Location.Longitude), "Longitude must be between -180 and 180.");
+
+        occurrence.Priority = ComputePriority(occurrence.Type, occurrence.ReportCount);
 
         try
         {
