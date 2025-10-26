@@ -71,6 +71,12 @@ public interface IOccurrenceService
     /// <summary>
     /// Retrieves ACTIVE or IN_PROGRESS occurrences with pagination and optional filters.
     /// </summary>
+    /// <param name="pageNumber">The page number for pagination.</param>
+    /// <param name="pageSize">The number of items per page.</param>
+    /// <param name="type">Optional occurrence type filter.</param>
+    /// <param name="priority">Optional priority level filter.</param>
+    /// <param name="responsibleEntityId">Optional responsible entity ID filter.</param>
+    /// <returns>A paginated list of active occurrences matching the specified criteria.</returns>
     List<Occurrence> GetAllActiveOccurrences(int pageNumber, int pageSize, OccurrenceType? type, PriorityLevel? priority, int? responsibleEntityId);
 
     /// <summary>

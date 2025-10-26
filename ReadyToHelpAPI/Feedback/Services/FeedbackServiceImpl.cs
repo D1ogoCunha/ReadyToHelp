@@ -20,11 +20,7 @@ public class FeedbackServiceImpl : IFeedbackService
         this.repo = repo ?? throw new ArgumentNullException(nameof(repo));
     }
 
-    /// <summary>
-    ///   Creates a new feedback.
-    /// </summary>
-    /// <param name="feedback">The feedback to create.</param>
-    /// <returns>The created feedback.</returns>
+    /// <inheritdoc />
     public Feedback Create(Feedback feedback)
     {
         if (feedback == null)
@@ -46,11 +42,7 @@ public class FeedbackServiceImpl : IFeedbackService
         return repo.Create(feedback);
     }
 
-    /// <summary>
-    ///   Gets feedback by its Id.
-    /// </summary>
-    /// <param name="id">The feedback Id.</param>
-    /// <returns>The feedback if found; otherwise, null.</returns>
+    /// <inheritdoc />
     public Feedback? GetFeedbackById(int id)
     {
         if (id <= 0)
@@ -59,17 +51,10 @@ public class FeedbackServiceImpl : IFeedbackService
         return repo.GetFeedbackById(id);
     }
 
-    /// <summary>
-    ///   Gets all feedbacks.
-    /// </summary>
-    /// <returns>All feedbacks.</returns>
+    /// <inheritdoc />
     public List<Feedback> GetAllFeedbacks() => repo.GetAllFeedbacks();
 
-    /// <summary>
-    ///   Gets feedbacks by occurrence Id.
-    /// </summary>
-    /// <param name="occurrenceId">The occurrence Id.</param>
-    /// <returns>The feedbacks associated with the specified occurrence Id.</returns>
+    /// <inheritdoc />
     public List<Feedback> GetFeedbacksByOccurrenceId(int occurrenceId)
     {
         if (occurrenceId <= 0)
@@ -84,11 +69,7 @@ public class FeedbackServiceImpl : IFeedbackService
         return repo.GetFeedbacksByOccurrenceId(occurrenceId);
     }
 
-    /// <summary>
-    ///   Gets feedbacks by user Id.
-    /// </summary>
-    /// <param name="userId">The user Id.</param>
-    /// <returns>The feedbacks associated with the specified user Id.</returns>
+    /// <inheritdoc />
     public List<Feedback> GetFeedbacksByUserId(int userId)
     {
         if (userId <= 0)

@@ -12,14 +12,3 @@ public class ReportResponseDto
     public OccurrenceStatus OccurrenceStatus { get; set; }
     public ResponsibleEntityContactDto? ResponsibleEntity { get; set; }
 }
-
-/// <summary>
-/// Data transfer object for responsible entity contact details.
-/// </summary>
-public class ResponsibleEntityContactDto
-{
-    public string Name { get; set; } = string.Empty;
-    public string Email { get; set; } = string.Empty;
-    public string Address { get; set; } = string.Empty;
-    public int ContactPhone { get; set; }
-}

@@ -42,22 +42,12 @@ public static class OccurrenceTypeExtensions
     /// Returns the responsible entity type for a given occurrence type.
     /// </summary>
     /// <param name="type">The occurrence type.</param>
+    /// <returns>The corresponding responsible entity type.</returns>
     public static ResponsibleEntityType GetResponsibleEntityType(this OccurrenceType type)
     {
         if (ResponsibleEntityMap.TryGetValue(type, out var entityType))
             return entityType;
 
         throw new ArgumentException($"No responsible entity mapped for OccurrenceType: {type}");
-    }
-
-    /// <summary>
-    /// Returns all occurrence types handled by a given responsible entity type.
-    /// </summary>
-    /// <param name="entityType">The responsible entity type.</param>
-    public static IEnumerable<OccurrenceType> GetHandledOccurrenceTypes(this ResponsibleEntityType entityType)
-    {
-        return ResponsibleEntityMap
-            .Where(kvp => kvp.Value == entityType)
-            .Select(kvp => kvp.Key);
     }
 }

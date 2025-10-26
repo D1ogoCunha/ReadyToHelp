@@ -21,11 +21,7 @@ public class UserServiceImpl : IUserService
         this.userRepository = userRepository;
     }
 
-    /// <summary>
-    ///   Creates a user.
-    /// </summary>
-    /// <param name="user">The user to create.</param>
-    /// <returns>The created user.</returns>
+    /// <inheritdoc />
     public User Create(User user)
     {
         if (user == null)
@@ -60,15 +56,7 @@ public class UserServiceImpl : IUserService
         }
     }
 
-    /// <summary>
-    ///   Updates a user.
-    /// </summary>
-    /// <param name="user">The user to update.</param>
-    /// <returns>The updated user.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when the user is null.</exception>
-    /// <exception cref="ArgumentException">Thrown when the user has invalid properties.</exception>
-    /// <exception cref="KeyNotFoundException">Thrown when the user is not found.</exception>
-    /// <exception cref="InvalidOperationException">Thrown when an error occurs while updating the user.</exception>
+    /// <inheritdoc />
     public User Update(User user)
     {
         if (user == null)
@@ -125,13 +113,7 @@ public class UserServiceImpl : IUserService
         }
     }
 
-    /// <summary>
-    ///   Deletes a user by id.
-    /// </summary>
-    /// <param name="id">The id of the user to delete.</param>
-    /// <returns>The deleted user.</returns>
-    /// <exception cref="ArgumentException">Thrown when the user id is invalid.</exception>
-    /// <exception cref="InvalidOperationException">Thrown when an error occurs while deleting the user.</exception>
+    /// <inheritdoc />
     public User Delete(int id)
     {
         if (id <= 0)
@@ -149,13 +131,7 @@ public class UserServiceImpl : IUserService
         }
     }
 
-    /// <summary>
-    ///  Gets a user by id.
-    /// </summary>
-    /// <param name="id">The id of the user to get.</param>
-    /// <returns>The user with the specified id.</returns>
-    /// <exception cref="ArgumentException">Thrown when the user id is invalid.</exception>
-    /// <exception cref="KeyNotFoundException">Thrown when the user is not found.</exception>
+    /// <inheritdoc />
     public User GetUserById(int id)
     {
         if (id <= 0)
@@ -168,27 +144,13 @@ public class UserServiceImpl : IUserService
         return user;
     }
 
-    /// <summary>
-    /// Gets users by name.
-    /// </summary>
-    /// <param name="name">The name of the users to get.</param>
-    /// <returns>A list of users with the specified name.</returns>
+    /// <inheritdoc />
     public List<User> GetUserByName(string name)
     {
         return this.userRepository.GetUserByName(name);
     }
 
-    /// <summary>
-    /// Gets all users with pagination, sorting, and filtering.
-    /// </summary>
-    /// <param name="pageNumber">The page number to retrieve.</param>
-    /// <param name="pageSize">The number of users per page.</param>
-    /// <param name="sortBy">The field to sort by.</param>
-    /// <param name="sortOrder">The sort order (asc or desc).</param>
-    /// <param name="filter">The filter to apply.</param>
-    /// <returns>A list of users matching the criteria.</returns>
-    /// <exception cref="ArgumentException">Thrown when any of the parameters are invalid.</exception>
-    /// <exception cref="InvalidOperationException">Thrown when an error occurs while retrieving users.</exception>
+    /// <inheritdoc />
     public List<User> GetAllUsers(int pageNumber, int pageSize, string sortBy, string sortOrder, string filter)
     {
         if (string.IsNullOrEmpty(sortBy))
@@ -216,13 +178,7 @@ public class UserServiceImpl : IUserService
 
 
 
-    /// <summary>
-    ///   Gets a user by email.
-    /// </summary>
-    /// <param name="email">The email of the user to get.</param>
-    /// <returns>The user with the specified email, or null if not found.</returns>
-    /// <exception cref="ArgumentException">Thrown when the email is null or empty.</exception>
-
+    /// <inheritdoc />
     public Models.User? GetUserByEmail(string email)
     {
         if (string.IsNullOrWhiteSpace(email) || string.IsNullOrEmpty(email))
@@ -231,12 +187,7 @@ public class UserServiceImpl : IUserService
         return userRepository.GetUserByEmail(email);
     }
 
-    /// <summary>
-    ///   Registers a new citizen user.
-    /// </summary>
-    /// <param name="user">The user to register.</param>
-    /// <returns>The registered user.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when the user is null.</exception>
+    /// <inheritdoc />
     public Models.User Register(Models.User user)
     {
         if (user == null)

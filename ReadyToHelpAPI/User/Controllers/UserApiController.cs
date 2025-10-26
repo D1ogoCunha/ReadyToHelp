@@ -27,6 +27,8 @@ public class UserApiController : ControllerBase
     /// <summary>
     /// Creates a new user. Only ADMIN can call.
     /// </summary>
+    /// <param name="user">The user to create.</param>
+    /// <returns>The created user.</returns>
     [Authorize(Roles = "ADMIN")]
     [HttpPost]
     public ActionResult Create([FromBody] User user)
@@ -63,6 +65,8 @@ public class UserApiController : ControllerBase
     /// <summary>
     ///   Updates an existing user. Only accessible by ADMIN users.
     /// </summary>
+    /// <param name="id">The user id.</param>
+    /// <param name="user">The user details to update.</param>
     [Authorize(Roles = "ADMIN")]
     [HttpPut("{id:int}")]
     public ActionResult Update([FromRoute] int id, [FromBody] User user)
@@ -103,6 +107,8 @@ public class UserApiController : ControllerBase
     /// <summary>
     ///   Deletes an existing user. Only accessible by ADMIN users.
     /// </summary>
+    /// <param name="id">The user id.</param>
+    /// <returns>The deleted user.</returns>
     [Authorize(Roles = "ADMIN")]
     [HttpDelete("{id:int}")]
     public ActionResult Delete([FromRoute] int id)
@@ -128,7 +134,11 @@ public class UserApiController : ControllerBase
         }
     }
 
-    // GET api/user/{id}
+    /// <summary>
+    ///  Gets a user by id.
+    /// </summary>
+    /// <param name="id">The user id.</param>
+    /// <returns> The user details.</returns>
     [HttpGet("{id:int}")]
     public ActionResult GetUserById(int id)
     {
@@ -156,6 +166,8 @@ public class UserApiController : ControllerBase
     /// <summary>
     /// Registers a new user with the CITIZEN profile. Publicly accessible.
     /// </summary>
+    /// <param name="req">The registration request.</param>
+    /// <returns>The created user.</returns>
     [AllowAnonymous]
     [HttpPost("register")]
     public ActionResult Register([FromBody] RegisterRequest? req)
@@ -206,6 +218,12 @@ public class UserApiController : ControllerBase
     /// <summary>
     ///   Lists users with pagination, sorting and filtering.
     /// </summary>
+    /// <param name="pageNumber">The page number to retrieve.</param>
+    /// <param name="pageSize">The number of users per page.</param>
+    /// <param name="sortBy">The field to sort by.</param>
+    /// <param name="sortOrder">The sort order (asc or desc).</param>
+    /// <param name="filter">A filter string to search users.</param>
+    /// <returns>A list of users matching the criteria.</returns>
     [HttpGet]
     public ActionResult<List<User>> GetAll(
         [FromQuery] int pageNumber = 1,
@@ -230,6 +248,11 @@ public class UserApiController : ControllerBase
         }
     }
 
+    /// <summary>
+    ///  Gets a user by email.
+    /// </summary>
+    /// <param name="email">The email.</param>
+    /// <returns>The user details.</returns>
     [HttpGet("email/{email}")]
     public ActionResult GetUserByEmail(string email)
     {
