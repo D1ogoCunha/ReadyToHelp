@@ -34,13 +34,7 @@ public class ReportServiceImpl : IReportService
         this.notifierClient = notifierClient;
     }
 
-    /// <summary>
-    /// Creates a new report
-    /// Triggers occurrence creation or update as needed.
-    /// Notiofies responsible entity when occurrence is activated.
-    /// </summary>
-    /// <param name="report">The report to create.</param>
-    /// <returns>The created report the associated occurrence, that has the responsible entity.</returns>
+    /// <inheritdoc />
     public (Report report, Occurrence occurrence) Create(Report report)
     {
         if (report is null)

@@ -14,6 +14,9 @@ using readytohelpapi.Common.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
 
+/// <summary>
+/// This class contains all tests related to ReportApiController.
+/// </summary>
 public class TestReportApiController : IClassFixture<DbFixture>
 {
     private readonly DbFixture fixture;
@@ -22,6 +25,10 @@ public class TestReportApiController : IClassFixture<DbFixture>
     private readonly AppDbContext context;
     private readonly ReportApiController controller;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TestReportApiController"/> class.
+    /// </summary>
+    /// <param name="fixture">The database fixture.</param>
     public TestReportApiController(DbFixture fixture)
     {
         this.fixture = fixture;
@@ -33,8 +40,15 @@ public class TestReportApiController : IClassFixture<DbFixture>
         controller = new ReportApiController(mockReportService.Object, mockReportRepository.Object, context);
     }
 
+    /// <summary>
+    /// Creates a GeoPoint for testing.
+    /// </summary>
+    /// <returns>A GeoPoint instance.</returns>
     private static GeoPoint Pt() => new GeoPoint { Latitude = 41.3678, Longitude = -8.2012 };
 
+    /// <summary>
+    /// Tests the Create method with a null report.
+    /// </summary>
     [Fact]
     public void Create_NullReport_ReturnsBadRequest()
     {
@@ -44,6 +58,9 @@ public class TestReportApiController : IClassFixture<DbFixture>
         mockReportService.Verify(s => s.Create(It.IsAny<ReportModel>()), Times.Never);
     }
 
+    /// <summary>
+    /// Tests the Create method with a valid report.
+    /// </summary>
     [Fact]
     public void Create_Valid_ReturnsCreatedAtAction_WithResponseObject()
     {
@@ -87,6 +104,9 @@ public class TestReportApiController : IClassFixture<DbFixture>
         )), Times.Once);
     }
 
+    /// <summary>
+    /// Tests the Create method with a responsible entity.
+    /// </summary>
     [Fact]
     public void Create_WithResponsibleEntity_ReturnsEntityInResponse()
     {
@@ -159,6 +179,9 @@ public class TestReportApiController : IClassFixture<DbFixture>
         Assert.Equal(213456789, response.ResponsibleEntity.ContactPhone);
     }
 
+    /// <summary>
+    /// Tests the Create method when the responsible entity is not found.
+    /// </summary>
     [Fact]
     public void Create_ResponsibleEntityNotFound_ReturnsNullEntity()
     {
@@ -196,6 +219,9 @@ public class TestReportApiController : IClassFixture<DbFixture>
         Assert.Null(response.ResponsibleEntity);
     }
 
+    /// <summary>
+    /// Tests the Create method with a service throwing ArgumentException.
+    /// </summary>
     [Fact]
     public void Create_ServiceThrowsArgumentException_ReturnsBadRequest()
     {
@@ -218,6 +244,9 @@ public class TestReportApiController : IClassFixture<DbFixture>
         Assert.IsType<BadRequestObjectResult>(result);
     }
 
+    /// <summary>
+    /// Tests the Create method with a service throwing a generic exception.
+    /// </summary>
     [Fact]
     public void Create_ServiceThrowsGenericException_ReturnsInternalServerError()
     {
@@ -241,6 +270,9 @@ public class TestReportApiController : IClassFixture<DbFixture>
         Assert.Equal(500, status.StatusCode);
     }
 
+    /// <summary>
+    /// Tests the GetById method with an invalid id.
+    /// </summary>
     [Fact]
     public void GetById_InvalidId_ReturnsBadRequest()
     {
@@ -251,6 +283,9 @@ public class TestReportApiController : IClassFixture<DbFixture>
         mockReportRepository.Verify(r => r.GetById(It.IsAny<int>()), Times.Never);
     }
 
+    /// <summary>
+    /// Tests the GetById method with a negative id.
+    /// </summary>
     [Fact]
     public void GetById_NegativeId_ReturnsBadRequest()
     {
@@ -261,6 +296,9 @@ public class TestReportApiController : IClassFixture<DbFixture>
         mockReportRepository.Verify(r => r.GetById(It.IsAny<int>()), Times.Never);
     }
 
+    /// <summary>
+    /// Tests the GetById method when the report is not found.
+    /// </summary>
     [Fact]
     public void GetById_NotFound_ReturnsNotFound()
     {
@@ -272,6 +310,9 @@ public class TestReportApiController : IClassFixture<DbFixture>
         mockReportRepository.Verify(r => r.GetById(42), Times.Once);
     }
 
+    /// <summary>
+    /// Tests the GetById method when the report is found.
+    /// </summary>
     [Fact]
     public void GetById_Found_ReturnsOkWithReport()
     {
@@ -287,6 +328,9 @@ public class TestReportApiController : IClassFixture<DbFixture>
         mockReportRepository.Verify(r => r.GetById(7), Times.Once);
     }
 
+    /// <summary>
+    /// Tests the Create method with a valid report.
+    /// </summary>
     [Fact]
     public void Create_Valid_ResponseContainsReportAndOccurrenceIds()
     {
@@ -333,6 +377,9 @@ public class TestReportApiController : IClassFixture<DbFixture>
         mockReportRepository.Verify(r => r.GetById(It.IsAny<int>()), Times.Never);
     }
 
+    /// <summary>
+    /// Tests the Create method with a responsible entity.
+    /// </summary>
     [Fact]
     public void Create_ServiceThrowsArgumentException_ReturnsBadRequest_WithMessage()
     {
@@ -358,6 +405,9 @@ public class TestReportApiController : IClassFixture<DbFixture>
         Assert.Equal("validation_error", errorProp.GetValue(errorObj));
     }
 
+    /// <summary>
+    /// Tests the Create method with a service throwing a generic exception.
+    /// </summary>
     [Fact]
     public void Create_ServiceThrowsGenericException_ReturnsInternalServerError_WithMessage()
     {
@@ -384,6 +434,9 @@ public class TestReportApiController : IClassFixture<DbFixture>
         Assert.Equal("internal_server_error", errorProp.GetValue(errorObj));
     }
 
+    /// <summary>
+    /// Tests the Create method with an empty title.
+    /// </summary>
     [Fact]
     public void Create_EmptyTitle_ThrowsArgumentException()
     {
@@ -406,6 +459,9 @@ public class TestReportApiController : IClassFixture<DbFixture>
         Assert.IsType<BadRequestObjectResult>(result);
     }
 
+    /// <summary>
+    /// Tests the Create method with an empty description.
+    /// </summary>
     [Fact]
     public void Create_EmptyDescription_ThrowsArgumentException()
     {
@@ -428,6 +484,9 @@ public class TestReportApiController : IClassFixture<DbFixture>
         Assert.IsType<BadRequestObjectResult>(result);
     }
 
+    /// <summary>
+    /// Tests the Create method with an invalid user id.
+    /// </summary>
     [Fact]
     public void Create_InvalidUserId_ThrowsArgumentException()
     {
