@@ -89,24 +89,6 @@ public class TestOccurrenceServiceTest
     }
 
     /// <summary>
-    ///  Tests Create with an invalid priority level.
-    /// </summary>
-    [Fact]
-    public void Create_InvalidPriority_ThrowsArgumentOutOfRangeException()
-    {
-        var o = new Models.Occurrence
-        {
-            Title = "t",
-            Description = "d",
-            Type = OccurrenceType.FLOOD,
-            Priority = (PriorityLevel)999,
-            ProximityRadius = 10,
-            Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
-        };
-        Assert.Throws<ArgumentOutOfRangeException>(() => service.Create(o));
-    }
-
-    /// <summary>
     ///  Tests Create with a non-positive proximity radius.
     /// </summary>
     [Fact]
@@ -358,7 +340,6 @@ public class TestOccurrenceServiceTest
             Title = "t",
             Description = "d",
             Type = (OccurrenceType)999,
-            Priority = PriorityLevel.LOW,
             ProximityRadius = 10,
             Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
         };
