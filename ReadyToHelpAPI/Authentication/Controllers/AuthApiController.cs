@@ -109,4 +109,35 @@ public class AuthApiController : ControllerBase
         return Ok(newToken);
     }
 
+    /// <summary>
+    /// Logs out the user by revoking the provided JWT token.
+    /// </summary>
+    [Authorize]
+    [HttpPost("logout")]
+    public IActionResult Logout()
+    {
+        var authHeader = Request.Headers["Authorization"].ToString();
+        if (string.IsNullOrWhiteSpace(authHeader) || !authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+        {
+            return BadRequest("Authorization Bearer token is required in the Authorization header.");
+        }
+
+        var token = authHeader.Substring("Bearer ".Length).Trim();
+        if (string.IsNullOrWhiteSpace(token)) return BadRequest("Invalid Bearer token.");
+
+        try
+        {
+            authService.RevokeToken(token);
+            return NoContent();
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { Message = ex.Message });
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, "An unexpected error occurred while revoking token.");
+        }
+    }
+
 }

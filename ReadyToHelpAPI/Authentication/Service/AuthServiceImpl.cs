@@ -2,6 +2,8 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Authentication;
 using System.Security.Claims;
 using System.Text;
+using System.Text.Json;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.IdentityModel.Tokens;
 using readytohelpapi.Authentication.Models;
 using readytohelpapi.User.Models;
@@ -17,6 +19,8 @@ public class AuthServiceImpl : IAuthService
     private readonly IUserService userService;
     private readonly IConfiguration configuration;
     private readonly JwtSecurityTokenHandler tokenHandler = new();
+    private readonly IDistributedCache cache;
+    private IUserService @object;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AuthServiceImpl"/> class.
@@ -24,11 +28,12 @@ public class AuthServiceImpl : IAuthService
     /// <param name="userService">The user service.</param>
     /// <param name="configuration">The configuration.</param>
     /// <exception cref="ArgumentNullException">Thrown if any dependency is null.</exception>
-    /// <exception cref="InvalidOperationException">Thrown if JWT settings are not configured.</exception
-    public AuthServiceImpl(IUserService userService, IConfiguration configuration)
+    /// <exception cref="InvalidOperationException">Thrown if JWT settings are not configured.</exception>
+    public AuthServiceImpl(IUserService userService, IConfiguration configuration, IDistributedCache cache)
     {
         this.userService = userService ?? throw new ArgumentNullException(nameof(userService));
         this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+        this.cache = cache ?? throw new ArgumentNullException(nameof(cache));
 
         _ = configuration["Jwt:Secret"] ?? throw new InvalidOperationException("Jwt:Secret not configured");
         _ = configuration["Jwt:Issuer"] ?? throw new InvalidOperationException("Jwt:Issuer not configured");
@@ -114,6 +119,31 @@ public class AuthServiceImpl : IAuthService
     }
 
     /// <summary>
+    /// Revokes the specified token, rendering it invalid for future use.
+    /// </summary>
+    /// <param name="token">The JWT token to revoke.</param>
+    public void RevokeToken(string token)
+    {
+        var jwt = JwtUtility.ConvertJwtStringToJwtSecurityToken(token);
+        if (jwt == null) return;
+
+        var jti = jwt.Id;
+        if (string.IsNullOrWhiteSpace(jti)) return;
+
+        var expiration = jwt.ValidTo;
+        var totalTime = expiration - DateTime.UtcNow;
+        if (totalTime <= TimeSpan.Zero) return;
+
+        var key = $"revoked_tokens:{jti}";
+        var options = new DistributedCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = totalTime
+        };
+
+        cache.SetString(key, JsonSerializer.Serialize(new { revokedAt = DateTime.UtcNow }), options);
+    }
+
+    /// <summary>
     /// Validates a JWT token and returns the associated ClaimsPrincipal.
     /// </summary>
     /// <param name="token">The JWT token to validate.</param>
@@ -137,6 +167,18 @@ public class AuthServiceImpl : IAuthService
 
         var principal = tokenHandler.ValidateToken(token, parameters, out SecurityToken securityToken);
         jwtToken = securityToken as JwtSecurityToken ?? throw new SecurityTokenException("Invalid token");
+
+        var jti = jwtToken.Id;
+        if (!string.IsNullOrWhiteSpace(jti))
+        {
+            var key = $"revoked_tokens:{jti}";
+            var revokedToken = cache.GetString(key);
+            if (revokedToken != null)
+            {
+                throw new SecurityTokenException("Token has been revoked.");
+            }
+        }
+
         return principal;
     }
 

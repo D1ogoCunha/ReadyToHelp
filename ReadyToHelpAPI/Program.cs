@@ -82,6 +82,8 @@ var jwtIssuer = builder.Configuration["Jwt:Issuer"];
 var jwtAudience = builder.Configuration["Jwt:Audience"];
 var keyBytes = Encoding.UTF8.GetBytes(jwtSecret);
 
+builder.Services.AddDistributedMemoryCache();
+
 builder
     .Services.AddAuthentication(options =>
     {
