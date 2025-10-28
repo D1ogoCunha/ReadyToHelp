@@ -394,7 +394,7 @@ public class TestsAuthApiController
         var obj = Assert.IsType<ObjectResult>(res);
         Assert.Equal(500, obj.StatusCode);
     }
-    
+
     /// <summary>
     /// Tests that Logout accepts case-insensitive 'Bearer' and trims whitespace around the token.
     /// </summary>

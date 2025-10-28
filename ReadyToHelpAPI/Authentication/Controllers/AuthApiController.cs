@@ -139,5 +139,5 @@ public class AuthApiController : ControllerBase
             return StatusCode(500, "An unexpected error occurred while revoking token.");
         }
     }
-    
+
 }
