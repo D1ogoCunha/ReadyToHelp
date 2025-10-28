@@ -11,6 +11,7 @@ using readytohelpapi.Authentication.Service;
 using readytohelpapi.User.Models;
 using readytohelpapi.User.Services;
 using Xunit;
+using Microsoft.Extensions.Caching.Distributed;
 
 namespace ReadyToHelpAPI.Tests.Authentication;
 
@@ -22,6 +23,7 @@ public class TestAuthService
     private readonly Mock<IUserService> mockUserService;
     private readonly IConfiguration configuration;
     private readonly AuthServiceImpl authService;
+    private readonly Mock<IDistributedCache> mockCache;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TestAuthService"/> class.
@@ -30,6 +32,7 @@ public class TestAuthService
     public TestAuthService()
     {
         mockUserService = new Mock<IUserService>();
+        mockCache = new Mock<IDistributedCache>();
 
         var configData = new Dictionary<string, string?>
         {
@@ -40,7 +43,7 @@ public class TestAuthService
         };
         configuration = new ConfigurationBuilder().AddInMemoryCollection(configData).Build();
 
-        authService = new AuthServiceImpl(mockUserService.Object, configuration);
+        authService = new AuthServiceImpl(mockUserService.Object, configuration, mockCache.Object);
     }
 
     /// <summary>
@@ -136,16 +139,20 @@ public class TestAuthService
     [Fact]
     public void RefreshToken_ShouldReturnNewToken_WhenTokenValid()
     {
-        var user = new User(5, "Admin", "admin@mail.com", BCrypt.Net.BCrypt.HashPassword("1234"), Profile.ADMIN);
-        mockUserService.Setup(u => u.GetUserByEmail("admin@mail.com")).Returns(user);
+        var token = CreateCustomJwt(new Dictionary<string, string>
+        {
+            [JwtRegisteredClaimNames.Sub] = "1",
+            [JwtRegisteredClaimNames.Email] = "u@mail.com",
+            [ClaimTypes.Role] = "ADMIN"
+        });
 
-        var auth = new AuthDto("admin@mail.com", "1234");
-        var token = authService.UserLoginWeb(auth);
+        Assert.False(string.IsNullOrWhiteSpace(token));
+        Assert.True(token.Count(c => c == '.') >= 2);
 
         var refreshed = authService.RefreshToken(token);
 
-        Assert.NotNull(refreshed);
-        Assert.Contains(".", refreshed);
+        Assert.False(string.IsNullOrWhiteSpace(refreshed));
+        Assert.Equal(2, refreshed.Count(c => c == '.'));
         Assert.NotEqual(token, refreshed);
     }
 
@@ -281,5 +288,50 @@ public class TestAuthService
     {
         var result = authService.RefreshToken("   ");
         Assert.Equal(string.Empty, result);
+    }
+
+    /// <summary>
+    /// Tests revoking a JWT token by storing its JTI in the cache.
+    /// </summary>
+    [Fact]
+    public void RevokeToken_ShouldStoreJtiInCache()
+    {
+        var user = new User(20, "U", "u20@mail.com", BCrypt.Net.BCrypt.HashPassword("p"), Profile.ADMIN);
+        mockUserService.Setup(u => u.GetUserByEmail("u20@mail.com")).Returns(user);
+
+        var auth = new AuthDto("u20@mail.com", "p");
+        var token = authService.UserLoginWeb(auth);
+
+        var jwt = new JwtSecurityTokenHandler().ReadJwtToken(token);
+        var key = $"revoked_tokens:{jwt.Id}";
+
+        authService.RevokeToken(token);
+
+        mockCache.Verify(c => c.Set(
+            It.Is<string>(k => k == key),
+            It.IsAny<byte[]>(),
+            It.IsAny<DistributedCacheEntryOptions>()), Times.Once);
+    }
+
+    /// <summary>
+    /// Tests refreshing a JWT token that has been revoked in the cache.
+    /// </summary>
+    [Fact]
+    public void RefreshToken_ShouldReturnEmpty_WhenTokenRevokedInCache()
+    {
+        var user = new User(21, "U2", "u21@mail.com", BCrypt.Net.BCrypt.HashPassword("p"), Profile.ADMIN);
+        mockUserService.Setup(u => u.GetUserByEmail("u21@mail.com")).Returns(user);
+
+        var auth = new AuthDto("u21@mail.com", "p");
+        var token = authService.UserLoginWeb(auth);
+
+        var jwt = new JwtSecurityTokenHandler().ReadJwtToken(token);
+        var key = $"revoked_tokens:{jwt.Id}";
+
+        mockCache.Setup(c => c.Get(It.Is<string>(k => k == key))).Returns(Encoding.UTF8.GetBytes("{}"));
+
+        var refreshed = authService.RefreshToken(token);
+
+        Assert.Equal(string.Empty, refreshed);
     }
 }

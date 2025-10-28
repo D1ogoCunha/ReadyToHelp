@@ -302,4 +302,113 @@ public class TestsAuthApiController
         var ok = Assert.IsType<OkObjectResult>(res.Result);
         Assert.Equal("newtok", Assert.IsType<string>(ok.Value));
     }
+
+    /// <summary>
+    /// Tests that Logout returns NoContent when provided a valid Authorization header.
+    /// </summary>
+    [Fact]
+    public void Logout_ReturnsNoContent_OnValidHeader()
+    {
+        var svc = new Mock<IAuthService>();
+        // RevokeToken is void; setup as verifiable
+        svc.Setup(s => s.RevokeToken("abc")).Verifiable();
+        var ctrl = MakeController(svc.Object);
+        ctrl.HttpContext.Request.Headers.Authorization = "Bearer abc";
+
+        var res = ctrl.Logout();
+
+        Assert.IsType<NoContentResult>(res);
+        svc.Verify(s => s.RevokeToken("abc"), Times.Once);
+    }
+
+    /// <summary>
+    /// Tests that Logout returns BadRequest when the Authorization header is missing.
+    /// </summary>
+    [Fact]
+    public void Logout_ReturnsBadRequest_WhenMissingHeader()
+    {
+        var ctrl = MakeController(new Mock<IAuthService>().Object);
+
+        var res = ctrl.Logout();
+
+        Assert.IsType<BadRequestObjectResult>(res);
+    }
+
+    /// <summary>
+    /// Tests that Logout returns BadRequest when the Authorization header does not start with "Bearer".
+    /// </summary>
+    [Fact]
+    public void Logout_ReturnsBadRequest_OnHeaderWithoutBearerPrefix()
+    {
+        var ctrl = MakeController(new Mock<IAuthService>().Object);
+        ctrl.HttpContext.Request.Headers.Authorization = "abc"; // sem 'Bearer '
+
+        var res = ctrl.Logout();
+
+        Assert.IsType<BadRequestObjectResult>(res);
+    }
+
+    /// <summary>
+    /// Tests that Logout returns BadRequest when the Bearer token is empty or whitespace.
+    /// </summary>
+    [Fact]
+    public void Logout_ReturnsBadRequest_OnEmptyBearerToken()
+    {
+        var ctrl = MakeController(new Mock<IAuthService>().Object);
+        ctrl.HttpContext.Request.Headers.Authorization = "Bearer    "; // só espaços
+
+        var res = ctrl.Logout();
+
+        Assert.IsType<BadRequestObjectResult>(res);
+    }
+
+    /// <summary>
+    /// Tests that Logout returns BadRequest when the authentication service throws an ArgumentException.
+    /// </summary>
+    [Fact]
+    public void Logout_ReturnsBadRequest_OnServiceThrowsArgumentException()
+    {
+        var svc = new Mock<IAuthService>();
+        svc.Setup(s => s.RevokeToken("abc")).Throws(new ArgumentException("invalid"));
+        var ctrl = MakeController(svc.Object);
+        ctrl.HttpContext.Request.Headers.Authorization = "Bearer abc";
+
+        var res = ctrl.Logout();
+
+        Assert.IsType<BadRequestObjectResult>(res);
+    }
+
+    /// <summary>
+    /// Tests that Logout returns 500 when an unexpected exception occurs.
+    /// </summary>
+    [Fact]
+    public void Logout_Returns500_OnUnexpectedException()
+    {
+        var svc = new Mock<IAuthService>();
+        svc.Setup(s => s.RevokeToken("abc")).Throws(new Exception("boom"));
+        var ctrl = MakeController(svc.Object);
+        ctrl.HttpContext.Request.Headers.Authorization = "Bearer abc";
+
+        var res = ctrl.Logout();
+
+        var obj = Assert.IsType<ObjectResult>(res);
+        Assert.Equal(500, obj.StatusCode);
+    }
+    
+    /// <summary>
+    /// Tests that Logout accepts case-insensitive 'Bearer' and trims whitespace around the token.
+    /// </summary>
+    [Fact]
+    public void Logout_AcceptsCaseInsensitiveBearer_AndTrimsToken()
+    {
+        var svc = new Mock<IAuthService>();
+        svc.Setup(s => s.RevokeToken("AbC")).Verifiable();
+        var ctrl = MakeController(svc.Object);
+        ctrl.HttpContext.Request.Headers.Authorization = "bearer    AbC   ";
+
+        var res = ctrl.Logout();
+
+        Assert.IsType<NoContentResult>(res);
+        svc.Verify(s => s.RevokeToken("AbC"), Times.Once);
+    }
 }
