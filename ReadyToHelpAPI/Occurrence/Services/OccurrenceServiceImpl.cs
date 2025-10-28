@@ -1,23 +1,27 @@
 namespace readytohelpapi.Occurrence.Services;
 
 using readytohelpapi.Occurrence.Models;
+using readytohelpapi.ResponsibleEntity.Services;
 using System;
 using System.Collections.Generic;
 
 /// <summary>
-///    Implements the occurrence service operations.
+///    Implementation of the occurrence service operations.
 /// </summary>
 public class OccurrenceServiceImpl : IOccurrenceService
 {
     private readonly IOccurrenceRepository occurrenceRepository;
+    private readonly IResponsibleEntityService responsibleEntityService;
 
     /// <summary>
     ///   Initializes a new instance of the <see cref="OccurrenceServiceImpl"/> class.
     /// </summary>
     /// <param name="occurrenceRepository">The occurrence repository instance.</param>
-    public OccurrenceServiceImpl(IOccurrenceRepository occurrenceRepository)
+    /// <param name="responsibleEntityService">The responsible entity service instance.</param>
+    public OccurrenceServiceImpl(IOccurrenceRepository occurrenceRepository, IResponsibleEntityService responsibleEntityService)
     {
         this.occurrenceRepository = occurrenceRepository;
+        this.responsibleEntityService = responsibleEntityService;
     }
 
     /// <summary>
@@ -105,6 +109,42 @@ public class OccurrenceServiceImpl : IOccurrenceService
             throw new ArgumentException("EndDateTime must be later than CreationDateTime.", nameof(occurrence.EndDateTime));
 
         occurrence.Priority = ComputePriority(occurrence.Type, occurrence.ReportCount);
+
+        try
+        {
+            return this.occurrenceRepository.Create(occurrence);
+        }
+        catch (Exception e)
+        {
+            throw new InvalidOperationException("An error occurred while trying to create an occurrence.", e);
+        }
+    }
+
+    /// <inheritdoc />
+    public Occurrence CreateAdminOccurrence(Occurrence occurrence)
+    {
+        if (occurrence == null)
+            throw new ArgumentNullException(nameof(occurrence));
+        if (string.IsNullOrWhiteSpace(occurrence.Title))
+            throw new ArgumentException("Occurrence title is required.", nameof(occurrence.Title));
+        if (string.IsNullOrWhiteSpace(occurrence.Description))
+            throw new ArgumentException("Occurrence description is required.", nameof(occurrence.Description));
+        if (occurrence.Location == null)
+            throw new ArgumentException("Occurrence location is required.", nameof(occurrence.Location));
+        if (!Enum.IsDefined(typeof(OccurrenceType), occurrence.Type))
+            throw new ArgumentOutOfRangeException(nameof(occurrence.Type), "Invalid occurrence type");
+        if (occurrence.ProximityRadius <= 0)
+            throw new ArgumentException("Proximity radius must be greater than zero.", nameof(occurrence.ProximityRadius));
+
+        var responsibleEntity = responsibleEntityService.FindResponsibleEntity(
+            occurrence.Type,
+            occurrence.Location.Latitude,
+            occurrence.Location.Longitude
+        );
+        occurrence.ResponsibleEntityId = responsibleEntity?.Id ?? 0;
+
+        occurrence.ReportId = null;
+        occurrence.ReportCount = 0;
 
         try
         {

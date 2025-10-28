@@ -3,6 +3,7 @@ using GeoPointModel = readytohelpapi.GeoPoint.Models.GeoPoint;
 using readytohelpapi.Occurrence.Models;
 using readytohelpapi.Occurrence.Services;
 using Xunit;
+using readytohelpapi.ResponsibleEntity.Services;
 
 namespace readytohelpapi.Occurrence.Tests;
 
@@ -12,6 +13,7 @@ namespace readytohelpapi.Occurrence.Tests;
 public class TestOccurrenceServiceTest
 {
     private readonly Mock<IOccurrenceRepository> mockRepo;
+    private readonly Mock<IResponsibleEntityService> mockResponsibleEntityService;
     private readonly IOccurrenceService service;
 
     /// <summary>
@@ -20,7 +22,8 @@ public class TestOccurrenceServiceTest
     public TestOccurrenceServiceTest()
     {
         mockRepo = new Mock<IOccurrenceRepository>();
-        service = new OccurrenceServiceImpl(mockRepo.Object);
+        mockResponsibleEntityService = new Mock<IResponsibleEntityService>();
+        service = new OccurrenceServiceImpl(mockRepo.Object, mockResponsibleEntityService.Object);
     }
 
     /// <summary>
@@ -787,123 +790,146 @@ public class TestOccurrenceServiceTest
     }
 
     /// <summary>
-    ///  Tests Create computes priority correctly for HIGH base priority.
+    ///  Tests CreateAdminOccurrence with null occurrence.
     /// </summary>
     [Fact]
-    public void Create_ComputesPriority_BaseHigh_AlwaysHigh()
+    public void CreateAdminOccurrence_NullOccurrence_ThrowsArgumentNullException()
     {
-        var input = new Models.Occurrence
-        {
-            Title = "Incêndio",
-            Description = "Floresta",
-            Type = OccurrenceType.FOREST_FIRE,
-            ProximityRadius = 50,
-            ReportCount = 0,
-            Location = new GeoPointModel { Latitude = 41, Longitude = -8 }
-        };
-
-        mockRepo.Setup(r => r.Create(It.IsAny<Models.Occurrence>()))
-                .Returns<Models.Occurrence>(o => { o.Id = 1; return o; });
-
-        var created = service.Create(input);
-
-        Assert.Equal(1, created.Id);
-        Assert.Equal(PriorityLevel.HIGH, created.Priority);
-
-        created.ReportCount = 10;
-        mockRepo.Setup(r => r.Update(It.IsAny<Models.Occurrence>()))
-                .Returns<Models.Occurrence>(o => o);
-
-        var updated = service.Update(created);
-        Assert.Equal(PriorityLevel.HIGH, updated.Priority);
+        Assert.Throws<ArgumentNullException>(() => service.CreateAdminOccurrence(null!));
     }
 
     /// <summary>
-    /// Tests if Base MEDIUM escalates to High at 5 reports.
+    ///  Tests CreateAdminOccurrence with missing title.
     /// </summary>
     [Fact]
-    public void ComputePriority_BaseMedium_EscalatesAt5()
+    public void CreateAdminOccurrence_EmptyTitle_ThrowsArgumentException()
     {
-        var input = new Models.Occurrence
+        var o = new Models.Occurrence
         {
-            Title = "Trânsito",
-            Description = "Congestionamento",
-            Type = OccurrenceType.TRAFFIC_CONGESTION,
-            ProximityRadius = 50,
-            ReportCount = 3,
-            Location = new GeoPointModel { Latitude = 41, Longitude = -8 }
+            Title = "",
+            Description = "desc",
+            Type = OccurrenceType.FLOOD,
+            ProximityRadius = 10,
+            Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
         };
 
-        mockRepo.Setup(r => r.Create(It.IsAny<Models.Occurrence>()))
-                .Returns<Models.Occurrence>(o => { o.Id = 2; return o; });
-
-        var created = service.Create(input);
-        Assert.Equal(PriorityLevel.MEDIUM, created.Priority);
-
-        created.ReportCount = 5;
-        mockRepo.Setup(r => r.Update(It.IsAny<Models.Occurrence>()))
-                .Returns<Models.Occurrence>(o => o);
-
-        var updated = service.Update(created);
-        Assert.Equal(PriorityLevel.HIGH, updated.Priority);
+        var ex = Assert.Throws<ArgumentException>(() => service.CreateAdminOccurrence(o));
+        Assert.Contains("title", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>
-    /// Tests if Base LOW escalates to Medium at 7 reports.
+    ///  Tests CreateAdminOccurrence with missing description.
     /// </summary>
     [Fact]
-    public void ComputePriority_BaseLow_EscalatesAt7()
+    public void CreateAdminOccurrence_EmptyDescription_ThrowsArgumentException()
     {
-        var input = new Models.Occurrence
+        var o = new Models.Occurrence
         {
-            Title = "Iluminação pública",
-            Description = "Lâmpada fundida",
-            Type = OccurrenceType.PUBLIC_LIGHTING,
-            ProximityRadius = 50,
-            ReportCount = 6,
-            Location = new GeoPointModel { Latitude = 41, Longitude = -8 }
+            Title = "Test",
+            Description = "",
+            Type = OccurrenceType.FLOOD,
+            ProximityRadius = 10,
+            Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
         };
 
-        mockRepo.Setup(r => r.Create(It.IsAny<Models.Occurrence>()))
-                .Returns<Models.Occurrence>(o => { o.Id = 3; return o; });
-
-        var created = service.Create(input);
-        Assert.Equal(PriorityLevel.LOW, created.Priority);
-
-        created.ReportCount = 7;
-        mockRepo.Setup(r => r.Update(It.IsAny<Models.Occurrence>()))
-                .Returns<Models.Occurrence>(o => o);
-
-        var updated = service.Update(created);
-        Assert.Equal(PriorityLevel.MEDIUM, updated.Priority);
+        Assert.Throws<ArgumentException>(() => service.CreateAdminOccurrence(o));
     }
 
     /// <summary>
-    ///  Tests Update recomputes priority when ReportCount changes.
+    ///  Tests CreateAdminOccurrence with missing location.
     /// </summary>
     [Fact]
-    public void Update_RecomputesPriority_When_ReportCountChanges()
+    public void CreateAdminOccurrence_NullLocation_ThrowsArgumentException()
     {
-        var input = new Models.Occurrence
+        var o = new Models.Occurrence
         {
-            Id = 50,
-            Title = "Obstrução",
-            Description = "Via bloqueada",
-            Type = OccurrenceType.ROAD_OBSTRUCTION,
-            ProximityRadius = 30,
-            ReportCount = 1,
-            Location = new GeoPointModel { Latitude = 40.5, Longitude = -8.5 }
+            Title = "Test",
+            Description = "Desc",
+            Type = OccurrenceType.FLOOD,
+            ProximityRadius = 10,
+            Location = null!
+        };
+
+        Assert.Throws<ArgumentException>(() => service.CreateAdminOccurrence(o));
+    }
+
+    /// <summary>
+    ///  Tests CreateAdminOccurrence sets ResponsibleEntityId based on coordinates.
+    /// </summary>
+    [Fact]
+    public void CreateAdminOccurrence_SetsResponsibleEntityId_WhenEntityExists()
+    {
+        var occurrence = new Models.Occurrence
+        {
+            Title = "Incident",
+            Description = "Desc",
+            Type = OccurrenceType.FLOOD,
+            ProximityRadius = 50,
+            Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
+        };
+
+        mockResponsibleEntityService
+            .Setup(s => s.FindResponsibleEntity(OccurrenceType.FLOOD, 40, -8))
+            .Returns(new readytohelpapi.ResponsibleEntity.Models.ResponsibleEntity { Id = 99 });
+
+        mockRepo.Setup(r => r.Create(It.IsAny<Models.Occurrence>()))
+                .Returns((Models.Occurrence o) => { o.Id = 10; return o; });
+
+        var result = service.CreateAdminOccurrence(occurrence);
+
+        Assert.Equal(10, result.Id);
+        Assert.Equal(99, result.ResponsibleEntityId);
+        Assert.Equal(0, result.ReportCount);
+        Assert.Null(result.ReportId);
+    }
+
+    /// <summary>
+    ///  Tests CreateAdminOccurrence sets ResponsibleEntityId = 0 if none is found.
+    /// </summary>
+    [Fact]
+    public void CreateAdminOccurrence_NoResponsibleEntity_SetsResponsibleEntityIdToZero()
+    {
+        var occurrence = new Models.Occurrence
+        {
+            Title = "Incident",
+            Description = "Desc",
+            Type = OccurrenceType.FLOOD,
+            ProximityRadius = 50,
+            Location = new GeoPointModel { Latitude = 41, Longitude = -8 }
+        };
+
+        mockResponsibleEntityService
+            .Setup(s => s.FindResponsibleEntity(It.IsAny<OccurrenceType>(), It.IsAny<double>(), It.IsAny<double>()))
+            .Returns((readytohelpapi.ResponsibleEntity.Models.ResponsibleEntity?)null);
+
+        mockRepo.Setup(r => r.Create(It.IsAny<Models.Occurrence>()))
+                .Returns((Models.Occurrence o) => { o.Id = 5; return o; });
+
+        var result = service.CreateAdminOccurrence(occurrence);
+
+        Assert.Equal(5, result.Id);
+        Assert.Equal(0, result.ResponsibleEntityId); // fallback
+    }
+
+    /// <summary>
+    ///  Tests CreateAdminOccurrence wraps repository exceptions.
+    /// </summary>
+    [Fact]
+    public void CreateAdminOccurrence_RepositoryThrows_WrapsInvalidOperationException()
+    {
+        var o = new Models.Occurrence
+        {
+            Title = "t",
+            Description = "d",
+            Type = OccurrenceType.FLOOD,
+            ProximityRadius = 10,
+            Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
         };
 
         mockRepo.Setup(r => r.Create(It.IsAny<Models.Occurrence>()))
-                .Returns<Models.Occurrence>(o => { o.Id = 50; return o; });
-        var created = service.Create(input);
-        Assert.Equal(PriorityLevel.MEDIUM, created.Priority);
+                .Throws(new Exception("DB error"));
 
-        created.ReportCount = 5;
-        mockRepo.Setup(r => r.Update(It.IsAny<Models.Occurrence>()))
-                .Returns<Models.Occurrence>(o => o);
-        var updated = service.Update(created);
-        Assert.Equal(PriorityLevel.HIGH, updated.Priority);
+        Assert.Throws<InvalidOperationException>(() => service.CreateAdminOccurrence(o));
     }
+
 }

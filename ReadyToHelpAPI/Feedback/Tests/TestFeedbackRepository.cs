@@ -9,6 +9,7 @@ using readytohelpapi.GeoPoint.Models;
 using readytohelpapi.Occurrence.Models;
 using readytohelpapi.Report.Models;
 using readytohelpapi.Feedback.Tests.Fixtures;
+using readytohelpapi.ResponsibleEntity.Models;
 using Xunit;
 
 /// <summary>
@@ -31,6 +32,20 @@ public class TestFeedbackRepository : IClassFixture<DbFixture>
         this.repository = new FeedbackRepository(this.context);
     }
 
+    private int CreateResponsibleEntityHelper()
+    {
+        var re = new ResponsibleEntity
+        {
+            Name = $"TestRE-{Guid.NewGuid():N}",
+            Email = "re@example.com",
+            Address = "addr",
+            ContactPhone = 123456789,
+            Type = ResponsibleEntityType.INEM
+        };
+        this.context.Set<ResponsibleEntity>().Add(re);
+        this.context.SaveChanges();
+        return re.Id;
+    }
     /// <summary>
     /// Tests the Create method with null feedback.
     /// </summary>
@@ -61,6 +76,8 @@ public class TestFeedbackRepository : IClassFixture<DbFixture>
         this.context.Reports.Add(report);
         this.context.SaveChanges();
 
+        var reId = CreateResponsibleEntityHelper();
+
         var occ = new Occurrence
         {
             Title = "o",
@@ -68,7 +85,8 @@ public class TestFeedbackRepository : IClassFixture<DbFixture>
             Type = OccurrenceType.ROAD_DAMAGE,
             Status = OccurrenceStatus.WAITING,
             Location = new GeoPoint { Latitude = 41.3678, Longitude = -8.2012 },
-            ReportId = report.Id
+            ReportId = report.Id,
+            ResponsibleEntityId = reId
         };
         this.context.Occurrences.Add(occ);
         this.context.SaveChanges();
@@ -104,6 +122,8 @@ public class TestFeedbackRepository : IClassFixture<DbFixture>
         this.context.Reports.Add(report);
         this.context.SaveChanges();
 
+        var reId = CreateResponsibleEntityHelper();
+
         var occ = new Occurrence
         {
             Title = "o2",
@@ -111,7 +131,8 @@ public class TestFeedbackRepository : IClassFixture<DbFixture>
             Type = OccurrenceType.ROAD_DAMAGE,
             Status = OccurrenceStatus.WAITING,
             Location = new GeoPoint { Latitude = 41.3678, Longitude = -8.2012 },
-            ReportId = report.Id
+            ReportId = report.Id,
+            ResponsibleEntityId = reId
         };
         this.context.Occurrences.Add(occ);
         this.context.SaveChanges();
@@ -157,6 +178,8 @@ public class TestFeedbackRepository : IClassFixture<DbFixture>
         this.context.Reports.Add(report);
         this.context.SaveChanges();
 
+        var reId = CreateResponsibleEntityHelper();
+
         var occ = new Occurrence
         {
             Title = "o3",
@@ -164,7 +187,8 @@ public class TestFeedbackRepository : IClassFixture<DbFixture>
             Type = OccurrenceType.ROAD_DAMAGE,
             Status = OccurrenceStatus.WAITING,
             Location = new GeoPoint { Latitude = 41.3678, Longitude = -8.2012 },
-            ReportId = report.Id
+            ReportId = report.Id,
+            ResponsibleEntityId = reId
         };
         this.context.Occurrences.Add(occ);
         this.context.SaveChanges();
@@ -200,6 +224,7 @@ public class TestFeedbackRepository : IClassFixture<DbFixture>
         this.context.Reports.Add(report);
         this.context.SaveChanges();
 
+        var reId = CreateResponsibleEntityHelper();
         var occ = new Occurrence
         {
             Title = "o4",
@@ -207,7 +232,8 @@ public class TestFeedbackRepository : IClassFixture<DbFixture>
             Type = OccurrenceType.ROAD_DAMAGE,
             Status = OccurrenceStatus.WAITING,
             Location = new GeoPoint { Latitude = 41.3678, Longitude = -8.2012 },
-            ReportId = report.Id
+            ReportId = report.Id,
+            ResponsibleEntityId = reId
         };
         this.context.Occurrences.Add(occ);
         this.context.SaveChanges();
@@ -245,6 +271,8 @@ public class TestFeedbackRepository : IClassFixture<DbFixture>
         this.context.Reports.Add(report);
         this.context.SaveChanges();
 
+        var reId = CreateResponsibleEntityHelper();
+
         var occ = new Occurrence
         {
             Title = "o5",
@@ -252,7 +280,8 @@ public class TestFeedbackRepository : IClassFixture<DbFixture>
             Type = OccurrenceType.ROAD_DAMAGE,
             Status = OccurrenceStatus.WAITING,
             Location = new GeoPoint { Latitude = 41.3678, Longitude = -8.2012 },
-            ReportId = report.Id
+            ReportId = report.Id,
+            ResponsibleEntityId = reId
         };
         this.context.Occurrences.Add(occ);
         this.context.SaveChanges();
@@ -290,6 +319,8 @@ public class TestFeedbackRepository : IClassFixture<DbFixture>
         this.context.Reports.Add(report);
         this.context.SaveChanges();
 
+        var reId = CreateResponsibleEntityHelper();
+
         var occ = new Occurrence
         {
             Title = "o6",
@@ -297,7 +328,8 @@ public class TestFeedbackRepository : IClassFixture<DbFixture>
             Type = OccurrenceType.ROAD_DAMAGE,
             Status = OccurrenceStatus.WAITING,
             Location = new GeoPoint { Latitude = 41.3678, Longitude = -8.2012 },
-            ReportId = report.Id
+            ReportId = report.Id,
+            ResponsibleEntityId = reId
         };
         this.context.Occurrences.Add(occ);
         this.context.SaveChanges();
@@ -330,6 +362,8 @@ public class TestFeedbackRepository : IClassFixture<DbFixture>
         this.context.Reports.Add(report);
         this.context.SaveChanges();
 
+        var reId = CreateResponsibleEntityHelper();
+
         var occ = new Occurrence
         {
             Title = "o7",
@@ -337,7 +371,8 @@ public class TestFeedbackRepository : IClassFixture<DbFixture>
             Type = OccurrenceType.ROAD_DAMAGE,
             Status = OccurrenceStatus.WAITING,
             Location = new GeoPoint { Latitude = 41.3678, Longitude = -8.2012 },
-            ReportId = report.Id
+            ReportId = report.Id,
+            ResponsibleEntityId = reId
         };
         this.context.Occurrences.Add(occ);
         this.context.SaveChanges();
