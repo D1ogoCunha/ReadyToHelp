@@ -28,6 +28,8 @@ public class FeedbackApiController : ControllerBase
     /// <summary>
     /// Create a new feedback.
     /// </summary>
+    /// <param name="feedback">The feedback to create.</param>
+    /// <returns>The created feedback.</returns>
     [HttpPost]
     public IActionResult Create([FromBody] Feedback feedback)
     {
@@ -59,6 +61,7 @@ public class FeedbackApiController : ControllerBase
     /// <summary>
     /// Get all feedbacks.
     /// </summary>
+    /// <returns>A list of all feedbacks.</returns>
     [HttpGet]
     public IActionResult GetAll()
     {
@@ -79,6 +82,8 @@ public class FeedbackApiController : ControllerBase
     /// <summary>
     /// Get feedbacks by userId.
     /// </summary>
+    /// <param name="userId">The user ID to filter feedbacks.</param>
+    /// <returns>A list of feedbacks for the specified user.</returns>
     [HttpGet("user/{userId:int}")]
     public IActionResult GetByUserId(int userId)
     {
@@ -109,6 +114,8 @@ public class FeedbackApiController : ControllerBase
     /// <summary>
     /// Get feedback by feedbackId.
     /// </summary>
+    /// <param name="id">The feedback ID.</param>
+    /// <returns>The feedback with the specified ID.</returns>
     [HttpGet("{id:int}")]
     public IActionResult GetById(int id)
     {
@@ -133,6 +140,8 @@ public class FeedbackApiController : ControllerBase
     /// <summary>
     /// Get feedbacks by occurrenceId.
     /// </summary>
+    /// <param name="occurrenceId">The occurrence ID to filter feedbacks.</param>
+    /// <returns>A list of feedbacks for the specified occurrence.</returns>
     [HttpGet("occurrence/{occurrenceId:int}")]
     public IActionResult GetByOccurrenceId(int occurrenceId)
     {

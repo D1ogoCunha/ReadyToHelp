@@ -4,10 +4,18 @@ using readytohelpapi.Common.Data;
 
 namespace readytohelpapi.Occurrence.Tests;
 
+/// <summary>
+///     Provides a test fixture for setting up and managing the OccurrenceContext database.
+///     This fixture ensures the database is created, reset, and disposed properly
+///     during the testing lifecycle.
+/// </summary>
 public class DbFixture : IDisposable
 {
     private readonly string _databaseName;
 
+    /// <summary>
+    ///   Initializes a new instance of the <see cref="DbFixture"/> class.
+    /// </summary>
     public DbFixture()
     {
         var postgresHost = Environment.GetEnvironmentVariable("POSTGRES_HOST") ?? "localhost";
@@ -30,8 +38,14 @@ public class DbFixture : IDisposable
         Context.Database.EnsureCreated();
     }
 
+    /// <summary>
+    ///   Gets the database context for the fixture.
+    /// </summary>
     public AppDbContext Context { get; }
 
+    /// <summary>
+    ///   Resets the database by clearing tracked entities and removing all occurrences.
+    /// </summary>
     public void ResetDatabase()
     {
         Context.ChangeTracker.Clear();
@@ -44,6 +58,9 @@ public class DbFixture : IDisposable
         Context.ChangeTracker.Clear();
     }
 
+    /// <summary>
+    ///  Disposes of the database context and deletes the test database.
+    /// </summary>
     public void Dispose()
     {
         Context.Database.EnsureDeleted();

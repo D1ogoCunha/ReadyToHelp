@@ -52,7 +52,6 @@ public class ReportApiController : ControllerBase
                 Title = dto.Title,
                 Description = dto.Description,
                 Type = dto.Type,
-                Priority = dto.Priority,
                 UserId = dto.UserId,
                 Location = new GeoPoint.Models.GeoPoint
                 {
@@ -105,6 +104,8 @@ public class ReportApiController : ControllerBase
     /// <summary>
     /// Retrieves a report by its ID.
     /// </summary>
+    /// <param name="id">The ID of the report.</param>
+    /// <returns>The report if found; otherwise, a not found response.</returns>
     [HttpGet("{id:int}")]
     public IActionResult GetById([FromRoute] int id)
     {

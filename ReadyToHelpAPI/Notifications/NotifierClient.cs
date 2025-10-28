@@ -97,6 +97,11 @@ public class NotifierClient : INotifierClient
         return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Clones a NotificationRequest with the current timestamp.
+    /// </summary>
+    /// <param name="src">The source NotificationRequest to clone.</param>
+    /// <returns>A cloned NotificationRequest with the current timestamp.</returns>
     private static NotificationRequest CloneWithTimestamp(NotificationRequest src) => new NotificationRequest
     {
         Type = src.Type,

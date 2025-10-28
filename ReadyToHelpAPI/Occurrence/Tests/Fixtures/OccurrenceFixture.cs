@@ -3,8 +3,14 @@ using GeoPointModel = readytohelpapi.GeoPoint.Models.GeoPoint;
 
 namespace readytohelpapi.Occurrence.Tests.Fixtures;
 
+/// <summary>
+///   Provides helper methods to create or update Occurrence instances for testing.
+/// </summary>
 public static class OccurrenceFixture
 {
+    /// <summary>
+    ///     Creates or updates an Occurrence object with the specified values.
+    /// </summary>
     public static Models.Occurrence CreateOrUpdateOccurrence(
         Models.Occurrence? o = null,
         int? id = null,

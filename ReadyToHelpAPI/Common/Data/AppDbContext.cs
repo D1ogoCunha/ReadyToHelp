@@ -104,7 +104,6 @@ public class AppDbContext : DbContext
              .HasConstraintName("FK_reports_user");
 
             b.Ignore(r => r.Status);
-            b.Ignore(r => r.Priority);
         });
 
         modelBuilder.Entity<Feedback>(entity =>

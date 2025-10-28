@@ -11,6 +11,9 @@ using readytohelpapi.GeoPoint.Models;
 using readytohelpapi.ResponsibleEntity.Services;
 using readytohelpapi.Notifications;
 
+/// <summary>
+///  This class contains all tests for the <see cref="ReportServiceImpl"/> class.
+/// </summary>
 public class TestReportService
 {
     private readonly Mock<IReportRepository> mockRepo = new();
@@ -19,6 +22,9 @@ public class TestReportService
     private readonly Mock<INotifierClient> mockNotifier = new();
     private readonly IReportService service;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TestReportService"/> class.
+    /// </summary>
     public TestReportService()
     {
         mockNotifier
@@ -33,15 +39,26 @@ public class TestReportService
         );
     }
 
-
+    /// <summary>
+    /// Creates a GeoPoint with the specified latitude and longitude.
+    /// </summary>
+    /// <param name="lat">The latitude of the point.</param>
+    /// <param name="lon">The longitude of the point.</param>
+    /// <returns>A GeoPoint representing the specified latitude and longitude.</returns>
     private static GeoPoint Pt(double lat = 41.3678, double lon = -8.2012) => new GeoPoint { Latitude = lat, Longitude = lon };
 
+    /// <summary>
+    /// Tests the Create method with a null report.
+    /// </summary>
     [Fact]
     public void Create_Null_Throws()
     {
         Assert.Throws<ArgumentNullException>(() => service.Create(null!));
     }
 
+    /// <summary>
+    /// Tests the Create method with an invalid title.
+    /// </summary>
     [Fact]
     public void Create_InvalidTitle_Throws()
     {
@@ -50,6 +67,9 @@ public class TestReportService
         mockNotifier.Verify(n => n.NotifyForNMinutesAsync(It.IsAny<NotificationRequest>(), It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    /// <summary>
+    /// Tests the Create method with an invalid description.
+    /// </summary>
     [Fact]
     public void Create_InvalidDescription_Throws()
     {
@@ -58,6 +78,9 @@ public class TestReportService
         mockNotifier.Verify(n => n.NotifyForNMinutesAsync(It.IsAny<NotificationRequest>(), It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    /// <summary>
+    /// Tests the Create method with an invalid user id.
+    /// </summary>
     [Fact]
     public void Create_InvalidUserId_Throws()
     {
@@ -66,6 +89,9 @@ public class TestReportService
         mockNotifier.Verify(n => n.NotifyForNMinutesAsync(It.IsAny<NotificationRequest>(), It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    /// <summary>
+    /// Tests the Create method with a missing location.
+    /// </summary>
     [Fact]
     public void Create_MissingLocation_Throws()
     {
@@ -75,7 +101,6 @@ public class TestReportService
             Description = "d",
             UserId = 1,
             Type = OccurrenceType.ROAD_DAMAGE,
-            Priority = PriorityLevel.MEDIUM,
             Location = null
         };
 
@@ -83,6 +108,9 @@ public class TestReportService
         mockNotifier.Verify(n => n.NotifyForNMinutesAsync(It.IsAny<NotificationRequest>(), It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    /// <summary>
+    /// Tests the Create method with no nearby occurrence.
+    /// </summary>
     [Fact]
     public void Create_NoNearbyOccurrence_CreatesOccurrence()
     {
@@ -106,7 +134,6 @@ public class TestReportService
             o.Title == input.Title &&
             o.Description == input.Description &&
             o.Type == input.Type &&
-            o.Priority == input.Priority &&
             o.ProximityRadius == 50 &&
             o.Status == OccurrenceStatus.WAITING &&
             o.ReportCount == 1 &&
@@ -120,6 +147,9 @@ public class TestReportService
         mockNotifier.Verify(n => n.NotifyForNMinutesAsync(It.IsAny<NotificationRequest>(), It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    /// <summary>
+    /// Tests the Create method with a duplicate report within 50 meters.
+    /// </summary>
     [Fact]
     public void Create_DuplicateWithin50m_IncrementsCount_StaysWaiting()
     {
@@ -158,6 +188,9 @@ public class TestReportService
         mockNotifier.Verify(n => n.NotifyForNMinutesAsync(It.IsAny<NotificationRequest>(), It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    /// <summary>
+    /// Tests the Create method with a duplicate report that reaches 3 reports.
+    /// </summary>
     [Fact]
     public void Create_Duplicate_Reaches3_ActivatesOccurrence()
     {
@@ -199,6 +232,9 @@ public class TestReportService
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    /// <summary>
+    /// Tests the Create method with a duplicate report where the occurrence is already active.
+    /// </summary>
     [Fact]
     public void Create_Duplicate_AlreadyActive_KeepsActive()
     {
