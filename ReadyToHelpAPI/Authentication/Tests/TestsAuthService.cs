@@ -18,6 +18,7 @@ namespace ReadyToHelpAPI.Tests.Authentication;
 /// <summary>
 ///     Unit tests for <see cref="AuthServiceImpl" />.
 /// </summary>
+[Trait("Category", "Unit")]
 public class TestAuthService
 {
     private readonly Mock<IUserService> mockUserService;

@@ -7,6 +7,7 @@ namespace readytohelpapi.Occurrence.Tests;
 /// <summary>
 ///    This class contains all unit tests related to the occurrence model.
 /// </summary>
+[Trait("Category", "Unit")]
 public class TestOccurrenceModel
 {
     /// <summary>

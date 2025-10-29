@@ -12,6 +12,7 @@ namespace ReadyToHelpAPI.Tests.Controllers;
 /// <summary>
 /// Unit tests for the AuthApiController.
 /// </summary>
+[Trait("Category", "Unit")]
 public class TestsAuthApiController
 {
     /// <summary>

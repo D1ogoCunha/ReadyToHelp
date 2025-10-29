@@ -12,6 +12,7 @@ using readytohelpapi.User.Tests.Fixtures;
 /// <summary>
 /// This class cointains all tests related to ReportRepository.
 /// </summary>
+[Trait("Category", "Integration")]
 public class TestReportRepository : IClassFixture<DbFixture>
 {
     private readonly DbFixture fixture;

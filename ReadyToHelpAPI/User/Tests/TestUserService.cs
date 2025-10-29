@@ -8,6 +8,7 @@ using Xunit;
 /// <summary>
 ///  This class contains all tests related to the user service.
 /// </summary>
+[Trait("Category", "Unit")]
 public class TestUserServiceTest
 {
     private readonly Mock<IUserRepository> mockRepo;

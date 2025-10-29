@@ -18,6 +18,7 @@ using readytohelpapi.Occurrence.Services;
 /// <summary>
 /// This class contains all tests related to ReportApiController.
 /// </summary>
+[Trait("Category", "Unit")]
 public class TestReportApiController : IClassFixture<DbFixture>
 {
     private readonly DbFixture fixture;

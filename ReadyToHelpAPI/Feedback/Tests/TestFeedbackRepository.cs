@@ -15,6 +15,7 @@ using Xunit;
 /// <summary>
 ///  This class contains all integration tests related to the feedback repository.
 /// </summary>
+[Trait("Category", "Integration")]
 public class TestFeedbackRepository : IClassFixture<DbFixture>
 {
     private readonly DbFixture fixture;

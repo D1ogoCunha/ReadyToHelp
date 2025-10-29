@@ -11,6 +11,7 @@ using readytohelpapi.Feedback.Tests.Fixtures;
 /// <summary>
 ///  This class contains all unit tests related to the feedback service.
 /// </summary>
+[Trait("Category", "Unit")]
 public class TestFeedbackServiceTest
 {
     private readonly Mock<IFeedbackRepository> mockRepo;
