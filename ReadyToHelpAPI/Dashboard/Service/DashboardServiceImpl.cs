@@ -25,11 +25,7 @@ public class DashboardServiceImpl : IDashboardService
         appContext = ctx ?? throw new ArgumentNullException(nameof(ctx));
     }
 
-    /// <summary>
-    /// Gets the overview statistics for the dashboard.
-    /// </summary>
-    /// <param name="ct">The cancellation token.</param>
-    /// <returns>A <see cref="DashboardStatsDto"/> containing the overview statistics.</returns>
+    /// <inheritdoc />
     public async Task<DashboardStatsDto> GetOverviewAsync(CancellationToken ct = default)
     {
         var totalOccurrences = await appContext.Occurrences.CountAsync(ct);
@@ -48,6 +44,54 @@ public class DashboardServiceImpl : IDashboardService
         };
 
         return stats;
+    }
+
+    /// <inheritdoc />
+    public async Task<UserStatsDto> GetUserStatsAsync(CancellationToken ct = default)
+    {
+        var users = await appContext.Users.AsNoTracking().ToListAsync(ct);
+        var reports = await appContext.Reports.AsNoTracking().ToListAsync(ct);
+        var feedbacks = await appContext.Feedbacks.AsNoTracking().ToListAsync(ct);
+
+        var total = users.Count;
+        var admins = users.Count(u => u.Profile.ToString().Equals("ADMIN", StringComparison.OrdinalIgnoreCase));
+        var managers = users.Count(u => u.Profile.ToString().Equals("MANAGER", StringComparison.OrdinalIgnoreCase));
+        var citizens = users.Count(u => u.Profile.ToString().Equals("CITIZEN", StringComparison.OrdinalIgnoreCase) || u.Profile.ToString().Equals("USER", StringComparison.OrdinalIgnoreCase));
+
+        var userIdsWithReports = reports.Select(r => r.UserId).Distinct().ToHashSet();
+        var userIdsWithFeedbacks = feedbacks.Select(f => f.UserId).Distinct().ToHashSet();
+
+        var usersWithReports = users.Count(u => userIdsWithReports.Contains(u.Id));
+        var usersWithFeedbacks = users.Count(u => userIdsWithFeedbacks.Contains(u.Id));
+        var usersWithBoth = users.Count(u => userIdsWithReports.Contains(u.Id) && userIdsWithFeedbacks.Contains(u.Id));
+        var usersWithoutReportsOrFeedbacks = users.Count(u => !userIdsWithReports.Contains(u.Id) && !userIdsWithFeedbacks.Contains(u.Id));
+
+        var mostActiveUser = users
+            .Select(u => new
+            {
+                UserId = u.Id,
+                Name = u.Name,
+                Reports = reports.Count(r => r.UserId == u.Id),
+                Feedbacks = feedbacks.Count(f => f.UserId == u.Id)
+            })
+            .OrderByDescending(x => x.Reports + x.Feedbacks)
+            .FirstOrDefault();
+
+        return new UserStatsDto
+        {
+            TotalUsers = total,
+            Admins = admins,
+            Managers = managers,
+            Citizens = citizens,
+            UsersWithReports = usersWithReports,
+            UsersWithFeedbacks = usersWithFeedbacks,
+            UsersWithBoth = usersWithBoth,
+            UsersWithoutReportsOrFeedbacks = usersWithoutReportsOrFeedbacks,
+            MostActiveUserId = mostActiveUser?.UserId ?? 0,
+            MostActiveUserName = mostActiveUser?.Name ?? "",
+            MostActiveUserReports = mostActiveUser?.Reports ?? 0,
+            MostActiveUserFeedbacks = mostActiveUser?.Feedbacks ?? 0
+        };
     }
 
     private async Task<double> ComputeAverageResolutionHoursAsync(CancellationToken ct)
