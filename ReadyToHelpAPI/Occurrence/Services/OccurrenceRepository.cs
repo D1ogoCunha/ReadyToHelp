@@ -1,11 +1,11 @@
 namespace readytohelpapi.Occurrence.Services;
 
-using readytohelpapi.Occurrence.Models;
-using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.EntityFrameworkCore;
 using readytohelpapi.Common.Data;
+using readytohelpapi.Occurrence.Models;
 
 /// <summary>
 ///    Implements the occurrence repository for managing occurrence data.
@@ -26,7 +26,8 @@ public class OccurrenceRepository : IOccurrenceRepository
     /// <inheritdoc />
     public Occurrence Create(Occurrence occurrence)
     {
-        if (occurrence == null) throw new ArgumentNullException(nameof(occurrence));
+        if (occurrence == null)
+            throw new ArgumentNullException(nameof(occurrence));
         try
         {
             var created = occurrenceContext.Occurrences.Add(occurrence).Entity;
@@ -65,7 +66,8 @@ public class OccurrenceRepository : IOccurrenceRepository
     public Occurrence? Delete(int id)
     {
         var existing = occurrenceContext.Occurrences.Find(id);
-        if (existing == null) return null;
+        if (existing == null)
+            return null;
         try
         {
             occurrenceContext.Occurrences.Remove(existing);
@@ -81,10 +83,9 @@ public class OccurrenceRepository : IOccurrenceRepository
     /// <inheritdoc />
     public Occurrence? GetOccurrenceById(int id)
     {
-        if (id <= 0) return null;
-        return occurrenceContext.Occurrences
-            .AsNoTracking()
-            .FirstOrDefault(o => o.Id == id);
+        if (id <= 0)
+            return null;
+        return occurrenceContext.Occurrences.AsNoTracking().FirstOrDefault(o => o.Id == id);
     }
 
     /// <inheritdoc />
@@ -94,18 +95,27 @@ public class OccurrenceRepository : IOccurrenceRepository
             return new List<Occurrence>();
 
         var pattern = $"%{title.Trim()}%";
-        return occurrenceContext.Occurrences
-            .AsNoTracking()
+        return occurrenceContext
+            .Occurrences.AsNoTracking()
             .Where(o => EF.Functions.ILike(o.Title, pattern))
             .ToList();
     }
 
     /// <inheritdoc />
-    public List<Occurrence> GetAllOccurrences(int pageNumber, int pageSize, string sortBy, string sortOrder, string filter)
+    public List<Occurrence> GetAllOccurrences(
+        int pageNumber,
+        int pageSize,
+        string sortBy,
+        string sortOrder,
+        string filter
+    )
     {
-        if (pageNumber <= 0) pageNumber = 1;
-        if (pageSize <= 0) pageSize = 10;
-        if (pageSize > 1000) pageSize = 1000;
+        if (pageNumber <= 0)
+            pageNumber = 1;
+        if (pageSize <= 0)
+            pageSize = 10;
+        if (pageSize > 1000)
+            pageSize = 1000;
 
         var query = occurrenceContext.Occurrences.AsNoTracking().AsQueryable();
 
@@ -114,8 +124,9 @@ public class OccurrenceRepository : IOccurrenceRepository
             var trimmed = filter.Trim();
             var pattern = $"%{trimmed}%";
             query = query.Where(o =>
-                EF.Functions.ILike(o.Title ?? string.Empty, pattern) ||
-                EF.Functions.ILike(o.Description ?? string.Empty, pattern));
+                EF.Functions.ILike(o.Title ?? string.Empty, pattern)
+                || EF.Functions.ILike(o.Description ?? string.Empty, pattern)
+            );
         }
 
         var asc = string.Equals(sortOrder, "asc", StringComparison.OrdinalIgnoreCase);
@@ -125,7 +136,9 @@ public class OccurrenceRepository : IOccurrenceRepository
                 query = asc ? query.OrderBy(o => o.Title) : query.OrderByDescending(o => o.Title);
                 break;
             case "priority":
-                query = asc ? query.OrderBy(o => o.Priority) : query.OrderByDescending(o => o.Priority);
+                query = asc
+                    ? query.OrderBy(o => o.Priority)
+                    : query.OrderByDescending(o => o.Priority);
                 break;
             case "status":
                 query = asc ? query.OrderBy(o => o.Status) : query.OrderByDescending(o => o.Status);
@@ -142,40 +155,45 @@ public class OccurrenceRepository : IOccurrenceRepository
     /// <inheritdoc />
     public List<Occurrence> GetOccurrencesByType(OccurrenceType type)
     {
-        return occurrenceContext.Occurrences
-            .AsNoTracking()
-            .Where(o => o.Type == type)
-            .ToList();
+        return occurrenceContext.Occurrences.AsNoTracking().Where(o => o.Type == type).ToList();
     }
 
     /// <inheritdoc />
     public List<Occurrence> GetOccurrencesByStatus(OccurrenceStatus status)
     {
-        return occurrenceContext.Occurrences
-            .AsNoTracking()
-            .Where(o => o.Status == status)
-            .ToList();
+        return occurrenceContext.Occurrences.AsNoTracking().Where(o => o.Status == status).ToList();
     }
 
     /// <inheritdoc />
     public List<Occurrence> GetOccurrencesByPriority(PriorityLevel priority)
     {
-        return occurrenceContext.Occurrences
-            .AsNoTracking()
+        return occurrenceContext
+            .Occurrences.AsNoTracking()
             .Where(o => o.Priority == priority)
             .ToList();
     }
 
     /// <inheritdoc />
-    public List<Occurrence> GetAllActiveOccurrences(int pageNumber, int pageSize, OccurrenceType? type, PriorityLevel? priority, int? responsibleEntityId)
+    public List<Occurrence> GetAllActiveOccurrences(
+        int pageNumber,
+        int pageSize,
+        OccurrenceType? type,
+        PriorityLevel? priority,
+        int? responsibleEntityId
+    )
     {
-        if (pageNumber <= 0) pageNumber = 1;
-        if (pageSize <= 0) pageSize = 10;
-        if (pageSize > 1000) pageSize = 1000;
+        if (pageNumber <= 0)
+            pageNumber = 1;
+        if (pageSize <= 0)
+            pageSize = 10;
+        if (pageSize > 1000)
+            pageSize = 1000;
 
-        var query = occurrenceContext.Occurrences
-            .AsNoTracking()
-            .Where(o => o.Status == OccurrenceStatus.ACTIVE || o.Status == OccurrenceStatus.IN_PROGRESS);
+        var query = occurrenceContext
+            .Occurrences.AsNoTracking()
+            .Where(o =>
+                o.Status == OccurrenceStatus.ACTIVE || o.Status == OccurrenceStatus.IN_PROGRESS
+            );
 
         if (type.HasValue)
             query = query.Where(o => o.Type == type.Value);
@@ -186,9 +204,7 @@ public class OccurrenceRepository : IOccurrenceRepository
         if (responsibleEntityId.HasValue)
             query = query.Where(o => o.ResponsibleEntityId == responsibleEntityId.Value);
 
-        query = query
-            .OrderByDescending(o => o.Priority)
-            .ThenByDescending(o => o.CreationDateTime);
+        query = query.OrderByDescending(o => o.Priority).ThenByDescending(o => o.CreationDateTime);
 
         var skip = (pageNumber - 1) * pageSize;
         return query.Skip(skip).Take(pageSize).ToList();
@@ -197,9 +213,10 @@ public class OccurrenceRepository : IOccurrenceRepository
     /// <inheritdoc />
     public Occurrence? GetByReportId(int reportId)
     {
-        if (reportId <= 0) return null;
-        return occurrenceContext.Occurrences
-            .AsNoTracking()
+        if (reportId <= 0)
+            return null;
+        return occurrenceContext
+            .Occurrences.AsNoTracking()
             .FirstOrDefault(o => o.ReportId == reportId);
     }
 }
