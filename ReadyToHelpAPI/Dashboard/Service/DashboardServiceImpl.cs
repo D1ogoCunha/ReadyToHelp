@@ -145,6 +145,61 @@ public class DashboardServiceImpl : IDashboardService
         };
     }
 
+    /// <inheritdoc />
+    public async Task<ReportStatsDto> GetReportStatsAsync(CancellationToken ct = default)
+    {
+        var reports = await appContext.Reports.AsNoTracking().ToListAsync(ct);
+
+        var now = DateTime.UtcNow;
+        var total = reports.Count;
+
+        var last24 = reports.Count(r => (now - r.ReportDateTime).TotalHours <= 24);
+        var last7 = reports.Count(r => r.ReportDateTime >= now.AddDays(-7));
+        var last30 = reports.Count(r => r.ReportDateTime >= now.AddDays(-30));
+
+        var uniqueReporters = reports.Select(r => r.UserId).Distinct().Count();
+        var avgPerDayLast30 = last30 / 30d;
+
+        var byType = reports
+            .GroupBy(r => r.Type.ToString())
+            .ToDictionary(g => g.Key, g => g.Count());
+
+        var top = reports
+            .GroupBy(r => r.UserId)
+            .Select(g => new { UserId = g.Key, Count = g.Count() })
+            .OrderByDescending(x => x.Count)
+            .ThenBy(x => x.UserId)
+            .FirstOrDefault();
+
+        string? topName = null;
+        if (top != null)
+        {
+            topName = await appContext.Users.AsNoTracking()
+                .Where(u => u.Id == top.UserId)
+                .Select(u => u.Name)
+                .FirstOrDefaultAsync(ct);
+        }
+
+        var firstDate = total > 0 ? reports.Min(r => r.ReportDateTime) : (DateTime?)null;
+        var lastDate = total > 0 ? reports.Max(r => r.ReportDateTime) : (DateTime?)null;
+
+        return new ReportStatsDto
+        {
+            TotalReports = total,
+            NewReportsLast24Hours = last24,
+            NewReportsLast7Days = last7,
+            NewReportsLast30Days = last30,
+            UniqueReporters = uniqueReporters,
+            AverageReportsPerDayLast30 = Math.Round(avgPerDayLast30, 2),
+            ReportsByType = byType,
+            TopReporterUserId = top?.UserId ?? 0,
+            TopReporterUserName = topName ?? string.Empty,
+            TopReporterReportCount = top?.Count ?? 0,
+            FirstReportDate = firstDate,
+            LastReportDate = lastDate
+        };
+    }
+
     /// <summary>
     /// Calcula o tempo médio de resolução (em horas) para ocorrências com EndDateTime válido.
     /// Materializa antes de filtrar para evitar problemas de tradução do provider.
