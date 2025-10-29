@@ -15,7 +15,7 @@ namespace readytohelpapi.Occurrence.Tests;
 ///   This class contains all unit tests for OccurrenceApiController,
 ///   following the same approach and documentation used in TestUserApiController.
 /// </summary>
-[Trait("Category", "Unit")]
+[Trait("Category", "Integration")]
 public class TestOccurrenceApiController : IClassFixture<DbFixture>
 {
     private readonly DbFixture fixture;

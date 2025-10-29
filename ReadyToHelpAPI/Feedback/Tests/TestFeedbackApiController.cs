@@ -13,7 +13,7 @@ using Xunit;
 /// <summary>
 ///   This class contains all unit tests related to the feedback api controller.
 /// </summary>
-[Trait("Category", "Unit")]
+[Trait("Category", "Integration")]
 public class TestFeedbackApiController : IClassFixture<DbFixture>
 {
     private readonly DbFixture fixture;

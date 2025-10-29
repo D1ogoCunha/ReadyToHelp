@@ -10,7 +10,7 @@ namespace readytohelpapi.User.Tests;
 /// <summary>
 ///   This class contains all unit tests related to the user api controller.
 /// </summary>
-[Trait("Category", "Unit")]
+[Trait("Category", "Integration")]
 public class TestUserApiController : IClassFixture<DbFixture>
 {
     private readonly DbFixture fixture;
