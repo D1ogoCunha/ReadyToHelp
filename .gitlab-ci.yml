@@ -57,7 +57,7 @@ unit-tests:
   variables:
     ASPNETCORE_ENVIRONMENT: Testing
   script:
-    - dotnet test ReadyToHelpAPI.sln --filter "Category!=Integration" --logger:"trx;LogFileName=UnitTestResults.trx"
+    - dotnet test ReadyToHelpAPI.sln --filter "Category=Unit" --logger:"trx;LogFileName=UnitTestResults.trx"
   artifacts:
     paths:
       - UnitTestResults.trx
