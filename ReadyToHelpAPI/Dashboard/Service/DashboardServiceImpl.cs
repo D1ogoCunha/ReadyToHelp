@@ -94,16 +94,74 @@ public class DashboardServiceImpl : IDashboardService
         };
     }
 
+    /// <inheritdoc />
+    public async Task<OccurrenceStatsDto> GetOccurrenceStatsAsync(CancellationToken ct = default)
+    {
+        var occurrences = await appContext.Occurrences.AsNoTracking().ToListAsync(ct);
+
+        var total = occurrences.Count;
+
+        var waiting = occurrences.Count(o => o.Status == OccurrenceStatus.WAITING);
+        var active = occurrences.Count(o => o.Status == OccurrenceStatus.ACTIVE);
+        var inProgress = occurrences.Count(o => o.Status == OccurrenceStatus.IN_PROGRESS);
+        var resolved = occurrences.Count(o => o.Status == OccurrenceStatus.RESOLVED);
+        var closed = occurrences.Count(o => o.Status == OccurrenceStatus.CLOSED);
+
+        var high = occurrences.Count(o => o.Priority == PriorityLevel.HIGH);
+        var medium = occurrences.Count(o => o.Priority == PriorityLevel.MEDIUM);
+        var low = occurrences.Count(o => o.Priority == PriorityLevel.LOW);
+
+        var since = DateTime.UtcNow.AddDays(-30);
+        var newLast30 = occurrences.Count(o => o.CreationDateTime >= since);
+
+        var byType = occurrences
+            .GroupBy(o => o.Type.ToString())
+            .ToDictionary(g => g.Key, g => g.Count());
+
+        var mostReported = occurrences
+            .OrderByDescending(o => o.ReportCount)
+            .ThenByDescending(o => o.CreationDateTime)
+            .FirstOrDefault();
+
+        var avgHours = await ComputeAverageResolutionHoursAsync(ct);
+
+        return new OccurrenceStatsDto
+        {
+            TotalOccurrences = total,
+            Waiting = waiting,
+            Active = active,
+            InProgress = inProgress,
+            Resolved = resolved,
+            Closed = closed,
+            HighPriority = high,
+            MediumPriority = medium,
+            LowPriority = low,
+            NewOccurrencesLast30Days = newLast30,
+            AverageResolutionHours = avgHours,
+            MostReportedOccurrenceId = mostReported?.Id ?? 0,
+            MostReportedOccurrenceTitle = mostReported?.Title ?? string.Empty,
+            MostReports = mostReported?.ReportCount ?? 0,
+            ByType = byType
+        };
+    }
+
+    /// <summary>
+    /// Calcula o tempo médio de resolução (em horas) para ocorrências com EndDateTime válido.
+    /// Materializa antes de filtrar para evitar problemas de tradução do provider.
+    /// </summary>
     private async Task<double> ComputeAverageResolutionHoursAsync(CancellationToken ct)
     {
-        var q = appContext.Set<Occurrence>().AsQueryable();
-        var resolved = await q.Where(o => EF.Property<DateTime?>(o, "ResolvedAt") != null)
-                              .Select(o => EF.Property<DateTime?>(o, "ResolvedAt")!.Value - (EF.Property<DateTime?>(o, "CreatedAt") ?? DateTime.MinValue))
-                              .ToListAsync(ct);
+        var times = await appContext.Occurrences.AsNoTracking()
+            .Select(o => new { o.CreationDateTime, o.EndDateTime })
+            .ToListAsync(ct);
 
-        if (!resolved.Any()) return 0.0;
+        var durations = times
+            .Where(x => x.EndDateTime != default && x.EndDateTime > x.CreationDateTime)
+            .Select(x => (x.EndDateTime - x.CreationDateTime).TotalHours)
+            .ToList();
 
-        var avg = resolved.Select(ts => ts.TotalHours).Average();
-        return Math.Round(avg, 2);
+        if (durations.Count == 0) return 0.0;
+
+        return Math.Round(durations.Average(), 2);
     }
 }

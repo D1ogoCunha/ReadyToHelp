@@ -24,4 +24,11 @@ public interface IDashboardService
     /// <param name="ct">The cancellation token.</param>
     /// <returns>A <see cref="UserStatsDto"/> containing the user statistics.</returns>
     Task<UserStatsDto> GetUserStatsAsync(CancellationToken ct = default);
+
+    /// <summary>
+    /// Gets the occurrence statistics for the dashboard.
+    /// </summary>
+    /// <param name="ct">The cancellation token.</param>
+    /// <returns>A <see cref="OccurrenceStatsDto"/> containing the occurrence statistics.</returns>
+    Task<OccurrenceStatsDto> GetOccurrenceStatsAsync(CancellationToken ct = default);
 }

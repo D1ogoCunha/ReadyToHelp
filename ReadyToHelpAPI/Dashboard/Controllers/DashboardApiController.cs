@@ -38,7 +38,7 @@ public class DashboardApiController : ControllerBase
         var dto = await dashboardService.GetOverviewAsync(ct);
         return Ok(dto);
     }
-    
+
     /// <summary>
     /// Gets user statistics for the dashboard.
     /// </summary>
@@ -47,6 +47,17 @@ public class DashboardApiController : ControllerBase
     public async Task<ActionResult<UserStatsDto>> GetUserStats(CancellationToken ct)
     {
         var dto = await dashboardService.GetUserStatsAsync(ct);
+        return Ok(dto);
+    }
+
+    /// <summary>
+    /// Gets occurrence statistics for the dashboard.
+    /// </summary>
+    /// <param name="ct">The cancellation token.</param>
+    [HttpGet("occurrences/stats")]
+    public async Task<ActionResult<OccurrenceStatsDto>> GetOccurrenceStats(CancellationToken ct)
+    {
+        var dto = await dashboardService.GetOccurrenceStatsAsync(ct);
         return Ok(dto);
     }
 }
