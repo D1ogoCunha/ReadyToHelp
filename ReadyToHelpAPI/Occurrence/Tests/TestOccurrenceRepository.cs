@@ -12,6 +12,7 @@ using readytohelpapi.ResponsibleEntity.Models;
 /// <summary>
 ///  This class contains unit tests for the OccurrenceRepository.
 /// </summary>
+[Trait("Category", "Integration")]
 public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
 {
     private readonly DbFixture fixture;

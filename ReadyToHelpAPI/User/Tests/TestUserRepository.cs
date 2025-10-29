@@ -8,6 +8,7 @@ namespace readytohelpapi.User.Tests;
 /// <summary>
 ///  This class contains all integration tests related to the user repository.
 /// </summary>
+[Trait("Category", "Integration")]
 public class TestUserRepositoryTest : IClassFixture<DbFixture>
 {
     private readonly DbFixture fixture;

@@ -13,6 +13,7 @@ using Xunit;
 /// <summary>
 /// This class contains all unit test related to the ResponsibleEntityService.
 /// </summary>
+[Trait("Category", "Unit")]
 public class TestResponsibleEntityService
 {
     private static readonly GeometryFactory Gf4326 =

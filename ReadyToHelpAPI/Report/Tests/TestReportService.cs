@@ -14,6 +14,7 @@ using readytohelpapi.Notifications;
 /// <summary>
 ///  This class contains all tests for the <see cref="ReportServiceImpl"/> class.
 /// </summary>
+[Trait("Category", "Unit")]
 public class TestReportService
 {
     private readonly Mock<IReportRepository> mockRepo = new();
