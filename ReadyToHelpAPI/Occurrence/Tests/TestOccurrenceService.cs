@@ -1038,4 +1038,140 @@ public class TestOccurrenceServiceTest
 
         Assert.Throws<InvalidOperationException>(() => service.CreateAdminOccurrence(o));
     }
+
+    /// <summary>
+    /// Tests that Create occurrence computes proximity radius for types whose base priority is HIGH.
+    /// </summary>
+    [Fact]
+    public void Create_ComputesProximityRadius_ForForestFire_High()
+    {
+        var input = new Models.Occurrence
+        {
+            Title = "Forest fire",
+            Description = "Smoke visible",
+            Type = OccurrenceType.FOREST_FIRE,
+            ProximityRadius = 0,
+            ReportCount = 0,
+            Location = new GeoPointModel { Latitude = 40.0, Longitude = -8.0 },
+        };
+
+        Models.Occurrence? saved = null;
+        mockRepo
+            .Setup(r => r.Create(It.IsAny<Models.Occurrence>()))
+            .Callback<Models.Occurrence>(o => saved = o)
+            .Returns<Models.Occurrence>(o =>
+            {
+                o.Id = 42;
+                return o;
+            });
+
+        var result = service.Create(input);
+
+        Assert.NotNull(saved);
+        Assert.Equal(PriorityLevel.HIGH, saved!.Priority);
+        Assert.Equal(2500.0 * 2.0, saved.ProximityRadius, 6);
+        Assert.Equal(42, result.Id);
+    }
+
+    /// <summary>
+    /// Tests that Create occurrence computes proximity radius for types whose base priority is MEDIUM.
+    /// </summary>
+    [Fact]
+    public void Create_ComputesProximityRadius_ForRoadObstruction_Medium()
+    {
+        var input = new Models.Occurrence
+        {
+            Title = "Road obstruction",
+            Description = "Debris on road",
+            Type = OccurrenceType.ROAD_OBSTRUCTION,
+            ProximityRadius = 0,
+            ReportCount = 0,
+            Location = new GeoPointModel { Latitude = 40.5, Longitude = -8.5 },
+        };
+
+        Models.Occurrence? saved = null;
+        mockRepo
+            .Setup(r => r.Create(It.IsAny<Models.Occurrence>()))
+            .Callback<Models.Occurrence>(o => saved = o)
+            .Returns<Models.Occurrence>(o =>
+            {
+                o.Id = 43;
+                return o;
+            });
+
+        var result = service.Create(input);
+
+        Assert.NotNull(saved);
+        Assert.Equal(PriorityLevel.MEDIUM, saved!.Priority);
+        Assert.Equal(200.0 * 1.5, saved.ProximityRadius, 6);
+        Assert.Equal(43, result.Id);
+    }
+
+    /// <summary>
+    /// Tests that Create occurrence computes proximity radius for types whose base priority is LOW.
+    /// </summary>
+    [Fact]
+    public void Create_ComputesProximityRadius_ForPublicLighting_Low()
+    {
+        var input = new Models.Occurrence
+        {
+            Title = "Street light out",
+            Description = "Lamp not working",
+            Type = OccurrenceType.PUBLIC_LIGHTING,
+            ProximityRadius = 0,
+            ReportCount = 0,
+            Location = new GeoPointModel { Latitude = 41.2, Longitude = -8.3 },
+        };
+
+        Models.Occurrence? saved = null;
+        mockRepo
+            .Setup(r => r.Create(It.IsAny<Models.Occurrence>()))
+            .Callback<Models.Occurrence>(o => saved = o)
+            .Returns<Models.Occurrence>(o =>
+            {
+                o.Id = 44;
+                return o;
+            });
+
+        var result = service.Create(input);
+
+        Assert.NotNull(saved);
+        Assert.Equal(PriorityLevel.LOW, saved!.Priority);
+        Assert.Equal(100.0 * 1.0, saved.ProximityRadius, 6);
+        Assert.Equal(44, result.Id);
+    }
+
+    /// <summary>
+    /// Tests that Create occurrence computes priority and resulting proximity radius when reportCount raises priority.
+    /// </summary>
+    [Fact]
+    public void Create_ComputesPriorityAndRadius_WhenReportCountElevatesPriority()
+    {
+        var input = new Models.Occurrence
+        {
+            Title = "Vehicle breakdown cluster",
+            Description = "Multiple reports",
+            Type = OccurrenceType.VEHICLE_BREAKDOWN,
+            ProximityRadius = 0,
+            ReportCount = 5,
+            Location = new GeoPointModel { Latitude = 41.0, Longitude = -8.5 },
+        };
+
+        Models.Occurrence? saved = null;
+        mockRepo
+            .Setup(r => r.Create(It.IsAny<Models.Occurrence>()))
+            .Callback<Models.Occurrence>(o => saved = o)
+            .Returns<Models.Occurrence>(o =>
+            {
+                o.Id = 99;
+                return o;
+            });
+
+        var result = service.Create(input);
+
+        Assert.NotNull(saved);
+        Assert.Equal(PriorityLevel.HIGH, saved!.Priority);
+        Assert.Equal(125.0 * 2.0, saved.ProximityRadius, 6);
+        Assert.Equal(99, result.Id);
+    }
 }
