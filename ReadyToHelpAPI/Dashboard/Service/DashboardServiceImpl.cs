@@ -200,6 +200,64 @@ public class DashboardServiceImpl : IDashboardService
         };
     }
 
+    /// <inheritdoc />
+    public async Task<FeedbackStatsDto> GetFeedbackStatsAsync(CancellationToken ct = default)
+    {
+        var feedbacks = await appContext.Feedbacks.AsNoTracking().ToListAsync(ct);
+
+        var now = DateTime.UtcNow;
+        var total = feedbacks.Count;
+
+        var last24 = feedbacks.Count(fb => (now - fb.FeedbackDateTime).TotalHours <= 24);
+        var last7 = feedbacks.Count(fb => fb.FeedbackDateTime >= now.AddDays(-7));
+        var last30 = feedbacks.Count(fb => fb.FeedbackDateTime >= now.AddDays(-30));
+
+        var uniqueUsers = feedbacks.Select(fb => fb.UserId).Distinct().Count();
+
+        var confirmed = feedbacks.Count(fb => fb.IsConfirmed);
+        var notConfirmed = total - confirmed;
+        var confirmationRate = total == 0 ? 0.0 : Math.Round((double)confirmed / total * 100.0, 2);
+
+        var avgPerDayLast30 = Math.Round(last30 / 30d, 2);
+
+        var top = feedbacks
+            .GroupBy(fb => fb.UserId)
+            .Select(g => new { UserId = g.Key, Count = g.Count() })
+            .OrderByDescending(x => x.Count)
+            .ThenBy(x => x.UserId)
+            .FirstOrDefault();
+
+        string? topName = null;
+        if (top != null)
+        {
+            topName = await appContext.Users.AsNoTracking()
+                .Where(u => u.Id == top.UserId)
+                .Select(u => u.Name)
+                .FirstOrDefaultAsync(ct);
+        }
+
+        var firstDate = total > 0 ? feedbacks.Min(fb => fb.FeedbackDateTime) : (DateTime?)null;
+        var lastDate = total > 0 ? feedbacks.Max(fb => fb.FeedbackDateTime) : (DateTime?)null;
+
+        return new FeedbackStatsDto
+        {
+            TotalFeedbacks = total,
+            NewFeedbacksLast24Hours = last24,
+            NewFeedbacksLast7Days = last7,
+            NewFeedbacksLast30Days = last30,
+            UniqueUsers = uniqueUsers,
+            ConfirmedCount = confirmed,
+            NotConfirmedCount = notConfirmed,
+            ConfirmationRate = confirmationRate,
+            AverageFeedbacksPerDayLast30 = avgPerDayLast30,
+            TopFeedbackUserId = top?.UserId ?? 0,
+            TopFeedbackUserName = topName ?? string.Empty,
+            TopFeedbackUserCount = top?.Count ?? 0,
+            FirstFeedbackDate = firstDate,
+            LastFeedbackDate = lastDate
+        };
+    }
+
     /// <summary>
     /// Calcula o tempo médio de resolução (em horas) para ocorrências com EndDateTime válido.
     /// Materializa antes de filtrar para evitar problemas de tradução do provider.

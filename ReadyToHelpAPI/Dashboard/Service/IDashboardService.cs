@@ -38,4 +38,11 @@ public interface IDashboardService
     /// <param name="ct">The cancellation token.</param>
     /// <returns>A ReportStatsDto with aggregated report metrics.</returns>
     Task<ReportStatsDto> GetReportStatsAsync(CancellationToken ct = default);
+
+    /// <summary>
+    /// Gets the feedback statistics for the dashboard.
+    /// </summary>
+    /// <param name="ct">The cancellation token.</param>
+    /// <returns>A FeedbackStatsDto with aggregated feedback metrics.</returns>
+    Task<FeedbackStatsDto> GetFeedbackStatsAsync(CancellationToken ct = default);
 }

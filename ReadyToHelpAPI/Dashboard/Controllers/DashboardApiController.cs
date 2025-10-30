@@ -71,4 +71,15 @@ public class DashboardApiController : ControllerBase
         var dto = await dashboardService.GetReportStatsAsync(ct);
         return Ok(dto);
     }
+
+    /// <summary>
+    /// Gets feedback statistics for the dashboard.
+    /// </summary>
+    /// <param name="ct">The cancellation token.</param>
+    [HttpGet("feedbacks/stats")]
+    public async Task<ActionResult<FeedbackStatsDto>> GetFeedbackStats(CancellationToken ct)
+    {
+        var dto = await dashboardService.GetFeedbackStatsAsync(ct);
+        return Ok(dto);
+    }
 }
