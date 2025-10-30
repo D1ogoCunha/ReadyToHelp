@@ -82,4 +82,15 @@ public class DashboardApiController : ControllerBase
         var dto = await dashboardService.GetFeedbackStatsAsync(ct);
         return Ok(dto);
     }
+
+    /// <summary>
+    /// Gets responsible entity statistics for the dashboard.
+    /// </summary>
+    /// <param name="ct">The cancellation token.</param>
+    [HttpGet("responsible-entities/stats")]
+    public async Task<ActionResult<ResponsibleEntityStatsDto>> GetResponsibleEntityStats(CancellationToken ct)
+    {
+        var dto = await dashboardService.GetResponsibleEntityStatsAsync(ct);
+        return Ok(dto);
+    }
 }

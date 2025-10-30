@@ -258,6 +258,69 @@ public class DashboardServiceImpl : IDashboardService
         };
     }
 
+    /// <inheritdoc />
+    public async Task<ResponsibleEntityStatsDto> GetResponsibleEntityStatsAsync(CancellationToken ct = default)
+    {
+        var entities = await appContext.ResponsibleEntities.AsNoTracking().ToListAsync(ct);
+        var occurrences = await appContext.Occurrences.AsNoTracking().ToListAsync(ct);
+
+        var totalEntities = entities.Count;
+
+        var byType = entities
+            .GroupBy(e => e.Type.ToString())
+            .ToDictionary(g => g.Key, g => g.Count());
+
+        var assignedOccs = occurrences.Where(o => o.ResponsibleEntityId > 0).ToList();
+        var entityIdsWithOcc = assignedOccs
+            .Select(o => o.ResponsibleEntityId)
+            .Distinct()
+            .ToHashSet();
+
+        var entitiesWithAssigned = entityIdsWithOcc.Count;
+        var entitiesWithoutAssigned = totalEntities - entitiesWithAssigned;
+
+        var totalAssignedOccurrences = assignedOccs.Count;
+        var averageOccurrencesPerEntity = totalEntities == 0 ? 0.0 : Math.Round(totalAssignedOccurrences / (double)totalEntities, 2);
+
+        var activeStatuses = new[] { OccurrenceStatus.WAITING, OccurrenceStatus.ACTIVE, OccurrenceStatus.IN_PROGRESS };
+        var activeOccurrences = assignedOccs.Count(o => activeStatuses.Contains(o.Status));
+
+        var occByStatus = occurrences
+            .GroupBy(o => o.Status.ToString())
+            .ToDictionary(g => g.Key, g => g.Count());
+
+        var withContact = entities.Count(e => !string.IsNullOrWhiteSpace(e.Email));
+        var withoutContact = totalEntities - withContact;
+
+        var top = assignedOccs
+            .GroupBy(o => o.ResponsibleEntityId)
+            .Select(g => new { EntityId = g.Key, Count = g.Count() })
+            .OrderByDescending(x => x.Count)
+            .ThenBy(x => x.EntityId)
+            .FirstOrDefault();
+
+        var topName = top == null
+            ? string.Empty
+            : entities.FirstOrDefault(e => e.Id == top.EntityId)?.Name ?? string.Empty;
+
+        return new ResponsibleEntityStatsDto
+        {
+            TotalResponsibleEntities = totalEntities,
+            ByType = byType,
+            EntitiesWithAssignedOccurrences = entitiesWithAssigned,
+            EntitiesWithoutAssignedOccurrences = entitiesWithoutAssigned,
+            TotalAssignedOccurrences = totalAssignedOccurrences,
+            AverageOccurrencesPerEntity = averageOccurrencesPerEntity,
+            ActiveOccurrences = activeOccurrences,
+            OccurrencesByStatus = occByStatus,
+            EntitiesWithContactInfo = withContact,
+            EntitiesWithoutContactInfo = withoutContact,
+            TopEntityByOccurrencesId = top?.EntityId ?? 0,
+            TopEntityByOccurrencesName = topName,
+            TopEntityByOccurrencesCount = top?.Count ?? 0
+        };
+    }
+
     /// <summary>
     /// Calcula o tempo médio de resolução (em horas) para ocorrências com EndDateTime válido.
     /// Materializa antes de filtrar para evitar problemas de tradução do provider.
