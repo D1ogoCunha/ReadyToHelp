@@ -61,7 +61,6 @@ public class TesteJwtUtil
     [Fact]
     public void DecodeJwt_ShouldReturnDecodedObject_WhenValidToken()
     {
-        var handler = new JwtSecurityTokenHandler();
         var claims = new[]
         {
             new System.Security.Claims.Claim("role", "ADMIN"),
