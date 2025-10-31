@@ -1,11 +1,11 @@
 namespace readytohelpapi.Occurrence.Tests;
 
 using Moq;
-using GeoPointModel = readytohelpapi.GeoPoint.Models.GeoPoint;
 using readytohelpapi.Occurrence.Models;
 using readytohelpapi.Occurrence.Services;
-using Xunit;
 using readytohelpapi.ResponsibleEntity.Services;
+using Xunit;
+using GeoPointModel = readytohelpapi.GeoPoint.Models.GeoPoint;
 
 /// <summary>
 ///  This class contains unit tests related to the occurrence service.
@@ -49,7 +49,7 @@ public class TestOccurrenceServiceTest
             Type = OccurrenceType.FLOOD,
             Priority = PriorityLevel.LOW,
             ProximityRadius = 10,
-            Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
+            Location = new GeoPointModel { Latitude = 40, Longitude = -8 },
         };
         var ex = Assert.Throws<ArgumentException>(() => service.Create(o));
         Assert.Contains("title", ex.Message, StringComparison.OrdinalIgnoreCase);
@@ -68,7 +68,7 @@ public class TestOccurrenceServiceTest
             Type = OccurrenceType.FLOOD,
             Priority = PriorityLevel.LOW,
             ProximityRadius = 10,
-            Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
+            Location = new GeoPointModel { Latitude = 40, Longitude = -8 },
         };
         var ex = Assert.Throws<ArgumentException>(() => service.Create(o));
         Assert.Contains("description", ex.Message, StringComparison.OrdinalIgnoreCase);
@@ -87,28 +87,9 @@ public class TestOccurrenceServiceTest
             Type = (OccurrenceType)999,
             Priority = PriorityLevel.LOW,
             ProximityRadius = 10,
-            Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
+            Location = new GeoPointModel { Latitude = 40, Longitude = -8 },
         };
         Assert.Throws<ArgumentOutOfRangeException>(() => service.Create(o));
-    }
-
-    /// <summary>
-    ///  Tests Create with a non-positive proximity radius.
-    /// </summary>
-    [Fact]
-    public void Create_NonPositiveRadius_ThrowsArgumentException()
-    {
-        var o = new Models.Occurrence
-        {
-            Title = "t",
-            Description = "d",
-            Type = OccurrenceType.FLOOD,
-            Priority = PriorityLevel.LOW,
-            ProximityRadius = 0,
-            Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
-        };
-        var ex = Assert.Throws<ArgumentException>(() => service.Create(o));
-        Assert.Contains("Proximity radius", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>
@@ -127,7 +108,7 @@ public class TestOccurrenceServiceTest
             ReportCount = -1,
             ReportId = -5,
             ResponsibleEntityId = -3,
-            Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
+            Location = new GeoPointModel { Latitude = 40, Longitude = -8 },
         };
         Assert.Throws<ArgumentException>(() => service.Create(o));
     }
@@ -146,7 +127,7 @@ public class TestOccurrenceServiceTest
             Priority = PriorityLevel.LOW,
             ProximityRadius = 10,
             EndDateTime = DateTime.UtcNow.AddMinutes(-5),
-            Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
+            Location = new GeoPointModel { Latitude = 40, Longitude = -8 },
         };
         var ex = Assert.Throws<ArgumentException>(() => service.Create(o));
         Assert.Contains("EndDateTime", ex.Message, StringComparison.OrdinalIgnoreCase);
@@ -165,9 +146,11 @@ public class TestOccurrenceServiceTest
             Type = OccurrenceType.FLOOD,
             Priority = PriorityLevel.LOW,
             ProximityRadius = 10,
-            Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
+            Location = new GeoPointModel { Latitude = 40, Longitude = -8 },
         };
-        mockRepo.Setup(r => r.Create(It.IsAny<Models.Occurrence>())).Throws(new Exception("DB error"));
+        mockRepo
+            .Setup(r => r.Create(It.IsAny<Models.Occurrence>()))
+            .Throws(new Exception("DB error"));
 
         Assert.Throws<InvalidOperationException>(() => service.Create(o));
     }
@@ -185,7 +168,7 @@ public class TestOccurrenceServiceTest
             Type = OccurrenceType.FLOOD,
             Priority = PriorityLevel.MEDIUM,
             ProximityRadius = 25,
-            Location = new GeoPointModel { Latitude = 40.1, Longitude = -8.1 }
+            Location = new GeoPointModel { Latitude = 40.1, Longitude = -8.1 },
         };
         var created = new Models.Occurrence
         {
@@ -195,7 +178,7 @@ public class TestOccurrenceServiceTest
             Type = OccurrenceType.FLOOD,
             Priority = PriorityLevel.MEDIUM,
             ProximityRadius = 25,
-            Location = new GeoPointModel { Latitude = 40.1, Longitude = -8.1 }
+            Location = new GeoPointModel { Latitude = 40.1, Longitude = -8.1 },
         };
         mockRepo.Setup(r => r.Create(It.IsAny<Models.Occurrence>())).Returns(created);
 
@@ -222,10 +205,15 @@ public class TestOccurrenceServiceTest
             ReportCount = 0,
             ReportId = null,
             ResponsibleEntityId = 0,
-            Location = new GeoPointModel { Latitude = 40.1, Longitude = -8.1 }
+            Location = new GeoPointModel { Latitude = 40.1, Longitude = -8.1 },
         };
 
-        var created = new Models.Occurrence { Id = 11, Title = "Ok", ReportId = null };
+        var created = new Models.Occurrence
+        {
+            Id = 11,
+            Title = "Ok",
+            ReportId = null,
+        };
         mockRepo.Setup(r => r.Create(It.IsAny<Models.Occurrence>())).Returns(created);
 
         var result = service.Create(input);
@@ -252,7 +240,7 @@ public class TestOccurrenceServiceTest
             ReportCount = 0,
             ReportId = null,
             ResponsibleEntityId = 0,
-            Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
+            Location = new GeoPointModel { Latitude = 40, Longitude = -8 },
         };
 
         mockRepo.Setup(r => r.Update(It.IsAny<Models.Occurrence>())).Returns(input);
@@ -286,7 +274,7 @@ public class TestOccurrenceServiceTest
             Type = OccurrenceType.FLOOD,
             Priority = PriorityLevel.LOW,
             ProximityRadius = 10,
-            Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
+            Location = new GeoPointModel { Latitude = 40, Longitude = -8 },
         };
         var ex = Assert.Throws<ArgumentException>(() => service.Update(o));
         Assert.Contains("Invalid occurrence ID", ex.Message, StringComparison.OrdinalIgnoreCase);
@@ -306,7 +294,7 @@ public class TestOccurrenceServiceTest
             Type = OccurrenceType.FLOOD,
             Priority = PriorityLevel.LOW,
             ProximityRadius = 10,
-            Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
+            Location = new GeoPointModel { Latitude = 40, Longitude = -8 },
         };
         var ex = Assert.Throws<ArgumentException>(() => service.Update(o));
         Assert.Contains("title", ex.Message, StringComparison.OrdinalIgnoreCase);
@@ -326,7 +314,7 @@ public class TestOccurrenceServiceTest
             Type = OccurrenceType.FLOOD,
             Priority = PriorityLevel.LOW,
             ProximityRadius = 10,
-            Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
+            Location = new GeoPointModel { Latitude = 40, Longitude = -8 },
         };
         var ex = Assert.Throws<ArgumentException>(() => service.Update(o));
         Assert.Contains("description", ex.Message, StringComparison.OrdinalIgnoreCase);
@@ -345,7 +333,7 @@ public class TestOccurrenceServiceTest
             Description = "d",
             Type = (OccurrenceType)999,
             ProximityRadius = 10,
-            Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
+            Location = new GeoPointModel { Latitude = 40, Longitude = -8 },
         };
         Assert.Throws<ArgumentOutOfRangeException>(() => service.Update(invalidType));
 
@@ -356,9 +344,14 @@ public class TestOccurrenceServiceTest
             Description = "d",
             Type = OccurrenceType.FLOOD,
             ProximityRadius = 0,
-            Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
+            Location = new GeoPointModel { Latitude = 40, Longitude = -8 },
         };
-        Assert.Throws<ArgumentException>(() => service.Update(nonPositiveRadius));
+        mockRepo
+            .Setup(r => r.Update(It.IsAny<Models.Occurrence>()))
+            .Returns((Models.Occurrence o) => o);
+
+        var updated = service.Update(nonPositiveRadius);
+        Assert.True(updated.ProximityRadius > 0);
 
         var negativeCounts = new Models.Occurrence
         {
@@ -370,7 +363,7 @@ public class TestOccurrenceServiceTest
             ReportCount = -1,
             ReportId = -2,
             ResponsibleEntityId = -3,
-            Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
+            Location = new GeoPointModel { Latitude = 40, Longitude = -8 },
         };
         Assert.Throws<ArgumentException>(() => service.Update(negativeCounts));
     }
@@ -391,7 +384,7 @@ public class TestOccurrenceServiceTest
             ProximityRadius = 10,
             CreationDateTime = DateTime.UtcNow,
             EndDateTime = DateTime.UtcNow.AddMinutes(-1),
-            Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
+            Location = new GeoPointModel { Latitude = 40, Longitude = -8 },
         };
         var ex = Assert.Throws<ArgumentException>(() => service.Update(o));
         Assert.Contains("EndDateTime", ex.Message, StringComparison.OrdinalIgnoreCase);
@@ -411,7 +404,7 @@ public class TestOccurrenceServiceTest
             Type = OccurrenceType.FLOOD,
             Priority = PriorityLevel.LOW,
             ProximityRadius = 10,
-            Location = null!
+            Location = null!,
         };
         var ex = Assert.Throws<ArgumentException>(() => service.Update(o));
         Assert.Contains("location", ex.Message, StringComparison.OrdinalIgnoreCase);
@@ -431,7 +424,7 @@ public class TestOccurrenceServiceTest
             Type = OccurrenceType.FLOOD,
             Priority = PriorityLevel.LOW,
             ProximityRadius = 10,
-            Location = new GeoPointModel { Latitude = 100, Longitude = 0 }
+            Location = new GeoPointModel { Latitude = 100, Longitude = 0 },
         };
         Assert.Throws<ArgumentOutOfRangeException>(() => service.Update(o));
     }
@@ -450,7 +443,7 @@ public class TestOccurrenceServiceTest
             Type = OccurrenceType.FLOOD,
             Priority = PriorityLevel.LOW,
             ProximityRadius = 10,
-            Location = new GeoPointModel { Latitude = 0, Longitude = 200 }
+            Location = new GeoPointModel { Latitude = 0, Longitude = 200 },
         };
         Assert.Throws<ArgumentOutOfRangeException>(() => service.Update(o));
     }
@@ -469,10 +462,11 @@ public class TestOccurrenceServiceTest
             Type = OccurrenceType.FLOOD,
             Priority = PriorityLevel.LOW,
             ProximityRadius = 10,
-            Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
+            Location = new GeoPointModel { Latitude = 40, Longitude = -8 },
         };
-        mockRepo.Setup(r => r.Update(It.IsAny<Models.Occurrence>()))
-                .Returns((Models.Occurrence)null!);
+        mockRepo
+            .Setup(r => r.Update(It.IsAny<Models.Occurrence>()))
+            .Returns((Models.Occurrence)null!);
 
         Assert.Throws<KeyNotFoundException>(() => service.Update(o));
     }
@@ -491,10 +485,11 @@ public class TestOccurrenceServiceTest
             Type = OccurrenceType.FLOOD,
             Priority = PriorityLevel.LOW,
             ProximityRadius = 10,
-            Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
+            Location = new GeoPointModel { Latitude = 40, Longitude = -8 },
         };
-        mockRepo.Setup(r => r.Update(It.IsAny<Models.Occurrence>()))
-                .Throws(new Exception("DB error"));
+        mockRepo
+            .Setup(r => r.Update(It.IsAny<Models.Occurrence>()))
+            .Throws(new Exception("DB error"));
 
         Assert.Throws<InvalidOperationException>(() => service.Update(o));
     }
@@ -513,7 +508,7 @@ public class TestOccurrenceServiceTest
             Type = OccurrenceType.FOREST_FIRE,
             Priority = PriorityLevel.HIGH,
             ProximityRadius = 50,
-            Location = new GeoPointModel { Latitude = 41, Longitude = -8.2 }
+            Location = new GeoPointModel { Latitude = 41, Longitude = -8.2 },
         };
         mockRepo.Setup(r => r.Update(It.IsAny<Models.Occurrence>())).Returns(updated);
 
@@ -561,7 +556,16 @@ public class TestOccurrenceServiceTest
     [Fact]
     public void Delete_Valid_ReturnsDeletedOccurrence()
     {
-        var o = new Models.Occurrence { Id = 9, Title = "t", Description = "d", Type = OccurrenceType.FLOOD, Priority = PriorityLevel.LOW, ProximityRadius = 10, Location = new GeoPointModel { Latitude = 40, Longitude = -8 } };
+        var o = new Models.Occurrence
+        {
+            Id = 9,
+            Title = "t",
+            Description = "d",
+            Type = OccurrenceType.FLOOD,
+            Priority = PriorityLevel.LOW,
+            ProximityRadius = 10,
+            Location = new GeoPointModel { Latitude = 40, Longitude = -8 },
+        };
         mockRepo.Setup(r => r.Delete(9)).Returns(o);
 
         var result = service.Delete(9);
@@ -597,7 +601,16 @@ public class TestOccurrenceServiceTest
     [Fact]
     public void GetOccurrenceById_Valid_ReturnsOccurrence()
     {
-        var o = new Models.Occurrence { Id = 7, Title = "t", Description = "d", Type = OccurrenceType.FLOOD, Priority = PriorityLevel.LOW, ProximityRadius = 10, Location = new GeoPointModel { Latitude = 40, Longitude = -8 } };
+        var o = new Models.Occurrence
+        {
+            Id = 7,
+            Title = "t",
+            Description = "d",
+            Type = OccurrenceType.FLOOD,
+            Priority = PriorityLevel.LOW,
+            ProximityRadius = 10,
+            Location = new GeoPointModel { Latitude = 40, Longitude = -8 },
+        };
         mockRepo.Setup(r => r.GetOccurrenceById(7)).Returns(o);
 
         var result = service.GetOccurrenceById(7);
@@ -625,9 +638,18 @@ public class TestOccurrenceServiceTest
     public void GetOccurrenceByTitle_Valid_ReturnsOccurrences()
     {
         var list = new List<Models.Occurrence>
+        {
+            new Models.Occurrence
             {
-                new Models.Occurrence { Id = 1, Title = "Flood Downtown", Description = "d", Type = OccurrenceType.FLOOD, Priority = PriorityLevel.LOW, ProximityRadius = 10, Location = new GeoPointModel { Latitude = 40, Longitude = -8 } }
-            };
+                Id = 1,
+                Title = "Flood Downtown",
+                Description = "d",
+                Type = OccurrenceType.FLOOD,
+                Priority = PriorityLevel.LOW,
+                ProximityRadius = 10,
+                Location = new GeoPointModel { Latitude = 40, Longitude = -8 },
+            },
+        };
         mockRepo.Setup(r => r.GetOccurrenceByTitle("Flood")).Returns(list);
 
         var result = service.GetOccurrenceByTitle("Flood");
@@ -644,7 +666,9 @@ public class TestOccurrenceServiceTest
     [Fact]
     public void GetAllOccurrences_InvalidPageNumber_ThrowsArgumentException()
     {
-        var ex = Assert.Throws<ArgumentException>(() => service.GetAllOccurrences(0, 10, "Title", "asc", ""));
+        var ex = Assert.Throws<ArgumentException>(() =>
+            service.GetAllOccurrences(0, 10, "Title", "asc", "")
+        );
         Assert.Contains("Page number", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -654,7 +678,9 @@ public class TestOccurrenceServiceTest
     [Fact]
     public void GetAllOccurrences_InvalidPageSize_ThrowsArgumentException()
     {
-        var ex = Assert.Throws<ArgumentException>(() => service.GetAllOccurrences(1, 0, "Title", "asc", ""));
+        var ex = Assert.Throws<ArgumentException>(() =>
+            service.GetAllOccurrences(1, 0, "Title", "asc", "")
+        );
         Assert.Contains("Page size", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -664,7 +690,9 @@ public class TestOccurrenceServiceTest
     [Fact]
     public void GetAllOccurrences_PageSizeTooLarge_ThrowsArgumentException()
     {
-        var ex = Assert.Throws<ArgumentException>(() => service.GetAllOccurrences(1, 1001, "Title", "asc", ""));
+        var ex = Assert.Throws<ArgumentException>(() =>
+            service.GetAllOccurrences(1, 1001, "Title", "asc", "")
+        );
         Assert.Contains("Page size", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -674,7 +702,9 @@ public class TestOccurrenceServiceTest
     [Fact]
     public void GetAllOccurrences_EmptySortBy_ThrowsArgumentException()
     {
-        var ex = Assert.Throws<ArgumentException>(() => service.GetAllOccurrences(1, 10, "", "asc", ""));
+        var ex = Assert.Throws<ArgumentException>(() =>
+            service.GetAllOccurrences(1, 10, "", "asc", "")
+        );
         Assert.Contains("Sort field", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -684,7 +714,9 @@ public class TestOccurrenceServiceTest
     [Fact]
     public void GetAllOccurrences_InvalidSortOrder_ThrowsArgumentException()
     {
-        var ex = Assert.Throws<ArgumentException>(() => service.GetAllOccurrences(1, 10, "Title", "invalid", ""));
+        var ex = Assert.Throws<ArgumentException>(() =>
+            service.GetAllOccurrences(1, 10, "Title", "invalid", "")
+        );
         Assert.Contains("Sort order", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -694,8 +726,9 @@ public class TestOccurrenceServiceTest
     [Fact]
     public void GetAllOccurrences_RepositoryReturnsNull_ReturnsEmptyList()
     {
-        mockRepo.Setup(r => r.GetAllOccurrences(1, 10, "Title", "asc", ""))
-                .Returns((List<Models.Occurrence>?)null);
+        mockRepo
+            .Setup(r => r.GetAllOccurrences(1, 10, "Title", "asc", ""))
+            .Returns((List<Models.Occurrence>?)null);
 
         var result = service.GetAllOccurrences(1, 10, "Title", "asc", "");
 
@@ -709,10 +742,21 @@ public class TestOccurrenceServiceTest
     [Fact]
     public void GetAllOccurrences_RepositoryThrows_WrapsInvalidOperationException()
     {
-        mockRepo.Setup(r => r.GetAllOccurrences(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
-                .Throws(new Exception("DB error"));
+        mockRepo
+            .Setup(r =>
+                r.GetAllOccurrences(
+                    It.IsAny<int>(),
+                    It.IsAny<int>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>()
+                )
+            )
+            .Throws(new Exception("DB error"));
 
-        Assert.Throws<InvalidOperationException>(() => service.GetAllOccurrences(1, 10, "Title", "asc", ""));
+        Assert.Throws<InvalidOperationException>(() =>
+            service.GetAllOccurrences(1, 10, "Title", "asc", "")
+        );
     }
 
     /// <summary>
@@ -722,9 +766,18 @@ public class TestOccurrenceServiceTest
     public void GetAllOccurrences_Valid_ReturnsList()
     {
         var list = new List<Models.Occurrence>
+        {
+            new Models.Occurrence
             {
-                new Models.Occurrence { Id = 2, Title = "Alpha", Description = "d", Type = OccurrenceType.FLOOD, Priority = PriorityLevel.LOW, ProximityRadius = 10, Location = new GeoPointModel { Latitude = 40, Longitude = -8 } }
-            };
+                Id = 2,
+                Title = "Alpha",
+                Description = "d",
+                Type = OccurrenceType.FLOOD,
+                Priority = PriorityLevel.LOW,
+                ProximityRadius = 10,
+                Location = new GeoPointModel { Latitude = 40, Longitude = -8 },
+            },
+        };
         mockRepo.Setup(r => r.GetAllOccurrences(1, 10, "Title", "asc", "")).Returns(list);
 
         var result = service.GetAllOccurrences(1, 10, "Title", "asc", "");
@@ -741,9 +794,18 @@ public class TestOccurrenceServiceTest
     public void GetOccurrencesByType_ReturnsRepoList()
     {
         var list = new List<Models.Occurrence>
+        {
+            new Models.Occurrence
             {
-                new Models.Occurrence { Id = 1, Title = "Flood", Description = "d", Type = OccurrenceType.FLOOD, Priority = PriorityLevel.LOW, ProximityRadius = 10, Location = new GeoPointModel { Latitude = 40, Longitude = -8 } }
-            };
+                Id = 1,
+                Title = "Flood",
+                Description = "d",
+                Type = OccurrenceType.FLOOD,
+                Priority = PriorityLevel.LOW,
+                ProximityRadius = 10,
+                Location = new GeoPointModel { Latitude = 40, Longitude = -8 },
+            },
+        };
         mockRepo.Setup(r => r.GetOccurrencesByType(OccurrenceType.FLOOD)).Returns(list);
 
         var result = service.GetOccurrencesByType(OccurrenceType.FLOOD);
@@ -759,17 +821,31 @@ public class TestOccurrenceServiceTest
     public void GetAllActiveOccurrences_ReturnsActiveList()
     {
         var list = new List<Models.Occurrence>
+        {
+            new Models.Occurrence
             {
-                new Models.Occurrence { Id = 3, Title = "Active", Description = "d", Type = OccurrenceType.FOREST_FIRE, Priority = PriorityLevel.HIGH, ProximityRadius = 20, Status = OccurrenceStatus.ACTIVE, Location = new GeoPointModel { Latitude = 41, Longitude = -8 } }
-            };
+                Id = 3,
+                Title = "Active",
+                Description = "d",
+                Type = OccurrenceType.FOREST_FIRE,
+                Priority = PriorityLevel.HIGH,
+                ProximityRadius = 20,
+                Status = OccurrenceStatus.ACTIVE,
+                Location = new GeoPointModel { Latitude = 41, Longitude = -8 },
+            },
+        };
         mockRepo.Setup(r => r.GetAllActiveOccurrences(1, 50, null, null, null)).Returns(list);
 
         var result = service.GetAllActiveOccurrences(1, 50, null, null, null);
 
         Assert.Single(result);
-        Assert.All(result, o => Assert.True(
-            o.Status == OccurrenceStatus.ACTIVE || o.Status == OccurrenceStatus.IN_PROGRESS
-        ));
+        Assert.All(
+            result,
+            o =>
+                Assert.True(
+                    o.Status == OccurrenceStatus.ACTIVE || o.Status == OccurrenceStatus.IN_PROGRESS
+                )
+        );
     }
 
     /// <summary>
@@ -779,9 +855,18 @@ public class TestOccurrenceServiceTest
     public void GetOccurrencesByPriority_ReturnsRepoList()
     {
         var list = new List<Models.Occurrence>
+        {
+            new Models.Occurrence
             {
-                new Models.Occurrence { Id = 4, Title = "High", Description = "d", Type = OccurrenceType.FLOOD, Priority = PriorityLevel.HIGH, ProximityRadius = 15, Location = new GeoPointModel { Latitude = 40.5, Longitude = -8.2 } }
-            };
+                Id = 4,
+                Title = "High",
+                Description = "d",
+                Type = OccurrenceType.FLOOD,
+                Priority = PriorityLevel.HIGH,
+                ProximityRadius = 15,
+                Location = new GeoPointModel { Latitude = 40.5, Longitude = -8.2 },
+            },
+        };
         mockRepo.Setup(r => r.GetOccurrencesByPriority(PriorityLevel.HIGH)).Returns(list);
 
         var result = service.GetOccurrencesByPriority(PriorityLevel.HIGH);
@@ -811,7 +896,7 @@ public class TestOccurrenceServiceTest
             Description = "desc",
             Type = OccurrenceType.FLOOD,
             ProximityRadius = 10,
-            Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
+            Location = new GeoPointModel { Latitude = 40, Longitude = -8 },
         };
 
         var ex = Assert.Throws<ArgumentException>(() => service.CreateAdminOccurrence(o));
@@ -830,7 +915,7 @@ public class TestOccurrenceServiceTest
             Description = "",
             Type = OccurrenceType.FLOOD,
             ProximityRadius = 10,
-            Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
+            Location = new GeoPointModel { Latitude = 40, Longitude = -8 },
         };
 
         Assert.Throws<ArgumentException>(() => service.CreateAdminOccurrence(o));
@@ -848,7 +933,7 @@ public class TestOccurrenceServiceTest
             Description = "Desc",
             Type = OccurrenceType.FLOOD,
             ProximityRadius = 10,
-            Location = null!
+            Location = null!,
         };
 
         Assert.Throws<ArgumentException>(() => service.CreateAdminOccurrence(o));
@@ -866,15 +951,22 @@ public class TestOccurrenceServiceTest
             Description = "Desc",
             Type = OccurrenceType.FLOOD,
             ProximityRadius = 50,
-            Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
+            Location = new GeoPointModel { Latitude = 40, Longitude = -8 },
         };
 
         mockResponsibleEntityService
             .Setup(s => s.FindResponsibleEntity(OccurrenceType.FLOOD, 40, -8))
             .Returns(new readytohelpapi.ResponsibleEntity.Models.ResponsibleEntity { Id = 99 });
 
-        mockRepo.Setup(r => r.Create(It.IsAny<Models.Occurrence>()))
-                .Returns((Models.Occurrence o) => { o.Id = 10; return o; });
+        mockRepo
+            .Setup(r => r.Create(It.IsAny<Models.Occurrence>()))
+            .Returns(
+                (Models.Occurrence o) =>
+                {
+                    o.Id = 10;
+                    return o;
+                }
+            );
 
         var result = service.CreateAdminOccurrence(occurrence);
 
@@ -896,15 +988,28 @@ public class TestOccurrenceServiceTest
             Description = "Desc",
             Type = OccurrenceType.FLOOD,
             ProximityRadius = 50,
-            Location = new GeoPointModel { Latitude = 41, Longitude = -8 }
+            Location = new GeoPointModel { Latitude = 41, Longitude = -8 },
         };
 
         mockResponsibleEntityService
-            .Setup(s => s.FindResponsibleEntity(It.IsAny<OccurrenceType>(), It.IsAny<double>(), It.IsAny<double>()))
+            .Setup(s =>
+                s.FindResponsibleEntity(
+                    It.IsAny<OccurrenceType>(),
+                    It.IsAny<double>(),
+                    It.IsAny<double>()
+                )
+            )
             .Returns((readytohelpapi.ResponsibleEntity.Models.ResponsibleEntity?)null);
 
-        mockRepo.Setup(r => r.Create(It.IsAny<Models.Occurrence>()))
-                .Returns((Models.Occurrence o) => { o.Id = 5; return o; });
+        mockRepo
+            .Setup(r => r.Create(It.IsAny<Models.Occurrence>()))
+            .Returns(
+                (Models.Occurrence o) =>
+                {
+                    o.Id = 5;
+                    return o;
+                }
+            );
 
         var result = service.CreateAdminOccurrence(occurrence);
 
@@ -924,16 +1029,152 @@ public class TestOccurrenceServiceTest
             Description = "d",
             Type = OccurrenceType.FLOOD,
             ProximityRadius = 10,
-            Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
+            Location = new GeoPointModel { Latitude = 40, Longitude = -8 },
         };
 
-        mockRepo.Setup(r => r.Create(It.IsAny<Models.Occurrence>()))
-                .Throws(new Exception("DB error"));
+        mockRepo
+            .Setup(r => r.Create(It.IsAny<Models.Occurrence>()))
+            .Throws(new Exception("DB error"));
 
         Assert.Throws<InvalidOperationException>(() => service.CreateAdminOccurrence(o));
     }
 
     /// <summary>
+    /// Tests that Create occurrence computes proximity radius for types whose base priority is HIGH.
+    /// </summary>
+    [Fact]
+    public void Create_ComputesProximityRadius_ForForestFire_High()
+    {
+        var input = new Models.Occurrence
+        {
+            Title = "Forest fire",
+            Description = "Smoke visible",
+            Type = OccurrenceType.FOREST_FIRE,
+            ProximityRadius = 0,
+            ReportCount = 0,
+            Location = new GeoPointModel { Latitude = 40.0, Longitude = -8.0 },
+        };
+
+        Models.Occurrence? saved = null;
+        mockRepo
+            .Setup(r => r.Create(It.IsAny<Models.Occurrence>()))
+            .Callback<Models.Occurrence>(o => saved = o)
+            .Returns<Models.Occurrence>(o =>
+            {
+                o.Id = 42;
+                return o;
+            });
+
+        var result = service.Create(input);
+
+        Assert.NotNull(saved);
+        Assert.Equal(PriorityLevel.HIGH, saved!.Priority);
+        Assert.Equal(2500.0 * 2.0, saved.ProximityRadius, 6);
+        Assert.Equal(42, result.Id);
+    }
+
+    /// <summary>
+    /// Tests that Create occurrence computes proximity radius for types whose base priority is MEDIUM.
+    /// </summary>
+    [Fact]
+    public void Create_ComputesProximityRadius_ForRoadObstruction_Medium()
+    {
+        var input = new Models.Occurrence
+        {
+            Title = "Road obstruction",
+            Description = "Debris on road",
+            Type = OccurrenceType.ROAD_OBSTRUCTION,
+            ProximityRadius = 0,
+            ReportCount = 0,
+            Location = new GeoPointModel { Latitude = 40.5, Longitude = -8.5 },
+        };
+
+        Models.Occurrence? saved = null;
+        mockRepo
+            .Setup(r => r.Create(It.IsAny<Models.Occurrence>()))
+            .Callback<Models.Occurrence>(o => saved = o)
+            .Returns<Models.Occurrence>(o =>
+            {
+                o.Id = 43;
+                return o;
+            });
+
+        var result = service.Create(input);
+
+        Assert.NotNull(saved);
+        Assert.Equal(PriorityLevel.MEDIUM, saved!.Priority);
+        Assert.Equal(200.0 * 1.5, saved.ProximityRadius, 6);
+        Assert.Equal(43, result.Id);
+    }
+
+    /// <summary>
+    /// Tests that Create occurrence computes proximity radius for types whose base priority is LOW.
+    /// </summary>
+    [Fact]
+    public void Create_ComputesProximityRadius_ForPublicLighting_Low()
+    {
+        var input = new Models.Occurrence
+        {
+            Title = "Street light out",
+            Description = "Lamp not working",
+            Type = OccurrenceType.PUBLIC_LIGHTING,
+            ProximityRadius = 0,
+            ReportCount = 0,
+            Location = new GeoPointModel { Latitude = 41.2, Longitude = -8.3 },
+        };
+
+        Models.Occurrence? saved = null;
+        mockRepo
+            .Setup(r => r.Create(It.IsAny<Models.Occurrence>()))
+            .Callback<Models.Occurrence>(o => saved = o)
+            .Returns<Models.Occurrence>(o =>
+            {
+                o.Id = 44;
+                return o;
+            });
+
+        var result = service.Create(input);
+
+        Assert.NotNull(saved);
+        Assert.Equal(PriorityLevel.LOW, saved!.Priority);
+        Assert.Equal(100.0 * 1.0, saved.ProximityRadius, 6);
+        Assert.Equal(44, result.Id);
+    }
+
+    /// <summary>
+    /// Tests that Create occurrence computes priority and resulting proximity radius when reportCount raises priority.
+    /// </summary>
+    [Fact]
+    public void Create_ComputesPriorityAndRadius_WhenReportCountElevatesPriority()
+    {
+        var input = new Models.Occurrence
+        {
+            Title = "Vehicle breakdown cluster",
+            Description = "Multiple reports",
+            Type = OccurrenceType.VEHICLE_BREAKDOWN,
+            ProximityRadius = 0,
+            ReportCount = 5,
+            Location = new GeoPointModel { Latitude = 41.0, Longitude = -8.5 },
+        };
+
+        Models.Occurrence? saved = null;
+        mockRepo
+            .Setup(r => r.Create(It.IsAny<Models.Occurrence>()))
+            .Callback<Models.Occurrence>(o => saved = o)
+            .Returns<Models.Occurrence>(o =>
+            {
+                o.Id = 99;
+                return o;
+            });
+
+        var result = service.Create(input);
+
+        Assert.NotNull(saved);
+        Assert.Equal(PriorityLevel.HIGH, saved!.Priority);
+        Assert.Equal(125.0 * 2.0, saved.ProximityRadius, 6);
+        Assert.Equal(99, result.Id);
+    }
+
     /// Tests Create with a Forest Fire occurrence sets priority to HIGH.
     /// </summary>
     [Fact]
@@ -1052,5 +1293,4 @@ public class TestOccurrenceServiceTest
 
         Assert.Equal(PriorityLevel.MEDIUM, result.Priority);
     }
-
 }

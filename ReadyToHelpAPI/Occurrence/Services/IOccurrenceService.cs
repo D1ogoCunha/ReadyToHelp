@@ -1,7 +1,7 @@
 namespace readytohelpapi.Occurrence.Services;
 
-using readytohelpapi.Occurrence.Models;
 using System.Collections.Generic;
+using readytohelpapi.Occurrence.Models;
 
 /// <summary>
 ///  Defines the contract for occurrence-related operations.
@@ -59,7 +59,13 @@ public interface IOccurrenceService
     /// <param name="sortOrder">The sort order, either "asc" or "desc".</param>
     /// <param name="filter">The string to filter the occurrence data.</param>
     /// <returns>A paginated, sorted, and filtered list of occurrences.</returns>
-    List<Occurrence> GetAllOccurrences(int pageNumber, int pageSize, string sortBy, string sortOrder, string filter);
+    List<Occurrence> GetAllOccurrences(
+        int pageNumber,
+        int pageSize,
+        string sortBy,
+        string sortOrder,
+        string filter
+    );
 
     /// <summary>
     ///     Retrieves all occurrences for a specific responsible entity.
@@ -84,7 +90,13 @@ public interface IOccurrenceService
     /// <param name="priority">Optional priority level filter.</param>
     /// <param name="responsibleEntityId">Optional responsible entity ID filter.</param>
     /// <returns>A paginated list of active occurrences matching the specified criteria.</returns>
-    List<Occurrence> GetAllActiveOccurrences(int pageNumber, int pageSize, OccurrenceType? type, PriorityLevel? priority, int? responsibleEntityId);
+    List<Occurrence> GetAllActiveOccurrences(
+        int pageNumber,
+        int pageSize,
+        OccurrenceType? type,
+        PriorityLevel? priority,
+        int? responsibleEntityId
+    );
 
     /// <summary>
     ///     Retrieves all occurrences by the specified priority level.
@@ -92,5 +104,4 @@ public interface IOccurrenceService
     /// <param name="priority">The priority level of the occurrence.</param>
     /// <returns>A list of occurrences of the specified priority level.</returns>
     List<Occurrence> GetOccurrencesByPriority(PriorityLevel priority);
-
 }

@@ -26,7 +26,12 @@ public class ReportServiceImpl : IReportService
     /// <param name="occurrenceService">The occurrence service.</param>
     /// <param name="responsibleEntityService">The responsible entity service.</param>
     /// <param name="notifierClient">The notifier client.</param>
-    public ReportServiceImpl(IReportRepository reportRepository, IOccurrenceService occurrenceService, IResponsibleEntityService responsibleEntityService, INotifierClient notifierClient)
+    public ReportServiceImpl(
+        IReportRepository reportRepository,
+        IOccurrenceService occurrenceService,
+        IResponsibleEntityService responsibleEntityService,
+        INotifierClient notifierClient
+    )
     {
         this.reportRepository = reportRepository;
         this.occurrenceService = occurrenceService;
@@ -54,12 +59,17 @@ public class ReportServiceImpl : IReportService
             report.Location.Longitude
         );
 
-        var duplicatedOccurrence = FindNearbyOccurrenceOfSameType(report, DefaultProximityRadiusMeters);
+        var duplicatedOccurrence = FindNearbyOccurrenceOfSameType(report);
         var createdReport = reportRepository.Create(report);
 
         if (duplicatedOccurrence != null)
         {
-            return HandleDuplicateOccurrence(duplicatedOccurrence, createdReport, report, responsibleEntity);
+            return HandleDuplicateOccurrence(
+                duplicatedOccurrence,
+                createdReport,
+                report,
+                responsibleEntity
+            );
         }
 
         var createdOccurrence = CreateNewOccurrence(createdReport, report, responsibleEntity);
@@ -78,14 +88,22 @@ public class ReportServiceImpl : IReportService
         Occurrence duplicatedOccurrence,
         Report createdReport,
         Report report,
-        ResponsibleEntity.Models.ResponsibleEntity? responsibleEntity)
+        ResponsibleEntity.Models.ResponsibleEntity? responsibleEntity
+    )
     {
         duplicatedOccurrence.ReportCount += 1;
-        if (duplicatedOccurrence.ReportCount >= triggerActivate &&
-            duplicatedOccurrence.Status == OccurrenceStatus.WAITING)
+        if (
+            duplicatedOccurrence.ReportCount >= triggerActivate
+            && duplicatedOccurrence.Status == OccurrenceStatus.WAITING
+        )
         {
             duplicatedOccurrence.Status = OccurrenceStatus.ACTIVE;
-            NotifyResponsibleEntity(duplicatedOccurrence, report, responsibleEntity, isDuplicate: true);
+            NotifyResponsibleEntity(
+                duplicatedOccurrence,
+                report,
+                responsibleEntity,
+                isDuplicate: true
+            );
         }
 
         occurrenceService.Update(duplicatedOccurrence);
@@ -102,20 +120,20 @@ public class ReportServiceImpl : IReportService
     private Occurrence CreateNewOccurrence(
         Report createdReport,
         Report report,
-        ResponsibleEntity.Models.ResponsibleEntity? responsibleEntity)
+        ResponsibleEntity.Models.ResponsibleEntity? responsibleEntity
+    )
     {
         var occurrence = new Occurrence
         {
             Title = createdReport.Title,
             Description = createdReport.Description,
             Type = report.Type,
-            ProximityRadius = DefaultProximityRadiusMeters,
             Status = OccurrenceStatus.WAITING,
             EndDateTime = default,
             ReportCount = 1,
             ReportId = createdReport.Id,
             ResponsibleEntityId = responsibleEntity?.Id ?? 0,
-            Location = report.Location
+            Location = report.Location,
         };
 
         return occurrenceService.Create(occurrence);
@@ -132,7 +150,8 @@ public class ReportServiceImpl : IReportService
         Occurrence occurrence,
         Report report,
         ResponsibleEntity.Models.ResponsibleEntity? responsibleEntity,
-        bool isDuplicate)
+        bool isDuplicate
+    )
     {
         var req = new NotificationRequest
         {
@@ -145,7 +164,7 @@ public class ReportServiceImpl : IReportService
             Longitude = report.Location.Longitude,
             Message = isDuplicate
                 ? $"Novo relatório para ocorrência existente ({occurrence.Id})."
-                : "Ocorrência reportada."
+                : "Ocorrência reportada.",
         };
         _ = notifierClient.NotifyForNMinutesAsync(req, minutes: 5);
     }
@@ -156,17 +175,25 @@ public class ReportServiceImpl : IReportService
     /// <param name="newReport">The new report to find occurrences for.</param>
     /// <param name="radiusMeters">The radius within which to search for occurrences.</param>
     /// <returns>The found occurrence, or null if none is found.</returns>
-    private Occurrence? FindNearbyOccurrenceOfSameType(Report newReport, double radiusMeters)
+    private Occurrence? FindNearbyOccurrenceOfSameType(Report newReport)
     {
-        if (newReport?.Location is null) return null;
+        if (newReport?.Location is null)
+            return null;
 
         var sameTypeOccurrences = occurrenceService.GetOccurrencesByType(newReport.Type);
-        if (sameTypeOccurrences == null || sameTypeOccurrences.Count == 0) return null;
+        if (sameTypeOccurrences == null || sameTypeOccurrences.Count == 0)
+            return null;
 
         foreach (var occ in sameTypeOccurrences)
         {
-            var anchorReport = occ.ReportId.HasValue ? reportRepository.GetById(occ.ReportId.Value) : null;
-            if (anchorReport?.Location == null) continue;
+            var occRadius =
+                occ.ProximityRadius > 0 ? occ.ProximityRadius : DefaultProximityRadiusMeters;
+
+            var anchorReport = occ.ReportId.HasValue
+                ? reportRepository.GetById(occ.ReportId.Value)
+                : null;
+            if (anchorReport?.Location == null)
+                continue;
 
             var d = GeoUtils.DistanceMeters(
                 newReport.Location.Latitude,
@@ -175,7 +202,7 @@ public class ReportServiceImpl : IReportService
                 anchorReport.Location.Longitude
             );
 
-            if (d <= radiusMeters)
+            if (d <= occRadius)
                 return occ;
         }
 

@@ -8,7 +8,6 @@ using readytohelpapi.GeoPoint.Models;
 /// </summary>
 public class Occurrence
 {
-
     /// <summary>
     ///  Initializes a new instance of the <see cref="Occurrence" /> class.
     ///  Default constructor that sets CreationDateTime to current UTC time and Status to ACTIVE.
@@ -35,7 +34,20 @@ public class Occurrence
     /// <param name="reportCount">The report count of the occurrence.</param>
     /// <param name="reportId">The report identifier associated with the occurrence.</param>
     /// <param name="responsibleEntityId">The responsible entity identifier associated with the occurrence.</param>
-    public Occurrence(int id, string title, string description, OccurrenceType type, OccurrenceStatus status, PriorityLevel priority, double proximityRadius, DateTime endDateTime, int reportCount, int reportId, int responsibleEntityId, GeoPoint location)
+    public Occurrence(
+        int id,
+        string title,
+        string description,
+        OccurrenceType type,
+        OccurrenceStatus status,
+        PriorityLevel priority,
+        double proximityRadius,
+        DateTime endDateTime,
+        int reportCount,
+        int reportId,
+        int responsibleEntityId,
+        GeoPoint location
+    )
     {
         Id = id;
         Title = title;
