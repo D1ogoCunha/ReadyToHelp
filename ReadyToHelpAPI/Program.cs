@@ -13,6 +13,7 @@ using readytohelpapi.Report.Services;
 using readytohelpapi.ResponsibleEntity.Services;
 using readytohelpapi.User.Services;
 using readytohelpapi.Notifications;
+using readytohelpapi.Dashboard.Service;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -59,6 +60,8 @@ builder.Services.AddScoped<IReportService, ReportServiceImpl>();
 builder.Services.AddScoped<IFeedbackRepository, FeedbackRepository>();
 builder.Services.AddScoped<IFeedbackService, FeedbackServiceImpl>();
 builder.Services.AddScoped<IResponsibleEntityService, ResponsibleEntityService>();
+builder.Services.AddScoped<INotifierClient, NotifierClient>();
+builder.Services.AddScoped<IDashboardService, DashboardServiceImpl>();
 
 builder.Services.AddHttpClient<INotifierClient, NotifierClient>(c =>
 {

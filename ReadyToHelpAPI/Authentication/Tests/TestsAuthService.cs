@@ -185,12 +185,21 @@ public class TestAuthService
     /// <summary>
     /// Tests mobile login for a user with a missing email.
     /// </summary>
-    [Fact]
-    public void UserLoginMobile_ShouldThrowAuth_WhenEmailNotFound()
+    [Theory]
+    [InlineData("mobile")]
+    [InlineData("web")]
+    public void UserLogin_ShouldThrowAuth_WhenEmailNotFound(string mode)
     {
         mockUserService.Setup(u => u.GetUserByEmail("missing@mail.com")).Returns((User?)null);
 
-        Assert.Throws<AuthException>(() => authService.UserLoginWeb(new AuthDto("missing@mail.com", "123")));
+        if (mode == "mobile")
+        {
+            Assert.Throws<AuthException>(() => authService.UserLoginMobile(new AuthDto("missing@mail.com", "123")));
+        }
+        else
+        {
+            Assert.Throws<AuthException>(() => authService.UserLoginWeb(new AuthDto("missing@mail.com", "123")));
+        }
     }
 
     [Fact]
@@ -199,19 +208,6 @@ public class TestAuthService
         Assert.Throws<ArgumentException>(() => authService.UserLoginWeb(new AuthDto("", "123")));
         Assert.Throws<ArgumentException>(() => authService.UserLoginWeb(new AuthDto("a@mail.com", "")));
     }
-
-    /// <summary>
-    /// Tests web login for a user with a missing email.
-    /// </summary>
-    [Fact]
-    public void UserLoginWeb_ShouldThrowAuth_WhenEmailNotFound()
-    {
-        mockUserService.Setup(u => u.GetUserByEmail("missing@mail.com")).Returns((User?)null);
-
-        Assert.Throws<AuthException>(() =>
-            authService.UserLoginWeb(new AuthDto("missing@mail.com", "123")));
-    }
-
 
     /// <summary>
     /// Tests refreshing an expired JWT token.

@@ -20,7 +20,6 @@ public class AuthServiceImpl : IAuthService
     private readonly IConfiguration configuration;
     private readonly JwtSecurityTokenHandler tokenHandler = new();
     private readonly IDistributedCache cache;
-    private IUserService @object;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AuthServiceImpl"/> class.
@@ -101,7 +100,7 @@ public class AuthServiceImpl : IAuthService
         try
         {
             var principal = ValidateToken(existingToken, out var jwtToken);
-            var sub = jwtToken.Subject ?? string.Empty;
+            var sub = principal.FindFirst(JwtRegisteredClaimNames.Sub)?.Value ?? jwtToken.Subject ?? string.Empty;
             if (!int.TryParse(sub, out var id)) return string.Empty;
 
             var email = jwtToken.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Email || c.Type == ClaimTypes.Email)?.Value;
