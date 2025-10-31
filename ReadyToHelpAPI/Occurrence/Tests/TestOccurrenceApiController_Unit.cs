@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using Xunit;
 using System.Linq;
+using readytohelpapi.ResponsibleEntity.Services;
 
 namespace readytohelpapi.Occurrence.Tests;
 
@@ -15,21 +16,17 @@ namespace readytohelpapi.Occurrence.Tests;
 ///   This class contains all unit tests for OccurrenceApiController,
 ///   following the same approach and documentation used in TestUserApiController.
 /// </summary>
-[Trait("Category", "Integration")]
-public class TestOccurrenceApiController : IClassFixture<DbFixture>
+[Trait("Category", "Unit")]
+public class TestOccurrenceApiController
 {
-    private readonly DbFixture fixture;
     private readonly Mock<IOccurrenceService> mockOccurrenceService;
     private readonly OccurrenceApiController controller;
 
     /// <summary>
     ///   Initializes a new instance of TestOccurrenceApiController.
     /// </summary>
-    public TestOccurrenceApiController(DbFixture fixture)
+    public TestOccurrenceApiController()
     {
-        this.fixture = fixture;
-        this.fixture.ResetDatabase();
-
         mockOccurrenceService = new Mock<IOccurrenceService>();
         controller = new OccurrenceApiController(mockOccurrenceService.Object);
     }
@@ -593,5 +590,4 @@ public class TestOccurrenceApiController : IClassFixture<DbFixture>
         var status = Assert.IsType<ObjectResult>(result.Result);
         Assert.Equal(500, status.StatusCode);
     }
-
 }
