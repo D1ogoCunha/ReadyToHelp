@@ -1,11 +1,11 @@
+namespace readytohelpapi.Occurrence.Tests;
+
 using Moq;
 using GeoPointModel = readytohelpapi.GeoPoint.Models.GeoPoint;
 using readytohelpapi.Occurrence.Models;
 using readytohelpapi.Occurrence.Services;
 using Xunit;
 using readytohelpapi.ResponsibleEntity.Services;
-
-namespace readytohelpapi.Occurrence.Tests;
 
 /// <summary>
 ///  This class contains unit tests related to the occurrence service.
@@ -931,6 +931,126 @@ public class TestOccurrenceServiceTest
                 .Throws(new Exception("DB error"));
 
         Assert.Throws<InvalidOperationException>(() => service.CreateAdminOccurrence(o));
+    }
+
+    /// <summary>
+    /// Tests Create with a Forest Fire occurrence sets priority to HIGH.
+    /// </summary>
+    [Fact]
+    public void Create_ForestFire_ShouldSetPriorityHigh()
+    {
+        var input = new Occurrence
+        {
+            Title = "test",
+            Description = "test",
+            Type = OccurrenceType.FOREST_FIRE,
+            ReportCount = 0,
+            ProximityRadius = 50,
+            Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
+        };
+
+        mockRepo.Setup(r => r.Create(It.IsAny<Occurrence>()))
+                .Returns((Occurrence o) => o);
+
+        var result = service.Create(input);
+
+        Assert.Equal(PriorityLevel.HIGH, result.Priority);
+    }
+
+    /// <summary>
+    /// Tests Create with a Pollution occurrence and low report count keeps priority MEDIUM.
+    /// </summary>
+    [Fact]
+    public void Create_Pollution_WithLowReportCount_ShouldRemainMediumPriority()
+    {
+        var input = new Occurrence
+        {
+            Title = "test",
+            Description = "test",
+            Type = OccurrenceType.POLLUTION,
+            ReportCount = 2,
+            ProximityRadius = 50,
+            Location = new GeoPointModel { Latitude = 41, Longitude = -7 }
+        };
+
+        mockRepo.Setup(r => r.Create(It.IsAny<Occurrence>()))
+                .Returns((Occurrence o) => o);
+
+        var result = service.Create(input);
+
+        Assert.Equal(PriorityLevel.MEDIUM, result.Priority);
+    }
+
+    /// <summary>
+    /// Tests Create with a Traffic Congestion occurrence and high report count increases priority to HIGH.
+    /// </summary>
+    [Fact]
+    public void Create_TrafficCongestion_WithHighReports_ShouldIncreasePriorityToHigh()
+    {
+        var input = new Occurrence
+        {
+            Title = "test",
+            Description = "test",
+            Type = OccurrenceType.TRAFFIC_CONGESTION,
+            ReportCount = 6,
+            ProximityRadius = 50,
+            Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
+        };
+
+        mockRepo.Setup(r => r.Create(It.IsAny<Occurrence>()))
+                .Returns((Occurrence o) => o);
+
+        var result = service.Create(input);
+
+        Assert.Equal(PriorityLevel.HIGH, result.Priority);
+    }
+
+    /// <summary>
+    /// Tests Create with a Public Lighting occurrence and low report count keeps priority LOW.
+    /// </summary>
+    [Fact]
+    public void Create_PublicLighting_WithLowReportCount_ShouldRemainLowPriority()
+    {
+        var input = new Occurrence
+        {
+            Title = "test",
+            Description = "test",
+            Type = OccurrenceType.PUBLIC_LIGHTING,
+            ReportCount = 3,
+            ProximityRadius = 50,
+            Location = new GeoPointModel { Latitude = 39, Longitude = -9 }
+        };
+
+        mockRepo.Setup(r => r.Create(It.IsAny<Occurrence>()))
+                .Returns((Occurrence o) => o);
+
+        var result = service.Create(input);
+
+        Assert.Equal(PriorityLevel.LOW, result.Priority);
+    }
+
+    /// <summary>
+    /// Tests Create with a Lost Animal occurrence and moderate report count sets priority to MEDIUM.
+    /// </summary>
+    [Fact]
+    public void Create_LostAnimal_WithReportCountAboveThreshold_ShouldSetPriorityMedium()
+    {
+        var input = new Occurrence
+        {
+            Title = "test",
+            Description = "test",
+            Type = OccurrenceType.LOST_ANIMAL,
+            ReportCount = 7,
+            ProximityRadius = 50,
+            Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
+        };
+
+        mockRepo.Setup(r => r.Create(It.IsAny<Occurrence>()))
+                .Returns((Occurrence o) => o);
+
+        var result = service.Create(input);
+
+        Assert.Equal(PriorityLevel.MEDIUM, result.Priority);
     }
 
 }
