@@ -7,6 +7,7 @@ using Xunit;
 using readytohelpapi.Feedback.Models;
 using readytohelpapi.Feedback.Services;
 using readytohelpapi.Feedback.Tests.Fixtures;
+using readytohelpapi.Occurrence.Services;
 
 /// <summary>
 ///  This class contains all unit tests related to the feedback service.
@@ -23,7 +24,8 @@ public class TestFeedbackServiceTest
     public TestFeedbackServiceTest()
     {
         mockRepo = new Mock<IFeedbackRepository>();
-        service = new FeedbackServiceImpl(mockRepo.Object);
+        var mockOccurrenceService = new Mock<IOccurrenceService>();
+        service = new FeedbackServiceImpl(mockRepo.Object, mockOccurrenceService.Object);
     }
 
     /// <summary>

@@ -3,6 +3,8 @@ namespace readytohelpapi.Feedback.Services;
 using System;
 using System.Collections.Generic;
 using readytohelpapi.Feedback.Models;
+using readytohelpapi.Occurrence.Services;
+using readytohelpapi.Occurrence.Models;
 
 /// <summary>
 ///   Implementation of feedback service operations.
@@ -10,14 +12,17 @@ using readytohelpapi.Feedback.Models;
 public class FeedbackServiceImpl : IFeedbackService
 {
     private readonly IFeedbackRepository repo;
+    private readonly IOccurrenceService occurrenceService;
 
     /// <summary>
     ///   Initializes a new instance of the <see cref="FeedbackServiceImpl"/> class.
     /// </summary>
     /// <param name="repo">The feedback repository.</param>
-    public FeedbackServiceImpl(IFeedbackRepository repo)
+    /// <param name="occurrenceService">The occurrence service.</param>
+    public FeedbackServiceImpl(IFeedbackRepository repo, IOccurrenceService? occurrenceService)
     {
         this.repo = repo ?? throw new ArgumentNullException(nameof(repo));
+        this.occurrenceService = occurrenceService ?? throw new ArgumentNullException(nameof(occurrenceService));
     }
 
     /// <inheritdoc />
@@ -38,8 +43,37 @@ public class FeedbackServiceImpl : IFeedbackService
                 nameof(feedback.OccurrenceId)
             );
 
+        var occCheck = occurrenceService.GetOccurrenceById(feedback.OccurrenceId);
+        if (occCheck != null && occCheck.Status == OccurrenceStatus.WAITING)
+            throw new InvalidOperationException("Cannot submit feedback for an occurrence with WAITING status.");
         feedback.FeedbackDateTime = DateTime.UtcNow;
-        return repo.Create(feedback);
+
+        var created = repo.Create(feedback);
+        try
+        {
+            if (created != null && !created.IsConfirmed)
+            {
+                var allForOccurrence = repo.GetFeedbacksByOccurrenceId(created.OccurrenceId) ?? new List<Feedback>();
+                var negativeCount = allForOccurrence.Count(f => f != null && !f.IsConfirmed);
+
+                if (negativeCount >= 5)
+                {
+                    var occ = occurrenceService.GetOccurrenceById(created.OccurrenceId);
+                    if (occ != null && occ.EndDateTime == default)
+                    {
+                        occ.Status = OccurrenceStatus.CLOSED;
+                        occ.EndDateTime = DateTime.UtcNow;
+                        occurrenceService.Update(occ);
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException("Failed to process occurrence status update based on feedback.", ex);
+        }
+
+        return created;
     }
 
     /// <inheritdoc />
