@@ -3,6 +3,7 @@ namespace readytohelpapi.Report.Tests;
 using Moq;
 using readytohelpapi.GeoPoint.Models;
 using readytohelpapi.Notifications;
+using readytohelpapi.Occurrence.DTOs;
 using readytohelpapi.Occurrence.Models;
 using readytohelpapi.Occurrence.Services;
 using readytohelpapi.Report.Services;
@@ -148,7 +149,7 @@ public class TestReportService
             Description = "d",
             UserId = 1,
             Type = OccurrenceType.ROAD_DAMAGE,
-            Location = null,
+            Location = null!,
         };
 
         Assert.Throws<ArgumentException>(() => service.Create(r));
@@ -195,7 +196,7 @@ public class TestReportService
         mockOccSvc.Setup(s => s.GetOccurrencesByType(input.Type)).Returns(new List<Occurrence>());
         mockRepo.Setup(r => r.Create(It.IsAny<ReportModel>())).Returns(createdReport);
 
-        var createdOccurrence = new Occurrence { Id = 200 };
+        var createdOccurrence = new Occurrence(new OccurrenceCreateDto { Id = 200 });
         mockOccSvc.Setup(s => s.Create(It.IsAny<Occurrence>())).Returns(createdOccurrence);
 
         var (rep, occ) = service.Create(input);
@@ -253,14 +254,16 @@ public class TestReportService
             location: input.Location
         );
 
-        var existingOcc = new Occurrence
-        {
-            Id = 10,
-            ReportId = 999,
-            ReportCount = 1,
-            Status = OccurrenceStatus.WAITING,
-            Type = input.Type,
-        };
+        var existingOcc = new Occurrence(
+            new OccurrenceCreateDto
+            {
+                Id = 10,
+                ReportId = 999,
+                ReportCount = 1,
+                Status = OccurrenceStatus.WAITING,
+                Type = input.Type,
+            }
+        );
 
         mockRespEntSvc
             .Setup(s =>
@@ -335,14 +338,16 @@ public class TestReportService
             location: input.Location
         );
 
-        var existingOcc = new Occurrence
-        {
-            Id = 22,
-            ReportId = 1000,
-            ReportCount = 2,
-            Status = OccurrenceStatus.WAITING,
-            Type = input.Type,
-        };
+        var existingOcc = new Occurrence(
+            new OccurrenceCreateDto
+            {
+                Id = 22,
+                ReportId = 1000,
+                ReportCount = 2,
+                Status = OccurrenceStatus.WAITING,
+                Type = input.Type,
+            }
+        );
 
         mockRespEntSvc
             .Setup(s =>

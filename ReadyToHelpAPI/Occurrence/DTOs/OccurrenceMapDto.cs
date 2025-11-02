@@ -1,4 +1,6 @@
-namespace readytohelpapi.Occurrence.Models;
+using readytohelpapi.Occurrence.Models;
+
+namespace readytohelpapi.Occurrence.DTOs;
 
 /// <summary>
 ///  Data Transfer Object for occurrence map information.

@@ -2,6 +2,7 @@ namespace readytohelpapi.Occurrence.Controllers;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using readytohelpapi.Occurrence.DTOs;
 using readytohelpapi.Occurrence.Models;
 using readytohelpapi.Occurrence.Services;
 using System;
@@ -52,6 +53,50 @@ public class OccurrenceApiController : ControllerBase
     }
 
     /// <summary>
+    /// Method to update an existing occurrence.
+    /// </summary>
+    /// <param name="occurrence">The occurrence to update.</param>
+    /// <returns>The updated occurrence.</returns>
+    [Authorize(Roles = "ADMIN,MANAGER")]
+    [HttpPut]
+    public IActionResult Update([FromBody] Occurrence occurrence)
+    {
+        if (occurrence == null)
+            return BadRequest("Occurrence cannot be null.");
+
+        try
+        {
+            var updatedOccurrence = occurrenceService.Update(occurrence);
+            return Ok(updatedOccurrence);
+        }
+        catch (ArgumentException ex) { return BadRequest(ex.Message); }
+        catch (KeyNotFoundException ex) { return NotFound(ex.Message); }
+        catch (Exception ex) { return StatusCode(500, $"Internal server error: {ex.Message}"); }
+    }
+
+    /// <summary>
+    /// Method to delete an occurrence by ID.
+    /// </summary>
+    /// <param name="id">The ID of the occurrence to delete.</param>
+    /// <returns>The deleted occurrence.</returns>
+    [Authorize(Roles = "ADMIN,MANAGER")]
+    [HttpDelete("{id:int}")]
+    public IActionResult Delete(int id)
+    {
+        if (id <= 0)
+            return BadRequest("Invalid occurrence ID.");
+
+        try
+        {
+            var deletedOccurrence = occurrenceService.Delete(id);
+            return Ok(deletedOccurrence);
+        }
+        catch (ArgumentException ex) { return BadRequest(ex.Message); }
+        catch (KeyNotFoundException ex) { return NotFound(ex.Message); }
+        catch (Exception ex) { return StatusCode(500, $"Internal server error: {ex.Message}"); }
+    }
+
+    /// <summary>
     /// Gets an occurrence by its ID.
     /// </summary>
     /// <param name="id">The ID of the occurrence to retrieve.</param>
@@ -99,8 +144,10 @@ public class OccurrenceApiController : ControllerBase
     }
 
     /// <summary>
-    /// Lists occurrences with pagination, sorting and filtering.
+    /// Method to get all occurrences with pagination, sorting, and filtering.
     /// </summary>
+    /// <returns>A list of occurrences.</returns>
+    [Authorize]
     [HttpGet]
     public ActionResult<List<Occurrence>> GetAll(
         [FromQuery] int pageNumber = 1,
@@ -125,69 +172,10 @@ public class OccurrenceApiController : ControllerBase
     }
 
     /// <summary>
-    /// Gets occurrences by title.
+    /// Method to get all active occurrences for map display.
     /// </summary>
-    /// <param name="title">The title to filter by.</param>
-    /// <returns>A list of occurrences with the specified title.</returns>
-    [HttpGet("title/{title}")]
-    public ActionResult<List<Occurrence>> GetByTitle(string title)
-    {
-        try
-        {
-            var occurrences = occurrenceService.GetOccurrenceByTitle(title);
-            return Ok(occurrences);
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { error = ex.Message });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { error = "internal_server_error", detail = ex.Message });
-        }
-    }
-
-    /// <summary>
-    /// Gets occurrences by type.
-    /// </summary>
-    /// <param name="type">The type of occurrence to filter by.</param>
-    /// <returns>A list of occurrences of the specified type.</returns>
-    [HttpGet("type/{type}")]
-    public ActionResult<List<Occurrence>> GetByType(OccurrenceType type)
-    {
-        try
-        {
-            var occurrences = occurrenceService.GetOccurrencesByType(type);
-            return Ok(occurrences);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { error = "internal_server_error", detail = ex.Message });
-        }
-    }
-
-    /// <summary>
-    /// Gets occurrences by priority.
-    /// </summary>
-    /// <param name="priority">The priority level to filter by.</param>
-    /// <returns>A list of occurrences with the specified priority.</returns>
-    [HttpGet("priority/{priority}")]
-    public ActionResult<List<Occurrence>> GetByPriority(PriorityLevel priority)
-    {
-        try
-        {
-            var occurrences = occurrenceService.GetOccurrencesByPriority(priority);
-            return Ok(occurrences);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { error = "internal_server_error", detail = ex.Message });
-        }
-    }
-
-    /// <summary>
-    /// Gets all active occurrences.
-    /// </summary>
+    /// <returns>A list of active occurrences for map display.</returns>
+    [Authorize]
     [HttpGet("active")]
     public ActionResult<List<OccurrenceMapDto>> GetAllActive(
         [FromQuery] int pageNumber = 1,
@@ -230,46 +218,5 @@ public class OccurrenceApiController : ControllerBase
         {
             return StatusCode(500, new { error = "internal_server_error", detail = ex.Message });
         }
-    }
-
-
-    /// <summary>
-    /// Updates an existing occurrence.
-    /// </summary>
-    /// <param name="occurrence">The occurrence to update.</param>
-    [HttpPut]
-    [Route("")]
-    public IActionResult Update([FromBody] Occurrence occurrence)
-    {
-        if (occurrence == null)
-            return BadRequest("Occurrence cannot be null.");
-
-        try
-        {
-            var updatedOccurrence = occurrenceService.Update(occurrence);
-            return Ok(updatedOccurrence);
-        }
-        catch (ArgumentException ex) { return BadRequest(ex.Message); }
-        catch (KeyNotFoundException ex) { return NotFound(ex.Message); }
-        catch (Exception ex) { return StatusCode(500, $"Internal server error: {ex.Message}"); }
-    }
-
-    /// <summary>
-    /// Deletes an occurrence by ID.
-    /// </summary>
-    [HttpDelete("{id:int}")]
-    public IActionResult Delete(int id)
-    {
-        if (id <= 0)
-            return BadRequest("Invalid occurrence ID.");
-
-        try
-        {
-            var deletedOccurrence = occurrenceService.Delete(id);
-            return Ok(deletedOccurrence);
-        }
-        catch (ArgumentException ex) { return BadRequest(ex.Message); }
-        catch (KeyNotFoundException ex) { return NotFound(ex.Message); }
-        catch (Exception ex) { return StatusCode(500, $"Internal server error: {ex.Message}"); }
     }
 }

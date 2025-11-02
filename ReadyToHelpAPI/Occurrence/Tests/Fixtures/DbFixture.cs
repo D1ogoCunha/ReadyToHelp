@@ -11,7 +11,8 @@ namespace readytohelpapi.Occurrence.Tests;
 /// </summary>
 public class DbFixture : IDisposable
 {
-    private readonly string _databaseName;
+    private readonly string databaseName;
+    private bool disposed;
 
     /// <summary>
     ///   Initializes a new instance of the <see cref="DbFixture"/> class.
@@ -23,12 +24,12 @@ public class DbFixture : IDisposable
         var postgresUser = Environment.GetEnvironmentVariable("POSTGRES_USERNAME") ?? "readytohelp";
         var postgresPwd = Environment.GetEnvironmentVariable("POSTGRES_PASSWORD") ?? "readytohelppwd";
 
-        _databaseName = $"occ_tests_{Guid.NewGuid():N}";
+        databaseName = $"occ_tests_{Guid.NewGuid():N}";
 
         var sp = new ServiceCollection()
             .AddDbContext<AppDbContext>(options =>
                 options.UseNpgsql(
-                    $"Host={postgresHost};Port={postgresPort};Database={_databaseName};Username={postgresUser};Password={postgresPwd}",
+                    $"Host={postgresHost};Port={postgresPort};Database={databaseName};Username={postgresUser};Password={postgresPwd}",
                     npgsqlOptions => npgsqlOptions.UseNetTopologySuite()
                 )
             )
@@ -60,10 +61,33 @@ public class DbFixture : IDisposable
 
     /// <summary>
     ///  Disposes of the database context and deletes the test database.
+    ///  Implements the dispose pattern for inheritable types.
+    /// </summary>
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposed) return;
+
+        if (disposing && Context != null)
+        {
+            try
+            {
+                Context.Database.EnsureDeleted();
+            }
+            catch
+            {
+                // Ignore exceptions during database deletion
+            }
+            Context.Dispose();
+        }
+        disposed = true;
+    }
+
+    /// <summary>
+    /// Releases all resources used by the <see cref="DbFixture"/>.
     /// </summary>
     public void Dispose()
     {
-        Context.Database.EnsureDeleted();
-        Context.Dispose();
+        Dispose(true);
+        GC.SuppressFinalize(this);
     }
 }
