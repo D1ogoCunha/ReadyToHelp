@@ -94,9 +94,6 @@ deploy:
   image: mcr.microsoft.com/dotnet/sdk:8.0
   script:
     - echo "Deploying to Azure..."
-    - echo "ID: $AZURE_CLIENT_ID"
-    - echo "SECRET: $AZURE_CLIENT_SECRET"
-    - echo "TENANT: $AZURE_TENANT_ID"
     - curl -sL https://aka.ms/InstallAzureCLIDeb | bash
     - az login --service-principal --username $AZURE_CLIENT_ID --password="$AZURE_CLIENT_SECRET" --tenant $AZURE_TENANT_ID
     - az acr login --name readytohelpcr
