@@ -10,25 +10,16 @@ using readytohelpapi.Feedback.Services;
 using readytohelpapi.Feedback.Tests.Fixtures;
 using Xunit;
 
-/// <summary>
-///   This class contains all unit tests related to the feedback api controller.
-/// </summary>
-[Trait("Category", "Integration")]
-public class TestFeedbackApiController : IClassFixture<DbFixture>
+
+
+[Trait("Category", "Unit")]
+public class TestFeedbackApiController_Unit
 {
-    private readonly DbFixture fixture;
     private readonly Mock<IFeedbackService> mockService;
     private readonly FeedbackApiController controller;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="TestFeedbackApiController"/> class.
-    /// </summary>
-    /// <param name="fixture">The database fixture.</param>
-    public TestFeedbackApiController(DbFixture fixture)
+    public TestFeedbackApiController_Unit()
     {
-        this.fixture = fixture;
-        this.fixture.ResetDatabase();
-
         mockService = new Mock<IFeedbackService>();
         controller = new FeedbackApiController(mockService.Object);
     }
@@ -91,9 +82,6 @@ public class TestFeedbackApiController : IClassFixture<DbFixture>
         Assert.IsType<BadRequestObjectResult>(result);
     }
 
-    /// <summary>
-    /// Tests the Create method when the service throws an unexpected exception.
-    /// </summary>
     [Fact]
     public void Create_ReturnsServerError_OnUnexpectedException()
     {
@@ -107,9 +95,6 @@ public class TestFeedbackApiController : IClassFixture<DbFixture>
         Assert.Equal(500, obj.StatusCode);
     }
 
-    /// <summary>
-    /// Tests the GetAll method when the list is not empty.
-    /// </summary>
     [Fact]
     public void GetAll_ReturnsOk_WhenListNotEmpty()
     {
@@ -122,9 +107,6 @@ public class TestFeedbackApiController : IClassFixture<DbFixture>
         Assert.Same(list, ok.Value);
     }
 
-    /// <summary>
-    /// Tests the GetAll method when the list is empty.
-    /// </summary>
     [Fact]
     public void GetAll_ReturnsNotFound_WhenEmpty()
     {
@@ -135,9 +117,6 @@ public class TestFeedbackApiController : IClassFixture<DbFixture>
         Assert.IsType<NotFoundObjectResult>(res);
     }
 
-    /// <summary>
-    /// Tests the GetById method when the feedback is found.
-    /// </summary>
     [Fact]
     public void GetById_ReturnsOk_WhenFound()
     {
@@ -150,9 +129,6 @@ public class TestFeedbackApiController : IClassFixture<DbFixture>
         Assert.Same(fb, ok.Value);
     }
 
-    /// <summary>
-    /// Tests the GetById method when the feedback is missing.
-    /// </summary>
     [Fact]
     public void GetById_ReturnsNotFound_WhenMissing()
     {
@@ -163,9 +139,6 @@ public class TestFeedbackApiController : IClassFixture<DbFixture>
         Assert.IsType<NotFoundObjectResult>(res);
     }
 
-    /// <summary>
-    /// Tests the GetById method when an invalid id is provided.
-    /// </summary>
     [Fact]
     public void GetById_ReturnsBadRequest_OnInvalidIdArgumentException()
     {
@@ -178,9 +151,6 @@ public class TestFeedbackApiController : IClassFixture<DbFixture>
         Assert.IsType<BadRequestObjectResult>(res);
     }
 
-    /// <summary>
-    /// Tests the GetById method when an unexpected exception occurs.
-    /// </summary>
     [Fact]
     public void GetById_ReturnsServerError_OnUnexpectedException()
     {
@@ -194,9 +164,6 @@ public class TestFeedbackApiController : IClassFixture<DbFixture>
         Assert.Equal(500, obj.StatusCode);
     }
 
-    /// <summary>
-    /// Tests the GetByUserId method when the feedback is found.
-    /// </summary>
     [Fact]
     public void GetByUserId_ReturnsOk_WhenFound()
     {
@@ -209,9 +176,6 @@ public class TestFeedbackApiController : IClassFixture<DbFixture>
         Assert.Same(list, ok.Value);
     }
 
-    /// <summary>
-    /// Tests the GetByUserId method when the feedback is not found.
-    /// </summary>
     [Fact]
     public void GetByUserId_ReturnsNotFound_WhenEmpty()
     {
@@ -222,9 +186,6 @@ public class TestFeedbackApiController : IClassFixture<DbFixture>
         Assert.IsType<NotFoundObjectResult>(res);
     }
 
-    /// <summary>
-    /// Tests the GetByUserId method when an invalid id is provided.
-    /// </summary>
     [Fact]
     public void GetByUserId_ReturnsBadRequest_OnInvalidId()
     {
@@ -237,9 +198,6 @@ public class TestFeedbackApiController : IClassFixture<DbFixture>
         Assert.IsType<BadRequestObjectResult>(res);
     }
 
-    /// <summary>
-    /// Tests the GetByOccurrenceId method when the feedback is found.
-    /// </summary>
     [Fact]
     public void GetByOccurrenceId_ReturnsOk_WhenFound()
     {
@@ -252,9 +210,6 @@ public class TestFeedbackApiController : IClassFixture<DbFixture>
         Assert.Same(list, ok.Value);
     }
 
-    /// <summary>
-    /// Tests the GetByOccurrenceId method when the feedback is not found.
-    /// </summary>
     [Fact]
     public void GetByOccurrenceId_ReturnsNotFound_WhenEmpty()
     {
@@ -265,9 +220,6 @@ public class TestFeedbackApiController : IClassFixture<DbFixture>
         Assert.IsType<NotFoundObjectResult>(res);
     }
 
-    /// <summary>
-    /// Tests the GetByOccurrenceId method when an invalid id is provided.
-    /// </summary>
     [Fact]
     public void GetByOccurrenceId_ReturnsBadRequest_OnInvalidId()
     {
@@ -278,5 +230,56 @@ public class TestFeedbackApiController : IClassFixture<DbFixture>
         var res = controller.GetByOccurrenceId(0);
 
         Assert.IsType<BadRequestObjectResult>(res);
+    }
+
+    [Fact]
+    public void GetAll_ServiceThrowsGeneric_ReturnsInternalServerError()
+    {
+        mockService.Setup(s => s.GetAllFeedbacks()).Throws(new Exception("db fail"));
+        var res = controller.GetAll();
+        var obj = Assert.IsType<ObjectResult>(res);
+        Assert.Equal(500, obj.StatusCode);
+    }
+
+    [Fact]
+    public void GetByUserId_ServiceThrowsNotFoundMessage_ReturnsNotFound()
+    {
+        mockService
+            .Setup(s => s.GetFeedbacksByUserId(It.IsAny<int>()))
+            .Throws(new ArgumentException("User does not exist"));
+        var res = controller.GetByUserId(1);
+        Assert.IsType<NotFoundObjectResult>(res);
+    }
+
+    [Fact]
+    public void GetByUserId_ServerError_OnUnexpectedException()
+    {
+        mockService
+            .Setup(s => s.GetFeedbacksByUserId(It.IsAny<int>()))
+            .Throws(new Exception("boom"));
+        var res = controller.GetByUserId(1);
+        var obj = Assert.IsType<ObjectResult>(res);
+        Assert.Equal(500, obj.StatusCode);
+    }
+
+    [Fact]
+    public void GetByOccurrenceId_ServiceThrowsNotFoundMessage_ReturnsNotFound()
+    {
+        mockService
+            .Setup(s => s.GetFeedbacksByOccurrenceId(It.IsAny<int>()))
+            .Throws(new ArgumentException("Occurrence does not exist"));
+        var res = controller.GetByOccurrenceId(1);
+        Assert.IsType<NotFoundObjectResult>(res);
+    }
+
+    [Fact]
+    public void GetByOccurrenceId_ServerError_OnUnexpectedException()
+    {
+        mockService
+            .Setup(s => s.GetFeedbacksByOccurrenceId(It.IsAny<int>()))
+            .Throws(new Exception("boom"));
+        var res = controller.GetByOccurrenceId(1);
+        var obj = Assert.IsType<ObjectResult>(res);
+        Assert.Equal(500, obj.StatusCode);
     }
 }

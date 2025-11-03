@@ -122,7 +122,7 @@ public class Occurrence
     /// <summary>
     /// Gets or sets the responsible entity identifier associated with the occurrence.
     /// </summary>
-    public int ResponsibleEntityId { get; set; }
+    public int? ResponsibleEntityId { get; set; }
 
     /// <summary>
     /// Gets or sets the location of the occurrence.
