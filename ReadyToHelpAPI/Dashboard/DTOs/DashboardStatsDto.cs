@@ -4,14 +4,14 @@ namespace readytohelpapi.Dashboard.DTOs;
 /// Aggregated statistics for the dashboard overview.
 /// </summary>
 public class DashboardStatsDto
-{   
+{
     /// <summary>
     /// Gets or sets the total number of occurrences.
     /// </summary>
     public int TotalOccurrences { get; set; }
 
     /// <summary>
-    /// Gets or sets the total number of responsible entities.
+    /// Gets or sets the total number of users.
     /// </summary>
     public int TotalUsers { get; set; }
 

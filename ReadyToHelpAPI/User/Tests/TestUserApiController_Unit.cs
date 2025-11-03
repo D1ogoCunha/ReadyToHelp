@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using readytohelpapi.User.Controllers;
+using readytohelpapi.User.DTOs;
 using readytohelpapi.User.Services;
 using readytohelpapi.User.Tests.Fixtures;
 using Xunit;
@@ -11,7 +13,7 @@ using Xunit;
 namespace readytohelpapi.User.Tests;
 
 /// <summary>
-///   Unit tests (com mocks) para o UserApiController.
+///   Unit tests for UserApiController.
 /// </summary>
 [Trait("Category", "Unit")]
 public class TestUserApiController_Unit
@@ -42,6 +44,8 @@ public class TestUserApiController_Unit
 
         var created = Assert.IsType<CreatedAtActionResult>(result);
         Assert.Equal(nameof(controller.GetUserById), created.ActionName);
+        var dto = Assert.IsType<UserResponseDto>(created.Value);
+        Assert.Equal(user.Id, dto.Id);
     }
 
     [Fact]
@@ -79,7 +83,7 @@ public class TestUserApiController_Unit
     }
 
     [Fact]
-    public void Update_ValidUser_ReturnsOk()
+    public void Update_ValidUser_ReturnsOk_WithDto()
     {
         var user = UserFixture.CreateOrUpdateUser(id: 2, name: "Bob", email: "bob@example.com");
         mockUserService.Setup(s => s.Update(It.IsAny<readytohelpapi.User.Models.User>())).Returns(user);
@@ -87,11 +91,14 @@ public class TestUserApiController_Unit
         var result = controller.Update(2, user);
 
         var ok = Assert.IsType<OkObjectResult>(result);
-        Assert.Equal(user, ok.Value);
+        var dto = Assert.IsType<UserResponseDto>(ok.Value);
+        Assert.Equal(user.Id, dto.Id);
+        Assert.Equal(user.Email, dto.Email);
+        Assert.Equal(user.Name, dto.Name);
     }
 
     [Fact]
-    public void Update_IdMismatch_UpdatesWithRouteId()
+    public void Update_IdMismatch_UpdatesWithRouteId_ReturnsDto()
     {
         var body = UserFixture.CreateOrUpdateUser(id: 999, name: "Wrong", email: "wrong@example.com");
         var updated = UserFixture.CreateOrUpdateUser(id: 10, name: "Wrong", email: "wrong@example.com");
@@ -101,7 +108,7 @@ public class TestUserApiController_Unit
         var result = controller.Update(10, body);
 
         var ok = Assert.IsType<OkObjectResult>(result);
-        var returned = Assert.IsType<readytohelpapi.User.Models.User>(ok.Value);
+        var returned = Assert.IsType<UserResponseDto>(ok.Value);
         Assert.Equal(10, returned.Id);
     }
 
@@ -169,7 +176,7 @@ public class TestUserApiController_Unit
     }
 
     [Fact]
-    public void Delete_Existing_ReturnsOk()
+    public void Delete_Existing_ReturnsOk_WithDto()
     {
         var user = UserFixture.CreateOrUpdateUser(id: 3, name: "Carol");
         mockUserService.Setup(s => s.Delete(user.Id)).Returns(user);
@@ -177,7 +184,8 @@ public class TestUserApiController_Unit
         var result = controller.Delete(user.Id);
 
         var ok = Assert.IsType<OkObjectResult>(result);
-        Assert.Equal(user, ok.Value);
+        var dto = Assert.IsType<UserResponseDto>(ok.Value);
+        Assert.Equal(user.Id, dto.Id);
     }
 
     [Fact]
@@ -286,7 +294,7 @@ public class TestUserApiController_Unit
     }
 
     [Fact]
-    public void Register_ValidRequest_ReturnsCreatedAtAction()
+    public void Register_ValidRequest_ReturnsCreatedAtAction_WithDto()
     {
         var req = new UserApiController.RegisterRequest("NewUser", "new@example.com", "password123");
         var created = UserFixture.CreateOrUpdateUser(id: 20, name: "NewUser", email: "new@example.com");
@@ -298,6 +306,8 @@ public class TestUserApiController_Unit
 
         var createdResult = Assert.IsType<CreatedAtActionResult>(result);
         Assert.Equal(nameof(controller.GetUserById), createdResult.ActionName);
+        var dto = Assert.IsType<UserResponseDto>(createdResult.Value);
+        Assert.Equal(created.Id, dto.Id);
     }
 
     [Fact]
@@ -328,12 +338,12 @@ public class TestUserApiController_Unit
     }
 
     [Fact]
-    public void GetAll_ReturnsOkWithList()
+    public void GetAll_ReturnsOkWithList_OfDto()
     {
         var users = new List<readytohelpapi.User.Models.User>
         {
-            UserFixture.CreateOrUpdateUser(id: 4, name: "U1"),
-            UserFixture.CreateOrUpdateUser(id: 5, name: "U2"),
+            UserFixture.CreateOrUpdateUser(id: 4, name: "U1", email: "u1@x.com"),
+            UserFixture.CreateOrUpdateUser(id: 5, name: "U2", email: "u2@x.com"),
         };
         mockUserService
             .Setup(s => s.GetAllUsers(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
@@ -341,9 +351,11 @@ public class TestUserApiController_Unit
 
         var result = controller.GetAll();
 
-        var actionResult = Assert.IsType<ActionResult<List<readytohelpapi.User.Models.User>>>(result);
+        var actionResult = Assert.IsType<ActionResult<List<UserResponseDto>>>(result);
         var ok = Assert.IsType<OkObjectResult>(actionResult.Result);
-        Assert.Equal(users, ok.Value);
+        var list = Assert.IsType<List<UserResponseDto>>(ok.Value);
+        Assert.Equal(2, list.Count);
+        Assert.Contains(list, d => d.Id == 4 && d.Email == "u1@x.com");
     }
 
     [Fact]
@@ -355,7 +367,7 @@ public class TestUserApiController_Unit
 
         var result = controller.GetAll();
 
-        var actionResult = Assert.IsType<ActionResult<List<readytohelpapi.User.Models.User>>>(result);
+        var actionResult = Assert.IsType<ActionResult<List<UserResponseDto>>>(result);
         var bad = Assert.IsType<BadRequestObjectResult>(actionResult.Result);
         Assert.NotNull(bad.Value);
     }
@@ -372,7 +384,7 @@ public class TestUserApiController_Unit
 
         var result = controller.GetAll();
 
-        var actionResult = Assert.IsType<ActionResult<List<readytohelpapi.User.Models.User>>>(result);
+        var actionResult = Assert.IsType<ActionResult<List<UserResponseDto>>>(result);
         var ok = Assert.IsType<OkObjectResult>(actionResult.Result);
         Assert.NotNull(ok.Value);
     }
@@ -388,7 +400,7 @@ public class TestUserApiController_Unit
 
         var result = controller.GetAll(2, 5, "Email", "desc", "filter");
 
-        var actionResult = Assert.IsType<ActionResult<List<readytohelpapi.User.Models.User>>>(result);
+        var actionResult = Assert.IsType<ActionResult<List<UserResponseDto>>>(result);
         var ok = Assert.IsType<OkObjectResult>(actionResult.Result);
         Assert.NotNull(ok.Value);
     }
@@ -402,7 +414,7 @@ public class TestUserApiController_Unit
 
         var result = controller.GetAll();
 
-        var actionResult = Assert.IsType<ActionResult<List<readytohelpapi.User.Models.User>>>(result);
+        var actionResult = Assert.IsType<ActionResult<List<UserResponseDto>>>(result);
         var status = Assert.IsType<ObjectResult>(actionResult.Result);
         Assert.Equal(500, status.StatusCode);
     }
@@ -420,7 +432,7 @@ public class TestUserApiController_Unit
     }
 
     [Fact]
-    public void GetUserByEmail_Found_ReturnsOk()
+    public void GetUserByEmail_Found_ReturnsOk_WithDto()
     {
         var user = UserFixture.CreateOrUpdateUser(id: 6, name: "Found", email: "found@example.com");
         mockUserService.Setup(s => s.GetUserByEmail("found@example.com")).Returns(user);
@@ -428,7 +440,9 @@ public class TestUserApiController_Unit
         var result = controller.GetUserByEmail("found@example.com");
 
         var ok = Assert.IsType<OkObjectResult>(result);
-        Assert.Equal(user, ok.Value);
+        var dto = Assert.IsType<UserResponseDto>(ok.Value);
+        Assert.Equal(user.Id, dto.Id);
+        Assert.Equal(user.Email, dto.Email);
     }
 
     [Fact]
@@ -469,7 +483,7 @@ public class TestUserApiController_Unit
     }
 
     [Fact]
-    public void GetUserById_HasExpectedRoutes()
+    public void GetUserById_HasAuthorizeAndRoutes()
     {
         var controllerType = typeof(UserApiController);
         var mi = controllerType.GetMethod("GetUserById");
@@ -482,5 +496,8 @@ public class TestUserApiController_Unit
         Assert.True(httpGets.Length >= 1);
         var templates = httpGets.Select(a => a.Template ?? string.Empty).ToArray();
         Assert.Contains(templates, t => t.Contains("{id", StringComparison.OrdinalIgnoreCase));
+
+        var hasAuthorize = mi.GetCustomAttributes(typeof(AuthorizeAttribute), true).Any();
+        Assert.True(hasAuthorize);
     }
 }

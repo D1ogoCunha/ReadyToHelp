@@ -9,9 +9,6 @@ namespace readytohelpapi.User.Tests;
 [Trait("Category", "Unit")]
 public class TestUserModel
 {
-    /// <summary>
-    ///   Verifica valores por defeito do construtor sem parâmetros.
-    /// </summary>
     [Fact]
     public void DefaultConstructor_InitializesDefaults()
     {
@@ -25,9 +22,6 @@ public class TestUserModel
         Assert.True(System.Enum.IsDefined(typeof(Profile), u.Profile));
     }
 
-    /// <summary>
-    ///   Verifica que o construtor parametrizado define todas as propriedades.
-    /// </summary>
     [Fact]
     public void ParameterizedConstructor_SetsAllProperties()
     {
