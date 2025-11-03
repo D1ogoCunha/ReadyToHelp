@@ -88,24 +88,3 @@ integration-tests:
     expire_in: 1 week
   only:
     - merge_requests
-
-deploy:
-  stage: deploy
-  image: mcr.microsoft.com/dotnet/sdk:8.0
-  script:
-    - echo "Deploying to Azure..."
-    - curl -sL https://aka.ms/InstallAzureCLIDeb | bash
-    - curl -fsSL https://get.docker.com -o get-docker.sh
-    - sh get-docker.sh
-    - service docker start
-    - az login --service-principal --username $AZURE_CLIENT_ID --password="$AZURE_CLIENT_SECRET" --tenant $AZURE_TENANT_ID
-    - az acr login --name readytohelpcr
-    - docker build -t readytohelpcr.azurecr.io/lds_25_26-app:latest ./ReadyToHelpAPI
-    - docker push readytohelpcr.azurecr.io/lds_25_26-app:latest
-    - az container delete --resource-group ReadyToHelp --name r2h-app --yes || true
-    - az container create --resource-group ReadyToHelp --name r2h-app --image readytohelpcr.azurecr.io/lds_25_26-app:latest --os-type Linux --cpu 1 --memory 2 --ports 8080 --ip-address Public --environment-variables ASPNETCORE_ENVIRONMENT=Development POSTGRES_HOST=20.250.214.63 POSTGRES_USERNAME=readytohelp POSTGRES_PASSWORD=readytohelppwd --registry-username readytohelpCR --registry-password $ACR_PASSWORD --restart-policy Always
-  only:
-    - main
-    - dev
-  environment:
-    name: production
