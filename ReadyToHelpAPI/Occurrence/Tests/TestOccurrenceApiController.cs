@@ -593,5 +593,4 @@ public class TestOccurrenceApiController : IClassFixture<DbFixture>
         var status = Assert.IsType<ObjectResult>(result.Result);
         Assert.Equal(500, status.StatusCode);
     }
-
 }
