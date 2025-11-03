@@ -709,4 +709,24 @@ public class TestUserApiController : IClassFixture<DbFixture>
         Assert.Contains(list, x => x.Email == u1.Email && x.Name == u1.Name);
         Assert.Contains(list, x => x.Email == u2.Email && x.Name == u2.Name);
     }
+    /// <summary>
+    ///   Ensures GetUserById has the expected route attributes.
+    /// </summary>
+    [Fact]
+    public void GetUserById_HasExpectedRoutes()
+    {
+        var controllerType = typeof(UserApiController);
+        var mi = controllerType.GetMethod("GetUserById");
+        Assert.NotNull(mi);
+
+        // [Route("api/user")] no controller
+        var routeAttrs = controllerType.GetCustomAttributes(typeof(RouteAttribute), true).Cast<RouteAttribute>().ToArray();
+        Assert.Contains(routeAttrs, a => (a.Template ?? string.Empty).Contains("api/user", StringComparison.OrdinalIgnoreCase));
+
+        // [HttpGet("{id:int}")]
+        var httpGets = mi!.GetCustomAttributes(typeof(HttpGetAttribute), true).Cast<HttpGetAttribute>().ToArray();
+        Assert.True(httpGets.Length >= 1);
+        var templates = httpGets.Select(a => a.Template ?? string.Empty).ToArray();
+        Assert.Contains(templates, t => t.Contains("{id", StringComparison.OrdinalIgnoreCase));
+    }
 }
