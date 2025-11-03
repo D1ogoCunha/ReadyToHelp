@@ -95,7 +95,7 @@ deploy:
   script:
     - echo "Deploying to Azure..."
     - curl -sL https://aka.ms/InstallAzureCLIDeb | bash
-    - az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
+    - az login --service-principal --username $AZURE_CLIENT_ID --password $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
     - az acr login --name readytohelpcr
     - docker build -t readytohelpcr.azurecr.io/lds_25_26-app:latest ./ReadyToHelpAPI
     - docker push readytohelpcr.azurecr.io/lds_25_26-app:latest
