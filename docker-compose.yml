@@ -3,17 +3,15 @@ services:
     build:
       context: ./ReadyToHelpAPI
       dockerfile: Dockerfile
-    restart: unless-stopped
+    ports:
+      - "8080:8080"
     environment:
+      ASPNETCORE_ENVIRONMENT: Development
       POSTGRES_HOST: postgres
       POSTGRES_USERNAME: readytohelp
       POSTGRES_PASSWORD: readytohelppwd
     depends_on:
       - postgres
-    ports:
-      - "8080:8080"
-    networks:
-      - r2h_network
 
   postgres:
     image: postgis/postgis:15-3.3
@@ -26,13 +24,6 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    networks:
-      - r2h_network
 
 volumes:
   postgres_data:
-
-
-networks:
-  r2h_network:
-    driver: bridge
