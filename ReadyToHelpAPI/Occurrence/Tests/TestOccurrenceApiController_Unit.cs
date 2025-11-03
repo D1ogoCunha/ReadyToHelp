@@ -1,3 +1,5 @@
+namespace readytohelpapi.Occurrence.Tests;
+
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using readytohelpapi.Occurrence.Controllers;
@@ -8,28 +10,24 @@ using System;
 using System.Collections.Generic;
 using Xunit;
 using System.Linq;
-
-namespace readytohelpapi.Occurrence.Tests;
+using readytohelpapi.ResponsibleEntity.Services;
+using readytohelpapi.Occurrence.DTOs;
 
 /// <summary>
 ///   This class contains all unit tests for OccurrenceApiController,
 ///   following the same approach and documentation used in TestUserApiController.
 /// </summary>
-[Trait("Category", "Integration")]
-public class TestOccurrenceApiController : IClassFixture<DbFixture>
+[Trait("Category", "Unit")]
+public class TestOccurrenceApiController
 {
-    private readonly DbFixture fixture;
     private readonly Mock<IOccurrenceService> mockOccurrenceService;
     private readonly OccurrenceApiController controller;
 
     /// <summary>
     ///   Initializes a new instance of TestOccurrenceApiController.
     /// </summary>
-    public TestOccurrenceApiController(DbFixture fixture)
+    public TestOccurrenceApiController()
     {
-        this.fixture = fixture;
-        this.fixture.ResetDatabase();
-
         mockOccurrenceService = new Mock<IOccurrenceService>();
         controller = new OccurrenceApiController(mockOccurrenceService.Object);
     }
@@ -50,8 +48,11 @@ public class TestOccurrenceApiController : IClassFixture<DbFixture>
     [Fact]
     public void Create_ValidOccurrence_ReturnsCreatedAtAction()
     {
-        var input = OccurrenceFixture.CreateOrUpdateOccurrence(id: 0, title: "T");
-        var created = OccurrenceFixture.CreateOrUpdateOccurrence(id: 10, title: "T");
+        var options = new OccurrenceFixtureDto { Id = 0, Title = "T" };
+        var input = OccurrenceFixture.CreateOrUpdateOccurrence(options: options);
+
+        var createdOptions = new OccurrenceFixtureDto { Id = 10, Title = "T" };
+        var created = OccurrenceFixture.CreateOrUpdateOccurrence(options: createdOptions);
         mockOccurrenceService.Setup(s => s.CreateAdminOccurrence(It.IsAny<Models.Occurrence>())).Returns(created);
 
         var result = controller.Create(input);
@@ -68,7 +69,9 @@ public class TestOccurrenceApiController : IClassFixture<DbFixture>
     {
         mockOccurrenceService.Setup(s => s.CreateAdminOccurrence(It.IsAny<Models.Occurrence>()))
                    .Throws(new ArgumentException("invalid"));
-        var result = controller.Create(new Models.Occurrence { Title = "t", Description = "d", Type = OccurrenceType.FLOOD, Priority = PriorityLevel.LOW, ProximityRadius = 1 });
+        var options = new OccurrenceFixtureDto { Id = 0, Title = "t", Description = "d", Type = OccurrenceType.FLOOD, Priority = PriorityLevel.LOW, ProximityRadius = 1 };
+        var input = OccurrenceFixture.CreateOrUpdateOccurrence(options: options);
+        var result = controller.Create(input);
         Assert.IsType<BadRequestObjectResult>(result);
     }
 
@@ -81,7 +84,8 @@ public class TestOccurrenceApiController : IClassFixture<DbFixture>
     {
         mockOccurrenceService.Setup(s => s.Create(It.IsAny<Models.Occurrence>()))
                    .Throws(new Exception("unexpected"));
-        var input = OccurrenceFixture.CreateOrUpdateOccurrence(id: 0, title: "X");
+        var options = new OccurrenceFixtureDto { Id = 0, Title = "X", Description = "D", Type = OccurrenceType.FLOOD, Priority = PriorityLevel.MEDIUM, ProximityRadius = 5 };
+        var input = OccurrenceFixture.CreateOrUpdateOccurrence(options: options);
         var result = controller.Create(input);
         var status = Assert.IsType<ObjectResult>(result);
         Assert.Equal(500, status.StatusCode);
@@ -93,10 +97,12 @@ public class TestOccurrenceApiController : IClassFixture<DbFixture>
     [Fact]
     public void Create_ValidOccurrenceWithoutReportId_ReturnsCreatedAtAction()
     {
-        var input = OccurrenceFixture.CreateOrUpdateOccurrence(id: 0, title: "T");
+        var options = new OccurrenceFixtureDto { Id = 0, Title = "T" };
+        var input = OccurrenceFixture.CreateOrUpdateOccurrence(options: options);
         input.ReportId = null;
 
-        var created = OccurrenceFixture.CreateOrUpdateOccurrence(id: 10, title: "T");
+        var createdOptions = new OccurrenceFixtureDto { Id = 10, Title = "T" };
+        var created = OccurrenceFixture.CreateOrUpdateOccurrence(options: createdOptions);
         created.ReportId = null;
 
         mockOccurrenceService.Setup(s => s.CreateAdminOccurrence(It.IsAny<Models.Occurrence>())).Returns(created);
@@ -123,7 +129,8 @@ public class TestOccurrenceApiController : IClassFixture<DbFixture>
     [Fact]
     public void Update_ValidOccurrence_ReturnsOk()
     {
-        var toUpdate = OccurrenceFixture.CreateOrUpdateOccurrence(id: 5, title: "TT");
+        var options = new OccurrenceFixtureDto { Id = 5, Title = "TT" };
+        var toUpdate = OccurrenceFixture.CreateOrUpdateOccurrence(options: options);
         mockOccurrenceService.Setup(s => s.Update(It.IsAny<Models.Occurrence>())).Returns(toUpdate);
 
         var result = controller.Update(toUpdate);
@@ -141,7 +148,8 @@ public class TestOccurrenceApiController : IClassFixture<DbFixture>
         mockOccurrenceService.Setup(s => s.Update(It.IsAny<Models.Occurrence>()))
                    .Throws(new KeyNotFoundException("not found"));
 
-        var result = controller.Update(OccurrenceFixture.CreateOrUpdateOccurrence(id: 999));
+        var options = new OccurrenceFixtureDto { Id = 999 };
+        var result = controller.Update(OccurrenceFixture.CreateOrUpdateOccurrence(options: options));
         Assert.IsType<NotFoundObjectResult>(result);
     }
 
@@ -153,7 +161,9 @@ public class TestOccurrenceApiController : IClassFixture<DbFixture>
     {
         mockOccurrenceService.Setup(s => s.Update(It.IsAny<Models.Occurrence>()))
                    .Throws(new ArgumentException("bad"));
-        var result = controller.Update(OccurrenceFixture.CreateOrUpdateOccurrence(id: 1));
+
+        var options = new OccurrenceFixtureDto { Id = 1 };
+        var result = controller.Update(OccurrenceFixture.CreateOrUpdateOccurrence(options: options));
         Assert.IsType<BadRequestObjectResult>(result);
     }
 
@@ -166,7 +176,9 @@ public class TestOccurrenceApiController : IClassFixture<DbFixture>
     {
         mockOccurrenceService.Setup(s => s.Update(It.IsAny<Models.Occurrence>()))
                    .Throws(new Exception("db failed"));
-        var result = controller.Update(OccurrenceFixture.CreateOrUpdateOccurrence(id: 2));
+
+        var options = new OccurrenceFixtureDto { Id = 2 };
+        var result = controller.Update(OccurrenceFixture.CreateOrUpdateOccurrence(options: options));
         var status = Assert.IsType<ObjectResult>(result);
         Assert.Equal(500, status.StatusCode);
     }
@@ -210,7 +222,8 @@ public class TestOccurrenceApiController : IClassFixture<DbFixture>
     [Fact]
     public void DeleteOccurrence_Existing_ReturnsOk()
     {
-        var del = OccurrenceFixture.CreateOrUpdateOccurrence(id: 3);
+        var delOptions = new OccurrenceFixtureDto { Id = 3 };
+        var del = OccurrenceFixture.CreateOrUpdateOccurrence(options: delOptions);
         mockOccurrenceService.Setup(s => s.Delete(3)).Returns(del);
 
         var result = controller.Delete(3);
@@ -262,7 +275,8 @@ public class TestOccurrenceApiController : IClassFixture<DbFixture>
     [Fact]
     public void GetOccurrenceById_Valid_ReturnsOkWithOccurrence()
     {
-        var occ = OccurrenceFixture.CreateOrUpdateOccurrence(id: 42, title: "Found");
+        var options = new OccurrenceFixtureDto { Id = 42, Title = "Found" };
+        var occ = OccurrenceFixture.CreateOrUpdateOccurrence(options: options);
         mockOccurrenceService.Setup(s => s.GetOccurrenceById(42)).Returns(occ);
 
         var result = controller.GetById(42);
@@ -291,18 +305,20 @@ public class TestOccurrenceApiController : IClassFixture<DbFixture>
     [Fact]
     public void GetOccurrenceById_Valid_ReturnsOkWithDetailsDto()
     {
-        var occ = OccurrenceFixture.CreateOrUpdateOccurrence(
-            id: 42,
-            title: "Found",
-            description: "Desc",
-            type: OccurrenceType.FOREST_FIRE,
-            status: OccurrenceStatus.ACTIVE,
-            priority: PriorityLevel.HIGH,
-            latitude: 1.23,
-            longitude: 4.56,
-            reportCount: 3,
-            responsibleEntityId: 0
-        );
+        var options = new OccurrenceFixtureDto
+        {
+            Id = 42,
+            Title = "Found",
+            Description = "Desc",
+            Type = OccurrenceType.FOREST_FIRE,
+            Status = OccurrenceStatus.ACTIVE,
+            Priority = PriorityLevel.HIGH,
+            Latitude = 1.23,
+            Longitude = 4.56,
+            ReportCount = 3,
+            ResponsibleEntityId = 0
+        };
+        var occ = OccurrenceFixture.CreateOrUpdateOccurrence(options: options);
         mockOccurrenceService.Setup(s => s.GetOccurrenceById(42)).Returns(occ);
 
         var result = controller.GetById(42);
@@ -329,7 +345,7 @@ public class TestOccurrenceApiController : IClassFixture<DbFixture>
     [Fact]
     public void GetOccurrenceById_ServiceReturnsNull_ReturnsNotFound()
     {
-        mockOccurrenceService.Setup(s => s.GetOccurrenceById(777)).Returns((Models.Occurrence?)null);
+        mockOccurrenceService.Setup(s => s.GetOccurrenceById(777)).Returns((Occurrence)null!);
 
         var result = controller.GetById(777);
 
@@ -362,32 +378,37 @@ public class TestOccurrenceApiController : IClassFixture<DbFixture>
     [Fact]
     public void GetAll_ReturnsOkWithList()
     {
-        var occurrences = new List<readytohelpapi.Occurrence.Models.Occurrence>
+        var occ1Options = new OccurrenceFixtureDto
+        {
+            Id = 42,
+            Title = "Found",
+            Description = "Desc",
+            Type = OccurrenceType.FOREST_FIRE,
+            Status = OccurrenceStatus.ACTIVE,
+            Priority = PriorityLevel.HIGH,
+            Latitude = 1.23,
+            Longitude = 4.56,
+            ReportCount = 3,
+            ResponsibleEntityId = 0
+        };
+        var occ2Options = new OccurrenceFixtureDto
+        {
+            Id = 43,
+            Title = "Lost",
+            Description = "Desc2",
+            Type = OccurrenceType.FLOOD,
+            Status = OccurrenceStatus.RESOLVED,
+            Priority = PriorityLevel.LOW,
+            Latitude = 7.89,
+            Longitude = 0.12,
+            ReportCount = 1,
+            ResponsibleEntityId = 5
+        };
+
+        var occurrences = new List<Occurrence>
     {
-        OccurrenceFixture.CreateOrUpdateOccurrence(
-            id: 42,
-            title: "Found",
-            description: "Desc",
-            type: OccurrenceType.FOREST_FIRE,
-            status: OccurrenceStatus.ACTIVE,
-            priority: PriorityLevel.HIGH,
-            latitude: 1.23,
-            longitude: 4.56,
-            reportCount: 3,
-            responsibleEntityId: 0
-        ),
-        OccurrenceFixture.CreateOrUpdateOccurrence(
-            id: 43,
-            title: "Lost",
-            description: "Desc2",
-            type: OccurrenceType.FLOOD,
-            status: OccurrenceStatus.RESOLVED,
-            priority: PriorityLevel.LOW,
-            latitude: 7.89,
-            longitude: 0.12,
-            reportCount: 1,
-            responsibleEntityId: 5
-        )
+        OccurrenceFixture.CreateOrUpdateOccurrence(options: occ1Options),
+        OccurrenceFixture.CreateOrUpdateOccurrence(options: occ2Options)
     };
 
         mockOccurrenceService
@@ -432,128 +453,43 @@ public class TestOccurrenceApiController : IClassFixture<DbFixture>
     }
 
     /// <summary>
-    ///   Tests GetByType returning a list.
-    /// </summary>
-    [Fact]
-    public void GetByType_ReturnsOkWithList()
-    {
-        var list = new List<readytohelpapi.Occurrence.Models.Occurrence>
-    {
-            OccurrenceFixture.CreateOrUpdateOccurrence(
-            id: 42,
-            title: "Found",
-            description: "Desc",
-            type: OccurrenceType.FLOOD,
-            status: OccurrenceStatus.ACTIVE,
-            priority: PriorityLevel.HIGH,
-            latitude: 1.23,
-            longitude: 4.56,
-            reportCount: 3,
-            responsibleEntityId: 0
-        )
-    };
-
-        mockOccurrenceService.Setup(s => s.GetOccurrencesByType(OccurrenceType.FLOOD)).Returns(list);
-
-        var result = controller.GetByType(OccurrenceType.FLOOD);
-
-        var ok = Assert.IsType<OkObjectResult>(result.Result);
-        Assert.Equal(list, ok.Value);
-    }
-
-    /// <summary>
-    ///   Tests GetByType when service throws.
-    /// </summary>
-    [Fact]
-    public void GetByType_ServiceThrows_ReturnsInternalServerError()
-    {
-        mockOccurrenceService.Setup(s => s.GetOccurrencesByType(It.IsAny<OccurrenceType>()))
-            .Throws(new Exception("db"));
-
-        var result = controller.GetByType(OccurrenceType.FOREST_FIRE);
-
-        var status = Assert.IsType<ObjectResult>(result.Result);
-        Assert.Equal(500, status.StatusCode);
-    }
-
-    /// <summary>
-    ///   Tests GetByPriority returning a list.
-    /// </summary>
-    [Fact]
-    public void GetByPriority_ReturnsOkWithList()
-    {
-        var list = new List<readytohelpapi.Occurrence.Models.Occurrence>
-    {
-            OccurrenceFixture.CreateOrUpdateOccurrence(
-            id: 42,
-            title: "Found",
-            description: "Desc",
-            type: OccurrenceType.FLOOD,
-            status: OccurrenceStatus.ACTIVE,
-            priority: PriorityLevel.HIGH,
-            latitude: 1.23,
-            longitude: 4.56,
-            reportCount: 3,
-            responsibleEntityId: 0
-        )
-    };
-
-        mockOccurrenceService.Setup(s => s.GetOccurrencesByPriority(PriorityLevel.HIGH)).Returns(list);
-
-        var result = controller.GetByPriority(PriorityLevel.HIGH);
-
-        var ok = Assert.IsType<OkObjectResult>(result.Result);
-        Assert.Equal(list, ok.Value);
-    }
-
-    /// <summary>
-    ///   Tests GetByPriority when service throws.
-    /// </summary>
-    [Fact]
-    public void GetByPriority_ServiceThrows_ReturnsInternalServerError()
-    {
-        mockOccurrenceService.Setup(s => s.GetOccurrencesByPriority(It.IsAny<PriorityLevel>()))
-            .Throws(new Exception("db"));
-
-        var result = controller.GetByPriority(PriorityLevel.LOW);
-
-        var status = Assert.IsType<ObjectResult>(result.Result);
-        Assert.Equal(500, status.StatusCode);
-    }
-
-    /// <summary>
     ///   Tests GetAllActive returning map DTO results.
     /// </summary>
     [Fact]
     public void GetAllActive_ReturnsOkWithMappedList()
     {
+        var options1 = new OccurrenceFixtureDto
+        {
+            Id = 42,
+            Title = "Found",
+            Description = "Desc",
+            Type = OccurrenceType.FOREST_FIRE,
+            Status = OccurrenceStatus.ACTIVE,
+            Priority = PriorityLevel.HIGH,
+            Latitude = 1.23,
+            Longitude = 4.56,
+            ReportCount = 3,
+            ResponsibleEntityId = 0
+        };
+        var options2 = new OccurrenceFixtureDto
+        {
+            Id = 43,
+            Title = "Lost",
+            Description = "Desc2",
+            Type = OccurrenceType.FLOOD,
+            Status = OccurrenceStatus.RESOLVED,
+            Priority = PriorityLevel.LOW,
+            Latitude = 1.23,
+            Longitude = 4.56,
+            ReportCount = 1,
+            ResponsibleEntityId = 5
+        };
+
         var active = new List<readytohelpapi.Occurrence.Models.Occurrence>
-    {
-        OccurrenceFixture.CreateOrUpdateOccurrence(
-            id: 42,
-            title: "Found",
-            description: "Desc",
-            type: OccurrenceType.FOREST_FIRE,
-            status: OccurrenceStatus.ACTIVE,
-            priority: PriorityLevel.HIGH,
-            latitude: 1.23,
-            longitude: 4.56,
-            reportCount: 3,
-            responsibleEntityId: 1
-        ),
-        OccurrenceFixture.CreateOrUpdateOccurrence(
-            id: 43,
-            title: "Lost",
-            description: "Desc2",
-            type: OccurrenceType.FLOOD,
-            status: OccurrenceStatus.RESOLVED,
-            priority: PriorityLevel.LOW,
-            latitude: 1.23,
-            longitude: 4.56,
-            reportCount: 1,
-            responsibleEntityId: 5
-        )
-    };
+        {
+            OccurrenceFixture.CreateOrUpdateOccurrence(options: options1),
+            OccurrenceFixture.CreateOrUpdateOccurrence(options: options2)
+        };
 
         mockOccurrenceService.Setup(s => s.GetAllActiveOccurrences(1, 50, null, null, null))
             .Returns(active);
@@ -593,5 +529,4 @@ public class TestOccurrenceApiController : IClassFixture<DbFixture>
         var status = Assert.IsType<ObjectResult>(result.Result);
         Assert.Equal(500, status.StatusCode);
     }
-
 }

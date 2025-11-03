@@ -14,6 +14,7 @@ using readytohelpapi.Common.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using readytohelpapi.Occurrence.Services;
+using readytohelpapi.Occurrence.DTOs;
 
 /// <summary>
 /// This class contains all tests related to ReportApiController.
@@ -77,16 +78,18 @@ public class TestReportApiController : IClassFixture<DbFixture>
         };
 
         var createdReport = ReportFixture.CreateOrUpdate(id: 101, title: dto.Title, description: dto.Description, userId: dto.UserId, location: Pt());
-        var createdOccurrence = new Occurrence
-        {
-            Id = 202,
-            ReportId = 101,
-            ReportCount = 1,
-            Status = OccurrenceStatus.WAITING,
-            Type = dto.Type,
-            ResponsibleEntityId = 0,
-            Location = Pt()
-        };
+        var createdOccurrence = new Occurrence(
+            new OccurrenceCreateDto
+            {
+                Id = 202,
+                ReportId = 101,
+                ReportCount = 1,
+                Status = OccurrenceStatus.WAITING,
+                Type = dto.Type,
+                ResponsibleEntityId = 0,
+                Location = Pt()
+            }
+        );
 
         mockReportService.Setup(s => s.Create(It.IsAny<ReportModel>()))
                          .Returns((createdReport, createdOccurrence));
@@ -152,16 +155,18 @@ public class TestReportApiController : IClassFixture<DbFixture>
         context.SaveChanges();
 
         var createdReport = ReportFixture.CreateOrUpdate(id: 150, title: dto.Title, description: dto.Description, userId: dto.UserId, location: Pt());
-        var createdOccurrence = new Occurrence
-        {
-            Id = 250,
-            ReportId = 150,
-            ReportCount = 1,
-            Status = OccurrenceStatus.WAITING,
-            Type = dto.Type,
-            ResponsibleEntityId = 10,
-            Location = Pt()
-        };
+        var createdOccurrence = new Occurrence(
+            new OccurrenceCreateDto
+            {
+                Id = 250,
+                ReportId = 150,
+                ReportCount = 1,
+                Status = OccurrenceStatus.WAITING,
+                Type = dto.Type,
+                ResponsibleEntityId = 10,
+                Location = Pt()
+            }
+        );
 
         mockReportService.Setup(s => s.Create(It.IsAny<ReportModel>())).Returns((createdReport, createdOccurrence));
 
@@ -339,16 +344,18 @@ public class TestReportApiController : IClassFixture<DbFixture>
         };
 
         var createdReport = ReportFixture.CreateOrUpdate(id: 201, title: dto.Title, description: dto.Description, userId: dto.UserId, location: Pt());
-        var createdOccurrence = new Occurrence
-        {
-            Id = 301,
-            ReportId = 201,
-            ReportCount = 1,
-            Status = OccurrenceStatus.WAITING,
-            Type = dto.Type,
-            ResponsibleEntityId = 0,
-            Location = Pt()
-        };
+        var createdOccurrence = new Occurrence(
+            new OccurrenceCreateDto
+            {
+                Id = 301,
+                ReportId = 201,
+                ReportCount = 1,
+                Status = OccurrenceStatus.WAITING,
+                Type = dto.Type,
+                ResponsibleEntityId = 0,
+                Location = Pt()
+            }
+        );
 
         mockReportService.Setup(s => s.Create(It.IsAny<ReportModel>())).Returns((createdReport, createdOccurrence));
 
