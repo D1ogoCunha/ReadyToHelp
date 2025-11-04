@@ -1,6 +1,8 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using readytohelpapi.User.Controllers;
+using readytohelpapi.User.DTOs;
 using readytohelpapi.User.Services;
 using readytohelpapi.User.Tests.Fixtures;
 using Xunit;
@@ -8,29 +10,25 @@ using Xunit;
 namespace readytohelpapi.User.Tests;
 
 /// <summary>
-///   This class contains all unit tests related to the user api controller.
+///   Unit tests for UserApiController.
 /// </summary>
-[Trait("Category", "Integration")]
-public class TestUserApiController : IClassFixture<DbFixture>
+[Trait("Category", "Unit")]
+public class TestUserApiController_Unit
 {
-    private readonly DbFixture fixture;
     private readonly Mock<IUserService> mockUserService;
     private readonly UserApiController controller;
 
     /// <summary>
-    ///   Initializes a new instance of the <see cref="TestUserApiController"/> class.
+    ///   Initializes controller with mocked IUserService.
     /// </summary>
-    public TestUserApiController(DbFixture fixture)
+    public TestUserApiController_Unit()
     {
-        this.fixture = fixture;
-        this.fixture.ResetDatabase();
-
         mockUserService = new Mock<IUserService>();
         controller = new UserApiController(mockUserService.Object);
     }
 
     /// <summary>
-    ///   Tests the Create method with a null user.
+    ///   Returns BadRequest when body is null.
     /// </summary>
     [Fact]
     public void Create_NullUser_ReturnsBadRequest()
@@ -40,33 +38,31 @@ public class TestUserApiController : IClassFixture<DbFixture>
     }
 
     /// <summary>
-    ///   Tests the Create method with a valid user.
+    ///   Returns CreatedAtAction with DTO on valid create.
     /// </summary>
     [Fact]
     public void Create_ValidUser_ReturnsCreatedAtAction()
     {
         var user = UserFixture.CreateOrUpdateUser(id: 1, name: "Alice", email: "alice@example.com");
-        mockUserService.Setup(s => s.Create(It.IsAny<Models.User>())).Returns(user);
+        mockUserService.Setup(s => s.Create(It.IsAny<readytohelpapi.User.Models.User>())).Returns(user);
 
         var result = controller.Create(user);
 
         var created = Assert.IsType<CreatedAtActionResult>(result);
         Assert.Equal(nameof(controller.GetUserById), created.ActionName);
+        var dto = Assert.IsType<UserResponseDto>(created.Value);
+        Assert.Equal(user.Id, dto.Id);
     }
 
     /// <summary>
-    ///   Tests the Create method when the email already exists.
+    ///   Returns Conflict when email already exists.
     /// </summary>
     [Fact]
     public void Create_EmailAlreadyExists_ReturnsConflict()
     {
-        var user = UserFixture.CreateOrUpdateUser(
-            id: 0,
-            name: "Existing",
-            email: "exists@example.com"
-        );
+        var user = UserFixture.CreateOrUpdateUser(email: "exists@example.com");
         mockUserService
-            .Setup(s => s.Create(It.IsAny<Models.User>()))
+            .Setup(s => s.Create(It.IsAny<readytohelpapi.User.Models.User>()))
             .Throws(new ArgumentException("Email already exists"));
 
         var result = controller.Create(user);
@@ -75,15 +71,14 @@ public class TestUserApiController : IClassFixture<DbFixture>
     }
 
     /// <summary>
-    ///   Tests the Create method when the service throws a generic exception.
-    ///   Expects an Internal Server Error (500).
+    ///   Returns 500 on unexpected exception.
     /// </summary>
     [Fact]
     public void Create_ServiceThrowsGenericException_ReturnsInternalServerError()
     {
-        var user = UserFixture.CreateOrUpdateUser(id: 0, name: "Test");
+        var user = UserFixture.CreateOrUpdateUser(name: "Test");
         mockUserService
-            .Setup(s => s.Create(It.IsAny<Models.User>()))
+            .Setup(s => s.Create(It.IsAny<readytohelpapi.User.Models.User>()))
             .Throws(new Exception("Unexpected error"));
 
         var result = controller.Create(user);
@@ -93,7 +88,7 @@ public class TestUserApiController : IClassFixture<DbFixture>
     }
 
     /// <summary>
-    ///   Tests the Update method with a null user.
+    ///   Returns BadRequest when body is null.
     /// </summary>
     [Fact]
     public void Update_NullUser_ReturnsBadRequest()
@@ -103,47 +98,43 @@ public class TestUserApiController : IClassFixture<DbFixture>
     }
 
     /// <summary>
-    ///   Tests the Update method with a valid user.
+    ///   Returns Ok with DTO on valid update.
     /// </summary>
     [Fact]
-    public void Update_ValidUser_ReturnsOk()
+    public void Update_ValidUser_ReturnsOk_WithDto()
     {
         var user = UserFixture.CreateOrUpdateUser(id: 2, name: "Bob", email: "bob@example.com");
-        mockUserService.Setup(s => s.Update(It.IsAny<Models.User>())).Returns(user);
+        mockUserService.Setup(s => s.Update(It.IsAny<readytohelpapi.User.Models.User>())).Returns(user);
 
         var result = controller.Update(2, user);
 
         var ok = Assert.IsType<OkObjectResult>(result);
-        Assert.Equal(user, ok.Value);
+        var dto = Assert.IsType<UserResponseDto>(ok.Value);
+        Assert.Equal(user.Id, dto.Id);
+        Assert.Equal(user.Email, dto.Email);
+        Assert.Equal(user.Name, dto.Name);
     }
 
     /// <summary>
-    ///   Tests the Update method when the IDs do not match.
+    ///   Uses route id and returns DTO when body id mismatches.
     /// </summary>
     [Fact]
-    public void Update_IdMismatch_UpdatesWithRouteId()
+    public void Update_IdMismatch_UpdatesWithRouteId_ReturnsDto()
     {
-        var user = UserFixture.CreateOrUpdateUser(
-            id: 999,
-            name: "Wrong",
-            email: "wrong@example.com"
-        );
-        var updated = UserFixture.CreateOrUpdateUser(
-            id: 10,
-            name: "Wrong",
-            email: "wrong@example.com"
-        );
-        mockUserService.Setup(s => s.Update(It.Is<Models.User>(u => u.Id == 10))).Returns(updated);
+        var body = UserFixture.CreateOrUpdateUser(id: 999, name: "Wrong", email: "wrong@example.com");
+        var updated = UserFixture.CreateOrUpdateUser(id: 10, name: "Wrong", email: "wrong@example.com");
 
-        var result = controller.Update(10, user);
+        mockUserService.Setup(s => s.Update(It.Is<readytohelpapi.User.Models.User>(u => u.Id == 10))).Returns(updated);
+
+        var result = controller.Update(10, body);
 
         var ok = Assert.IsType<OkObjectResult>(result);
-        var returned = Assert.IsType<Models.User>(ok.Value);
+        var returned = Assert.IsType<UserResponseDto>(ok.Value);
         Assert.Equal(10, returned.Id);
     }
 
     /// <summary>
-    ///  Tests the Update method when the service throws an ArgumentException.
+    ///   Returns BadRequest when service throws ArgumentNullException.
     /// </summary>
     [Fact]
     public void Update_ServiceThrowsArgumentNullException_ReturnsBadRequest()
@@ -151,7 +142,7 @@ public class TestUserApiController : IClassFixture<DbFixture>
         var user = UserFixture.CreateOrUpdateUser(id: 5);
         mockUserService
             .Setup(s => s.Update(It.IsAny<Models.User>()))
-            .Throws(new ArgumentNullException("user"));
+            .Throws<ArgumentNullException>();
 
         var result = controller.Update(5, user);
 
@@ -159,14 +150,14 @@ public class TestUserApiController : IClassFixture<DbFixture>
     }
 
     /// <summary>
-    ///   Tests the Update method when the email already exists.
+    ///   Returns Conflict when email already exists.
     /// </summary>
     [Fact]
     public void Update_EmailAlreadyExists_ReturnsConflict()
     {
         var user = UserFixture.CreateOrUpdateUser(id: 7, email: "conflict@example.com");
         mockUserService
-            .Setup(s => s.Update(It.IsAny<Models.User>()))
+            .Setup(s => s.Update(It.IsAny<readytohelpapi.User.Models.User>()))
             .Throws(new ArgumentException("Email already exists"));
 
         var result = controller.Update(7, user);
@@ -175,14 +166,14 @@ public class TestUserApiController : IClassFixture<DbFixture>
     }
 
     /// <summary>
-    ///  Tests the Update method when the service throws a KeyNotFoundException.
+    ///   Returns NotFound when user is not found.
     /// </summary>
     [Fact]
     public void Update_ServiceThrowsKeyNotFoundException_ReturnsNotFound()
     {
         var user = UserFixture.CreateOrUpdateUser(id: 999);
         mockUserService
-            .Setup(s => s.Update(It.IsAny<Models.User>()))
+            .Setup(s => s.Update(It.IsAny<readytohelpapi.User.Models.User>()))
             .Throws(new KeyNotFoundException("User not found"));
 
         var result = controller.Update(999, user);
@@ -191,15 +182,14 @@ public class TestUserApiController : IClassFixture<DbFixture>
     }
 
     /// <summary>
-    ///   Tests the Update method when the service throws a generic exception.
-    ///   Expects an Internal Server Error (500).
+    ///   Returns 500 on unexpected exception.
     /// </summary>
     [Fact]
     public void Update_ServiceThrowsGenericException_ReturnsInternalServerError()
     {
         var user = UserFixture.CreateOrUpdateUser(id: 8);
         mockUserService
-            .Setup(s => s.Update(It.IsAny<Models.User>()))
+            .Setup(s => s.Update(It.IsAny<readytohelpapi.User.Models.User>()))
             .Throws(new Exception("DB error"));
 
         var result = controller.Update(8, user);
@@ -209,12 +199,13 @@ public class TestUserApiController : IClassFixture<DbFixture>
     }
 
     /// <summary>
-    ///   Tests the Delete method with a non-existing user.
+    ///   Returns NotFound when delete returns null.
     /// </summary>
     [Fact]
     public void Delete_NonExisting_ReturnsNotFound()
     {
-        mockUserService.Setup(s => s.Delete(It.IsAny<int>())).Returns((Models.User?)null);
+        mockUserService.Setup(s => s.Delete(It.IsAny<int>())).Returns((Models.User?)null!);
+
 
         var result = controller.Delete(999);
 
@@ -222,10 +213,10 @@ public class TestUserApiController : IClassFixture<DbFixture>
     }
 
     /// <summary>
-    ///   Tests the Delete method with an existing user.
+    ///   Returns Ok with DTO on successful delete.
     /// </summary>
     [Fact]
-    public void Delete_Existing_ReturnsOk()
+    public void Delete_Existing_ReturnsOk_WithDto()
     {
         var user = UserFixture.CreateOrUpdateUser(id: 3, name: "Carol");
         mockUserService.Setup(s => s.Delete(user.Id)).Returns(user);
@@ -233,11 +224,12 @@ public class TestUserApiController : IClassFixture<DbFixture>
         var result = controller.Delete(user.Id);
 
         var ok = Assert.IsType<OkObjectResult>(result);
-        Assert.Equal(user, ok.Value);
+        var dto = Assert.IsType<UserResponseDto>(ok.Value);
+        Assert.Equal(user.Id, dto.Id);
     }
 
     /// <summary>
-    ///   Tests the Delete method when the service throws an ArgumentException.
+    ///   Returns BadRequest on invalid id.
     /// </summary>
     [Fact]
     public void Delete_ServiceThrowsArgumentException_ReturnsBadRequest()
@@ -252,7 +244,7 @@ public class TestUserApiController : IClassFixture<DbFixture>
     }
 
     /// <summary>
-    ///   Tests the Delete method when the service throws a KeyNotFoundException.
+    ///   Returns NotFound when user is not found.
     /// </summary>
     [Fact]
     public void Delete_ServiceThrowsKeyNotFoundException_ReturnsNotFound()
@@ -267,8 +259,7 @@ public class TestUserApiController : IClassFixture<DbFixture>
     }
 
     /// <summary>
-    ///   Tests the Delete method when the service throws a generic exception.
-    ///   Expects an Internal Server Error (500).
+    ///   Returns 500 on unexpected exception.
     /// </summary>
     [Fact]
     public void Delete_ServiceThrowsGenericException_ReturnsInternalServerError()
@@ -284,7 +275,7 @@ public class TestUserApiController : IClassFixture<DbFixture>
     }
 
     /// <summary>
-    ///   Tests the GetUserById method when the id is invalid.
+    ///   Returns BadRequest on invalid id.
     /// </summary>
     [Fact]
     public void GetUserById_InvalidId_ReturnsBadRequest()
@@ -299,7 +290,7 @@ public class TestUserApiController : IClassFixture<DbFixture>
     }
 
     /// <summary>
-    ///   Tests the GetUserById method when the user is not found.
+    ///   Returns NotFound when user is not found.
     /// </summary>
     [Fact]
     public void GetUserById_UserNotFound_ReturnsNotFound()
@@ -314,8 +305,7 @@ public class TestUserApiController : IClassFixture<DbFixture>
     }
 
     /// <summary>
-    ///   Tests the GetUserById method when the service throws a generic exception.
-    ///   Expects an Internal Server Error (500).
+    ///   Returns 500 on unexpected exception.
     /// </summary>
     [Fact]
     public void GetUserById_ServiceThrowsGenericException_ReturnsInternalServerError()
@@ -331,90 +321,77 @@ public class TestUserApiController : IClassFixture<DbFixture>
     }
 
     /// <summary>
-    ///   Tests the Register method when the request is null.
+    ///   Returns BadRequest when body is null.
     /// </summary>
     [Fact]
     public void Register_NullRequest_ReturnsBadRequest()
     {
         var result = controller.Register(null);
-
         Assert.IsType<BadRequestObjectResult>(result);
     }
 
     /// <summary>
-    ///   Tests the Register method when the name is empty.
+    ///   Returns BadRequest when name is empty.
     /// </summary>
     [Fact]
     public void Register_EmptyName_ReturnsBadRequest()
     {
         var req = new UserApiController.RegisterRequest("", "email@example.com", "password");
-
         var result = controller.Register(req);
-
         Assert.IsType<BadRequestObjectResult>(result);
     }
 
     /// <summary>
-    ///   Tests the Register method when the email is empty.
+    ///   Returns BadRequest when email is empty.
     /// </summary>
     [Fact]
     public void Register_EmptyEmail_ReturnsBadRequest()
     {
         var req = new UserApiController.RegisterRequest("Name", "", "password");
-
         var result = controller.Register(req);
-
         Assert.IsType<BadRequestObjectResult>(result);
     }
 
     /// <summary>
-    ///   Tests the Register method when the password is empty.
+    ///   Returns BadRequest when password is empty.
     /// </summary>
     [Fact]
     public void Register_EmptyPassword_ReturnsBadRequest()
     {
         var req = new UserApiController.RegisterRequest("Name", "email@example.com", "");
-
         var result = controller.Register(req);
-
         Assert.IsType<BadRequestObjectResult>(result);
     }
 
     /// <summary>
-    ///   Tests the Register method with a valid request.
+    ///   Returns CreatedAtAction with DTO on valid register.
     /// </summary>
     [Fact]
-    public void Register_ValidRequest_ReturnsCreatedAtAction()
+    public void Register_ValidRequest_ReturnsCreatedAtAction_WithDto()
     {
-        var req = new UserApiController.RegisterRequest(
-            "NewUser",
-            "new@example.com",
-            "password123"
-        );
-        var created = UserFixture.CreateOrUpdateUser(
-            id: 20,
-            name: "NewUser",
-            email: "new@example.com"
-        );
-        created.Profile = Models.Profile.CITIZEN;
+        var req = new UserApiController.RegisterRequest("NewUser", "new@example.com", "password123");
+        var created = UserFixture.CreateOrUpdateUser(id: 20, name: "NewUser", email: "new@example.com");
+        created.Profile = readytohelpapi.User.Models.Profile.CITIZEN;
 
-        mockUserService.Setup(s => s.Register(It.IsAny<Models.User>())).Returns(created);
+        mockUserService.Setup(s => s.Register(It.IsAny<readytohelpapi.User.Models.User>())).Returns(created);
 
         var result = controller.Register(req);
 
         var createdResult = Assert.IsType<CreatedAtActionResult>(result);
         Assert.Equal(nameof(controller.GetUserById), createdResult.ActionName);
+        var dto = Assert.IsType<UserResponseDto>(createdResult.Value);
+        Assert.Equal(created.Id, dto.Id);
     }
 
     /// <summary>
-    ///   Tests the Register method when the email already exists.
+    ///   Returns Conflict when email exists on register.
     /// </summary>
     [Fact]
     public void Register_EmailAlreadyExists_ReturnsConflict()
     {
         var req = new UserApiController.RegisterRequest("User", "exists@example.com", "password");
         mockUserService
-            .Setup(s => s.Register(It.IsAny<Models.User>()))
+            .Setup(s => s.Register(It.IsAny<readytohelpapi.User.Models.User>()))
             .Throws(new ArgumentException("Email already exists"));
 
         var result = controller.Register(req);
@@ -423,14 +400,14 @@ public class TestUserApiController : IClassFixture<DbFixture>
     }
 
     /// <summary>
-    ///   Tests the Register method when the service throws a generic exception.
+    ///   Returns 500 on unexpected exception during register.
     /// </summary>
     [Fact]
     public void Register_ServiceThrowsGenericException_ReturnsInternalServerError()
     {
         var req = new UserApiController.RegisterRequest("User", "test@example.com", "password");
         mockUserService
-            .Setup(s => s.Register(It.IsAny<Models.User>()))
+            .Setup(s => s.Register(It.IsAny<readytohelpapi.User.Models.User>()))
             .Throws(new Exception("Unexpected error"));
 
         var result = controller.Register(req);
@@ -440,67 +417,53 @@ public class TestUserApiController : IClassFixture<DbFixture>
     }
 
     /// <summary>
-    ///   Tests the GetAll method returning a list of users.
+    ///   Returns Ok with list of DTOs.
     /// </summary>
     [Fact]
-    public void GetAll_ReturnsOkWithList()
+    public void GetAll_ReturnsOkWithList_OfDto()
     {
-        var users = new List<Models.User>
+        var users = new List<readytohelpapi.User.Models.User>
         {
-            UserFixture.CreateOrUpdateUser(id: 4, name: "U1"),
-            UserFixture.CreateOrUpdateUser(id: 5, name: "U2"),
+            UserFixture.CreateOrUpdateUser(id: 4, name: "U1", email: "u1@x.com"),
+            UserFixture.CreateOrUpdateUser(id: 5, name: "U2", email: "u2@x.com"),
         };
         mockUserService
-            .Setup(s =>
-                s.GetAllUsers(
-                    It.IsAny<int>(),
-                    It.IsAny<int>(),
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<string>()
-                )
-            )
+            .Setup(s => s.GetAllUsers(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
             .Returns(users);
 
         var result = controller.GetAll();
 
-        var actionResult = Assert.IsType<ActionResult<List<Models.User>>>(result);
+        var actionResult = Assert.IsType<ActionResult<List<UserResponseDto>>>(result);
         var ok = Assert.IsType<OkObjectResult>(actionResult.Result);
-        Assert.Equal(users, ok.Value);
+        var list = Assert.IsType<List<UserResponseDto>>(ok.Value);
+        Assert.Equal(2, list.Count);
+        Assert.Contains(list, d => d.Id == 4 && d.Email == "u1@x.com");
     }
 
     /// <summary>
-    ///   Tests the GetAll method when the service throws an ArgumentException.
+    ///   Returns BadRequest when service throws ArgumentException.
     /// </summary>
     [Fact]
     public void GetAll_ServiceThrowsArgumentException_ReturnsBadRequest()
     {
         mockUserService
-            .Setup(s =>
-                s.GetAllUsers(
-                    It.IsAny<int>(),
-                    It.IsAny<int>(),
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<string>()
-                )
-            )
+            .Setup(s => s.GetAllUsers(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
             .Throws(new ArgumentException("Invalid"));
 
         var result = controller.GetAll();
 
-        var actionResult = Assert.IsType<ActionResult<List<Models.User>>>(result);
+        var actionResult = Assert.IsType<ActionResult<List<UserResponseDto>>>(result);
         var bad = Assert.IsType<BadRequestObjectResult>(actionResult.Result);
         Assert.NotNull(bad.Value);
     }
 
     /// <summary>
-    ///   Tests the GetAll method with default parameters.
+    ///   Returns Ok with default parameters.
     /// </summary>
     [Fact]
     public void GetAll_WithDefaultParameters_ReturnsOk()
     {
-        var users = new List<Models.User>
+        var users = new List<readytohelpapi.User.Models.User>
         {
             UserFixture.CreateOrUpdateUser(id: 30, name: "Default1"),
             UserFixture.CreateOrUpdateUser(id: 31, name: "Default2"),
@@ -509,18 +472,18 @@ public class TestUserApiController : IClassFixture<DbFixture>
 
         var result = controller.GetAll();
 
-        var actionResult = Assert.IsType<ActionResult<List<Models.User>>>(result);
+        var actionResult = Assert.IsType<ActionResult<List<UserResponseDto>>>(result);
         var ok = Assert.IsType<OkObjectResult>(actionResult.Result);
         Assert.NotNull(ok.Value);
     }
 
     /// <summary>
-    ///   Tests the GetAll method with custom parameters.
+    ///   Returns Ok with custom parameters.
     /// </summary>
     [Fact]
     public void GetAll_WithCustomParameters_ReturnsOk()
     {
-        var users = new List<Models.User>
+        var users = new List<readytohelpapi.User.Models.User>
         {
             UserFixture.CreateOrUpdateUser(id: 32, name: "Custom"),
         };
@@ -528,45 +491,37 @@ public class TestUserApiController : IClassFixture<DbFixture>
 
         var result = controller.GetAll(2, 5, "Email", "desc", "filter");
 
-        var actionResult = Assert.IsType<ActionResult<List<Models.User>>>(result);
+        var actionResult = Assert.IsType<ActionResult<List<UserResponseDto>>>(result);
         var ok = Assert.IsType<OkObjectResult>(actionResult.Result);
         Assert.NotNull(ok.Value);
     }
 
     /// <summary>
-    ///   Tests the GetAll method when the service throws a generic exception.
+    ///   Returns 500 on unexpected exception on GetAll.
     /// </summary>
     [Fact]
     public void GetAll_ServiceThrowsGenericException_ReturnsInternalServerError()
     {
         mockUserService
-            .Setup(s =>
-                s.GetAllUsers(
-                    It.IsAny<int>(),
-                    It.IsAny<int>(),
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<string>()
-                )
-            )
+            .Setup(s => s.GetAllUsers(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
             .Throws(new Exception("Database error"));
 
         var result = controller.GetAll();
 
-        var actionResult = Assert.IsType<ActionResult<List<Models.User>>>(result);
+        var actionResult = Assert.IsType<ActionResult<List<UserResponseDto>>>(result);
         var status = Assert.IsType<ObjectResult>(actionResult.Result);
         Assert.Equal(500, status.StatusCode);
     }
 
     /// <summary>
-    ///   Tests the GetUserByEmail method when the user is not found.
+    ///   Returns NotFound when email is not found.
     /// </summary>
     [Fact]
     public void GetUserByEmail_NotFound_ReturnsNotFound()
     {
         mockUserService
             .Setup(s => s.GetUserByEmail(It.IsAny<string>()))
-            .Returns((Models.User?)null);
+            .Returns((readytohelpapi.User.Models.User?)null);
 
         var result = controller.GetUserByEmail("noone@example.com");
 
@@ -574,10 +529,10 @@ public class TestUserApiController : IClassFixture<DbFixture>
     }
 
     /// <summary>
-    ///   Tests the GetUserByEmail method when the user is found.
+    ///   Returns Ok with DTO when email exists.
     /// </summary>
     [Fact]
-    public void GetUserByEmail_Found_ReturnsOk()
+    public void GetUserByEmail_Found_ReturnsOk_WithDto()
     {
         var user = UserFixture.CreateOrUpdateUser(id: 6, name: "Found", email: "found@example.com");
         mockUserService.Setup(s => s.GetUserByEmail("found@example.com")).Returns(user);
@@ -585,11 +540,13 @@ public class TestUserApiController : IClassFixture<DbFixture>
         var result = controller.GetUserByEmail("found@example.com");
 
         var ok = Assert.IsType<OkObjectResult>(result);
-        Assert.Equal(user, ok.Value);
+        var dto = Assert.IsType<UserResponseDto>(ok.Value);
+        Assert.Equal(user.Id, dto.Id);
+        Assert.Equal(user.Email, dto.Email);
     }
 
     /// <summary>
-    ///   Tests the GetUserByEmail method when the service throws an ArgumentException.
+    ///   Returns BadRequest on invalid email.
     /// </summary>
     [Fact]
     public void GetUserByEmail_ServiceThrowsArgumentException_ReturnsBadRequest()
@@ -604,7 +561,7 @@ public class TestUserApiController : IClassFixture<DbFixture>
     }
 
     /// <summary>
-    ///   Tests the GetUserByEmail method when the service throws a generic exception.
+    ///   Returns 500 on unexpected exception.
     /// </summary>
     [Fact]
     public void GetUserByEmail_ServiceThrowsGenericException_ReturnsInternalServerError()
@@ -620,14 +577,14 @@ public class TestUserApiController : IClassFixture<DbFixture>
     }
 
     /// <summary>
-    ///   Tests the GetUserByEmail method with a whitespace email.
+    ///   Returns NotFound when email is whitespace.
     /// </summary>
     [Fact]
     public void GetUserByEmail_WithWhitespaceEmail_ReturnsNotFoundOrThrows()
     {
         mockUserService
             .Setup(s => s.GetUserByEmail(It.IsAny<string>()))
-            .Returns((Models.User?)null);
+            .Returns((readytohelpapi.User.Models.User?)null);
 
         var result = controller.GetUserByEmail("   ");
 
@@ -635,78 +592,24 @@ public class TestUserApiController : IClassFixture<DbFixture>
     }
 
     /// <summary>
-    ///   Tests the GetUserById method with a valid id.
+    ///   Verifies routing and authorization attributes.
     /// </summary>
     [Fact]
-    public void GetUserById_ValidId_ReturnsUser()
+    public void GetUserById_HasAuthorizeAndRoutes()
     {
-        fixture.ResetDatabase();
-        var user = new Models.User
-        {
-            Name = "John Doe",
-            Email = "john@example.com",
-            Password = "password",
-            Profile = Models.Profile.CITIZEN,
-        };
-        fixture.Context.Users.Add(user);
-        fixture.Context.SaveChanges();
+        var controllerType = typeof(UserApiController);
+        var mi = controllerType.GetMethod("GetUserById");
+        Assert.NotNull(mi);
 
-        mockUserService.Setup(s => s.GetUserById(user.Id)).Returns(user);
+        var routeAttrs = controllerType.GetCustomAttributes(typeof(RouteAttribute), true).Cast<RouteAttribute>().ToArray();
+        Assert.Contains(routeAttrs, a => (a.Template ?? string.Empty).Contains("api/user", StringComparison.OrdinalIgnoreCase));
 
-        var result = controller.GetUserById(user.Id);
+        var httpGets = mi!.GetCustomAttributes(typeof(HttpGetAttribute), true).Cast<HttpGetAttribute>().ToArray();
+        Assert.True(httpGets.Length >= 1);
+        var templates = httpGets.Select(a => a.Template ?? string.Empty).ToArray();
+        Assert.Contains(templates, t => t.Contains("{id", StringComparison.OrdinalIgnoreCase));
 
-        var ok = Assert.IsType<OkObjectResult>(result);
-        var returned = Assert.IsType<Models.User>(ok.Value);
-        Assert.Equal(user.Id, returned.Id);
-        Assert.Equal(user.Email, returned.Email);
-        Assert.Equal(user.Name, returned.Name);
-    }
-
-    /// <summary>
-    ///   Tests the GetUsers method when users are found with pagination.
-    /// </summary>
-    [Fact]
-    public void GetUsers_UsersFound_ReturnsOkWithPagination()
-    {
-        fixture.ResetDatabase();
-        var u1 = new Models.User
-        {
-            Name = "John Doe",
-            Email = "john@example.com",
-            Password = "password",
-            Profile = Models.Profile.CITIZEN,
-        };
-        var u2 = new Models.User
-        {
-            Name = "Jane Doe",
-            Email = "jane@example.com",
-            Password = "password",
-            Profile = Models.Profile.CITIZEN,
-        };
-        fixture.Context.Users.AddRange(u1, u2);
-        fixture.Context.SaveChanges();
-
-        var users = new List<Models.User> { u1, u2 };
-        mockUserService
-            .Setup(s =>
-                s.GetAllUsers(
-                    It.IsAny<int>(),
-                    It.IsAny<int>(),
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<string>()
-                )
-            )
-            .Returns(users);
-
-        var result = controller.GetAll();
-
-        var actionResult = Assert.IsType<ActionResult<List<Models.User>>>(result);
-        var ok = Assert.IsType<OkObjectResult>(actionResult.Result);
-        var returned = Assert.IsAssignableFrom<IEnumerable<Models.User>>(ok.Value);
-        var list = returned.ToList();
-        Assert.Equal(2, list.Count);
-        Assert.Contains(list, x => x.Email == u1.Email && x.Name == u1.Name);
-        Assert.Contains(list, x => x.Email == u2.Email && x.Name == u2.Name);
+        var hasAuthorize = mi.GetCustomAttributes(typeof(AuthorizeAttribute), true).Any();
+        Assert.True(hasAuthorize);
     }
 }

@@ -1,7 +1,7 @@
+namespace readytohelpapi.User.Tests;
+
 using Microsoft.EntityFrameworkCore;
 using readytohelpapi.Common.Data;
-
-namespace readytohelpapi.User.Tests;
 
 /// <summary>
 ///     Provides a test fixture for setting up and managing the UserContext database.
@@ -11,6 +11,7 @@ namespace readytohelpapi.User.Tests;
 public class DbFixture : IDisposable
 {
     private readonly string _databaseName;
+    private bool _disposed;
 
     /// <summary>
     ///   Initializes a new instance of the <see cref="DbFixture"/> class.
@@ -49,14 +50,56 @@ public class DbFixture : IDisposable
     /// </summary>
     public void Dispose()
     {
-        this.Context.Database.EnsureDeleted();
-        this.Context.Dispose();
+        Dispose(true);
+        GC.SuppressFinalize(this);
     }
+
+    /// <summary>
+    ///  Finalizer in case Dispose was not called.
+    /// </summary>
+    ~DbFixture()
+    {
+        Dispose(false);
+    }
+
+    /// <summary>
+    ///   Protected dispose pattern implementation.
+    /// </summary>
+    /// <param name="disposing">True when called from Dispose, false from finalizer.</param>
+    protected virtual void Dispose(bool disposing)
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        if (disposing)
+        {
+            try
+            {
+                this.Context?.Database?.EnsureDeleted();
+            }
+            catch
+            {
+                // Swallow exceptions during cleanup to avoid throwing from Dispose.
+            }
+
+            this.Context?.Dispose();
+        }
+
+        _disposed = true;
+    }
+
     /// <summary>
     ///   Resets the database by clearing tracked entities and removing all users.
     /// </summary>
     public void ResetDatabase()
     {
+        if (_disposed)
+        {
+            throw new ObjectDisposedException(nameof(DbFixture));
+        }
+
         this.Context.ChangeTracker.Clear();
         var users = this.Context.Users.AsNoTracking().ToList();
         if (users.Any())
