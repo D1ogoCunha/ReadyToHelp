@@ -16,14 +16,14 @@ using Xunit;
 /// This class contains all tests related to ReportApiController.
 /// </summary>
 [Trait("Category", "Unit")]
-public class TestReportApiController
+public class TestReportApiController_Unit
 {
     private readonly Mock<IReportService> mockReportService;
     private readonly Mock<IReportRepository> mockReportRepository;
     private readonly Mock<AppDbContext> mockContext;
     private readonly ReportApiController controller;
 
-    public TestReportApiController()
+    public TestReportApiController_Unit()
     {
         mockReportService = new Mock<IReportService>();
         mockReportRepository = new Mock<IReportRepository>();

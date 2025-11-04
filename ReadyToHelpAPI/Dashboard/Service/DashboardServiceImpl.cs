@@ -40,7 +40,7 @@ public class DashboardServiceImpl : IDashboardService
             TotalUsers = totalUsers,
             TotalReports = totalReports,
             TotalFeedbacks = totalFeedbacks,
-            TotalResponsibleEntities = totalResponsibleEntities
+            TotalResponsibleEntities = totalResponsibleEntities,
         };
 
         return stats;
@@ -54,17 +54,28 @@ public class DashboardServiceImpl : IDashboardService
         var feedbacks = await appContext.Feedbacks.AsNoTracking().ToListAsync(ct);
 
         var total = users.Count;
-        var admins = users.Count(u => u.Profile.ToString().Equals("ADMIN", StringComparison.OrdinalIgnoreCase));
-        var managers = users.Count(u => u.Profile.ToString().Equals("MANAGER", StringComparison.OrdinalIgnoreCase));
-        var citizens = users.Count(u => u.Profile.ToString().Equals("CITIZEN", StringComparison.OrdinalIgnoreCase) || u.Profile.ToString().Equals("USER", StringComparison.OrdinalIgnoreCase));
+        var admins = users.Count(u =>
+            u.Profile.ToString().Equals("ADMIN", StringComparison.OrdinalIgnoreCase)
+        );
+        var managers = users.Count(u =>
+            u.Profile.ToString().Equals("MANAGER", StringComparison.OrdinalIgnoreCase)
+        );
+        var citizens = users.Count(u =>
+            u.Profile.ToString().Equals("CITIZEN", StringComparison.OrdinalIgnoreCase)
+            || u.Profile.ToString().Equals("USER", StringComparison.OrdinalIgnoreCase)
+        );
 
         var userIdsWithReports = reports.Select(r => r.UserId).Distinct().ToHashSet();
         var userIdsWithFeedbacks = feedbacks.Select(f => f.UserId).Distinct().ToHashSet();
 
         var usersWithReports = users.Count(u => userIdsWithReports.Contains(u.Id));
         var usersWithFeedbacks = users.Count(u => userIdsWithFeedbacks.Contains(u.Id));
-        var usersWithBoth = users.Count(u => userIdsWithReports.Contains(u.Id) && userIdsWithFeedbacks.Contains(u.Id));
-        var usersWithoutReportsOrFeedbacks = users.Count(u => !userIdsWithReports.Contains(u.Id) && !userIdsWithFeedbacks.Contains(u.Id));
+        var usersWithBoth = users.Count(u =>
+            userIdsWithReports.Contains(u.Id) && userIdsWithFeedbacks.Contains(u.Id)
+        );
+        var usersWithoutReportsOrFeedbacks = users.Count(u =>
+            !userIdsWithReports.Contains(u.Id) && !userIdsWithFeedbacks.Contains(u.Id)
+        );
 
         var mostActiveUser = users
             .Select(u => new
@@ -72,7 +83,7 @@ public class DashboardServiceImpl : IDashboardService
                 UserId = u.Id,
                 Name = u.Name,
                 Reports = reports.Count(r => r.UserId == u.Id),
-                Feedbacks = feedbacks.Count(f => f.UserId == u.Id)
+                Feedbacks = feedbacks.Count(f => f.UserId == u.Id),
             })
             .OrderByDescending(x => x.Reports + x.Feedbacks)
             .FirstOrDefault();
@@ -90,7 +101,7 @@ public class DashboardServiceImpl : IDashboardService
             MostActiveUserId = mostActiveUser?.UserId ?? 0,
             MostActiveUserName = mostActiveUser?.Name ?? "",
             MostActiveUserReports = mostActiveUser?.Reports ?? 0,
-            MostActiveUserFeedbacks = mostActiveUser?.Feedbacks ?? 0
+            MostActiveUserFeedbacks = mostActiveUser?.Feedbacks ?? 0,
         };
     }
 
@@ -141,7 +152,7 @@ public class DashboardServiceImpl : IDashboardService
             MostReportedOccurrenceId = mostReported?.Id ?? 0,
             MostReportedOccurrenceTitle = mostReported?.Title ?? string.Empty,
             MostReports = mostReported?.ReportCount ?? 0,
-            ByType = byType
+            ByType = byType,
         };
     }
 
@@ -174,7 +185,8 @@ public class DashboardServiceImpl : IDashboardService
         string? topName = null;
         if (top != null)
         {
-            topName = await appContext.Users.AsNoTracking()
+            topName = await appContext
+                .Users.AsNoTracking()
                 .Where(u => u.Id == top.UserId)
                 .Select(u => u.Name)
                 .FirstOrDefaultAsync(ct);
@@ -196,7 +208,7 @@ public class DashboardServiceImpl : IDashboardService
             TopReporterUserName = topName ?? string.Empty,
             TopReporterReportCount = top?.Count ?? 0,
             FirstReportDate = firstDate,
-            LastReportDate = lastDate
+            LastReportDate = lastDate,
         };
     }
 
@@ -230,7 +242,8 @@ public class DashboardServiceImpl : IDashboardService
         string? topName = null;
         if (top != null)
         {
-            topName = await appContext.Users.AsNoTracking()
+            topName = await appContext
+                .Users.AsNoTracking()
                 .Where(u => u.Id == top.UserId)
                 .Select(u => u.Name)
                 .FirstOrDefaultAsync(ct);
@@ -254,12 +267,14 @@ public class DashboardServiceImpl : IDashboardService
             TopFeedbackUserName = topName ?? string.Empty,
             TopFeedbackUserCount = top?.Count ?? 0,
             FirstFeedbackDate = firstDate,
-            LastFeedbackDate = lastDate
+            LastFeedbackDate = lastDate,
         };
     }
 
     /// <inheritdoc />
-    public async Task<ResponsibleEntityStatsDto> GetResponsibleEntityStatsAsync(CancellationToken ct = default)
+    public async Task<ResponsibleEntityStatsDto> GetResponsibleEntityStatsAsync(
+        CancellationToken ct = default
+    )
     {
         var entities = await appContext.ResponsibleEntities.AsNoTracking().ToListAsync(ct);
         var occurrences = await appContext.Occurrences.AsNoTracking().ToListAsync(ct);
@@ -280,9 +295,17 @@ public class DashboardServiceImpl : IDashboardService
         var entitiesWithoutAssigned = totalEntities - entitiesWithAssigned;
 
         var totalAssignedOccurrences = assignedOccs.Count;
-        var averageOccurrencesPerEntity = totalEntities == 0 ? 0.0 : Math.Round(totalAssignedOccurrences / (double)totalEntities, 2);
+        var averageOccurrencesPerEntity =
+            totalEntities == 0
+                ? 0.0
+                : Math.Round(totalAssignedOccurrences / (double)totalEntities, 2);
 
-        var activeStatuses = new[] { OccurrenceStatus.WAITING, OccurrenceStatus.ACTIVE, OccurrenceStatus.IN_PROGRESS };
+        var activeStatuses = new[]
+        {
+            OccurrenceStatus.WAITING,
+            OccurrenceStatus.ACTIVE,
+            OccurrenceStatus.IN_PROGRESS,
+        };
         var activeOccurrences = assignedOccs.Count(o => activeStatuses.Contains(o.Status));
 
         var occByStatus = occurrences
@@ -299,9 +322,10 @@ public class DashboardServiceImpl : IDashboardService
             .ThenBy(x => x.EntityId)
             .FirstOrDefault();
 
-        var topName = top == null
-            ? string.Empty
-            : entities.FirstOrDefault(e => e.Id == top.EntityId)?.Name ?? string.Empty;
+        var topName =
+            top == null
+                ? string.Empty
+                : entities.FirstOrDefault(e => e.Id == top.EntityId)?.Name ?? string.Empty;
 
         return new ResponsibleEntityStatsDto
         {
@@ -317,7 +341,7 @@ public class DashboardServiceImpl : IDashboardService
             EntitiesWithoutContactInfo = withoutContact,
             TopEntityByOccurrencesId = top?.EntityId ?? 0,
             TopEntityByOccurrencesName = topName,
-            TopEntityByOccurrencesCount = top?.Count ?? 0
+            TopEntityByOccurrencesCount = top?.Count ?? 0,
         };
     }
 
@@ -327,7 +351,8 @@ public class DashboardServiceImpl : IDashboardService
     /// </summary>
     private async Task<double> ComputeAverageResolutionHoursAsync(CancellationToken ct)
     {
-        var times = await appContext.Occurrences.AsNoTracking()
+        var times = await appContext
+            .Occurrences.AsNoTracking()
             .Select(o => new { o.CreationDateTime, o.EndDateTime })
             .ToListAsync(ct);
 
@@ -336,7 +361,8 @@ public class DashboardServiceImpl : IDashboardService
             .Select(x => (x.EndDateTime - x.CreationDateTime).TotalHours)
             .ToList();
 
-        if (durations.Count == 0) return 0.0;
+        if (durations.Count == 0)
+            return 0.0;
 
         return Math.Round(durations.Average(), 2);
     }

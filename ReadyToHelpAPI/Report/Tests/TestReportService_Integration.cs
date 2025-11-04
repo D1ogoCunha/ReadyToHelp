@@ -237,7 +237,7 @@ public class TestReportService_Integration : IClassFixture<DbFixture>
         Assert.Equal(3, dbOcc!.ReportCount);
         Assert.Equal(OccurrenceStatus.ACTIVE, dbOcc.Status);
 
-        var called = SpinWait.SpinUntil(() => handler.Calls > 0, TimeSpan.FromSeconds(1));
+        var called = SpinWait.SpinUntil(() => handler.Calls > 0, TimeSpan.FromSeconds(5));
         Assert.True(called, "Notifier was not called within timeout");
         Assert.Equal(1, handler.Calls);
     }

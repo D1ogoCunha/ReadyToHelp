@@ -1,13 +1,11 @@
 namespace readytohelpapi.Dashboard.Controllers;
 
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using readytohelpapi.Dashboard.Service;
-using readytohelpapi.Dashboard.DTOs;
-using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using readytohelpapi.Dashboard.DTOs;
+using readytohelpapi.Dashboard.Service;
 
 /// <summary>
 /// API Controller for dashboard related endpoints.
@@ -88,7 +86,9 @@ public class DashboardApiController : ControllerBase
     /// </summary>
     /// <param name="ct">The cancellation token.</param>
     [HttpGet("responsible-entities/stats")]
-    public async Task<ActionResult<ResponsibleEntityStatsDto>> GetResponsibleEntityStats(CancellationToken ct)
+    public async Task<ActionResult<ResponsibleEntityStatsDto>> GetResponsibleEntityStats(
+        CancellationToken ct
+    )
     {
         var dto = await dashboardService.GetResponsibleEntityStatsAsync(ct);
         return Ok(dto);

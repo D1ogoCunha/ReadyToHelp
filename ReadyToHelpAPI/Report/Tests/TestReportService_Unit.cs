@@ -17,7 +17,7 @@ using static System.Reflection.BindingFlags;
 ///  This class contains all unit tests for the ReportServiceImpl.
 /// </summary>
 [Trait("Category", "Unit")]
-public class TestReportService
+public class TestReportService_Unit
 {
     private readonly Mock<IReportRepository> mockRepo = new();
     private readonly Mock<IOccurrenceService> mockOccSvc = new();
@@ -26,9 +26,9 @@ public class TestReportService
     private readonly IReportService service;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="TestReportService"/> class.
+    /// Initializes a new instance of the <see cref="TestReportService_Unit"/> class.
     /// </summary>
-    public TestReportService()
+    public TestReportService_Unit()
     {
         mockNotifier
             .Setup(n =>
