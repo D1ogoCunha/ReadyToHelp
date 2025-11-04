@@ -10,9 +10,10 @@ using readytohelpapi.Report.Services;
 using readytohelpapi.Report.Tests.Fixtures;
 using readytohelpapi.ResponsibleEntity.Services;
 using Xunit;
+using static System.Reflection.BindingFlags;
 
 /// <summary>
-///  This class contains all tests for the ReportServiceImpl class.
+///  This class contains all unit tests for the ReportServiceImpl.
 /// </summary>
 [Trait("Category", "Unit")]
 public class TestReportService
@@ -148,7 +149,7 @@ public class TestReportService
             Description = "d",
             UserId = 1,
             Type = OccurrenceType.ROAD_DAMAGE,
-            Location = null,
+            Location = null!,
         };
 
         Assert.Throws<ArgumentException>(() => service.Create(r));
@@ -363,7 +364,7 @@ public class TestReportService
         mockRepo.Setup(r => r.Create(It.IsAny<Report>())).Returns(createdReport);
         mockOccSvc.Setup(s => s.Update(It.IsAny<Occurrence>())).Returns<Occurrence>(o => o);
 
-        var (rep, occ) = service.Create(input);
+        var (_, occ) = service.Create(input);
 
         Assert.Equal(3, occ.ReportCount);
         Assert.Equal(OccurrenceStatus.ACTIVE, occ.Status);
@@ -471,7 +472,7 @@ public class TestReportService
 
         var method = typeof(ReportServiceImpl).GetMethod(
             "FindNearbyOccurrenceOfSameType",
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance
+            NonPublic | Instance
         );
 
         var report = new Report
@@ -480,10 +481,10 @@ public class TestReportService
             Description = "d",
             UserId = 1,
             Type = OccurrenceType.ROAD_DAMAGE,
-            Location = null,
+            Location = null!,
         };
 
-        var result = method!.Invoke(impl, new object?[] { report });
+        var result = method!.Invoke(impl, [report]);
         Assert.Null(result);
     }
 }

@@ -23,7 +23,8 @@ public class ReportRepository : IReportRepository
     /// <inheritdoc />
     public Report Create(Report report)
     {
-        if (report == null) throw new ArgumentNullException(nameof(report));
+        if (report == null)
+            throw new ArgumentNullException(nameof(report));
         try
         {
             if (report.ReportDateTime == default)
@@ -42,9 +43,8 @@ public class ReportRepository : IReportRepository
     /// <inheritdoc />
     public Report? GetById(int id)
     {
-        if (id <= 0) return null;
-        return reportContext.Reports
-            .AsNoTracking()
-            .FirstOrDefault(r => r.Id == id);
+        if (id <= 0)
+            return null;
+        return reportContext.Reports.AsNoTracking().FirstOrDefault(r => r.Id == id);
     }
 }

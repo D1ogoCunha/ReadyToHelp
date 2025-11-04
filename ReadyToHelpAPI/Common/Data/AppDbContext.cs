@@ -98,6 +98,7 @@ public class AppDbContext : DbContext
             b.Property(r => r.Title).IsRequired().HasMaxLength(200);
             b.Property(r => r.Description).IsRequired().HasMaxLength(1000);
             b.Property(r => r.ReportDateTime).IsRequired();
+            b.Property(r => r.Type).HasConversion<string>().HasMaxLength(50);
 
             b.OwnsOne(
                 r => r.Location,
@@ -146,9 +147,9 @@ public class AppDbContext : DbContext
         {
             entity.ToTable("responsible_entities");
             entity.HasKey(re => re.Id).HasName("PK_responsible_entities");
-            entity.Property(re => re.Name).IsRequired().HasMaxLength(200);
-            entity.Property(re => re.Email).IsRequired().HasMaxLength(200);
-            entity.Property(re => re.ContactPhone).HasMaxLength(500);
+            entity.Property(re => re.Name).HasMaxLength(200);
+            entity.Property(re => re.Email).HasMaxLength(200);
+            entity.Property(re => re.ContactPhone);
             entity.Property(re => re.Address).HasMaxLength(500);
             entity.Property(re => re.Type).HasConversion<string>().HasMaxLength(100);
             entity.Property(e => e.GeoArea).HasColumnType("geometry(MultiPolygon,4326)");

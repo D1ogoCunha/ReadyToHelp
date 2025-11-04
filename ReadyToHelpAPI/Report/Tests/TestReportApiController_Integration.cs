@@ -34,7 +34,7 @@ public class TestReportApiController_Integration : IClassFixture<DbFixture>
     {
         this.fixture = fixture;
         this.fixture.ResetDatabase();
-        this.context = this.fixture.Context;
+        context = this.fixture.Context;
 
         var reportRepo = new ReportRepository(context);
         var occurrenceRepo = new OccurrenceRepository(context);

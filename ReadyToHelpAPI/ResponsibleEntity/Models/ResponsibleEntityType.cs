@@ -10,5 +10,5 @@ public enum ResponsibleEntityType
     POLICIA,
     CAMARA_MUNICIPAL,
     SERVICOS_ANIMAL_AMBIENTAL,
-    INEM
+    INEM,
 }

@@ -1,7 +1,7 @@
 namespace readytohelpapi.Report.Services;
 
-using readytohelpapi.Report.Models;
 using readytohelpapi.Occurrence.Models;
+using readytohelpapi.Report.Models;
 
 /// <summary>
 /// Defines the contract for report services.

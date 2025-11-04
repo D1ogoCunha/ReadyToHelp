@@ -1,5 +1,6 @@
 namespace readytohelpapi.Report.Controllers;
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using readytohelpapi.Common.Data;
@@ -10,6 +11,7 @@ using readytohelpapi.Report.Services;
 /// <summary>
 /// Provides API endpoints for managing reports.
 /// </summary>
+[Authorize]
 [ApiController]
 [Route("api/reports")]
 public class ReportApiController : ControllerBase
