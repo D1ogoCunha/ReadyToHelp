@@ -19,13 +19,33 @@ public static class ReportFixture
         GeoPoint? location = null
     )
     {
-        r ??= new Report();
-        if (id.HasValue) r.Id = id.Value;
+        location ??= new GeoPoint { Latitude = 41.3678, Longitude = -8.2012 };
+
+        if (r == null)
+        {
+            r = new Report
+            {
+                Title = title,
+                Description = description,
+                UserId = userId,
+                Type = type,
+                Location = location,
+            };
+
+            if (id.HasValue)
+                r.Id = id.Value;
+
+            return r;
+        }
+
+        if (id.HasValue)
+            r.Id = id.Value;
         r.Title = title;
         r.Description = description;
         r.UserId = userId;
         r.Type = type;
-        r.Location = location ?? new GeoPoint { Latitude = 41.3678, Longitude = -8.2012 };
+        r.Location ??= location;
+
         return r;
     }
 }

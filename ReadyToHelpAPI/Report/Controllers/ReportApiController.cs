@@ -1,15 +1,17 @@
 namespace readytohelpapi.Report.Controllers;
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using readytohelpapi.Common.Data;
-using readytohelpapi.Report.Services;
-using readytohelpapi.Report.Models;
 using readytohelpapi.Report.DTOs;
+using readytohelpapi.Report.Models;
+using readytohelpapi.Report.Services;
 
 /// <summary>
 /// Provides API endpoints for managing reports.
 /// </summary>
+[Authorize]
 [ApiController]
 [Route("api/reports")]
 public class ReportApiController : ControllerBase
@@ -27,7 +29,8 @@ public class ReportApiController : ControllerBase
     public ReportApiController(
         IReportService reportService,
         IReportRepository reportRepository,
-        AppDbContext context)
+        AppDbContext context
+    )
     {
         this.reportService = reportService;
         this.reportRepository = reportRepository;
@@ -43,7 +46,9 @@ public class ReportApiController : ControllerBase
     public IActionResult Create([FromBody] CreateReportDto? dto)
     {
         if (dto == null)
-            return BadRequest(new { error = "invalid_request", detail = "Request body is required." });
+            return BadRequest(
+                new { error = "invalid_request", detail = "Request body is required." }
+            );
 
         try
         {
@@ -56,8 +61,8 @@ public class ReportApiController : ControllerBase
                 Location = new GeoPoint.Models.GeoPoint
                 {
                     Latitude = dto.Latitude,
-                    Longitude = dto.Longitude
-                }
+                    Longitude = dto.Longitude,
+                },
             };
 
             var (createdReport, occurrence) = reportService.Create(report);
@@ -65,8 +70,8 @@ public class ReportApiController : ControllerBase
             ResponsibleEntityContactDto? responsibleDto = null;
             if (occurrence.ResponsibleEntityId > 0)
             {
-                var entity = context.ResponsibleEntities
-                    .AsNoTracking()
+                var entity = context
+                    .ResponsibleEntities.AsNoTracking()
                     .FirstOrDefault(re => re.Id == occurrence.ResponsibleEntityId);
 
                 if (entity != null)
@@ -76,7 +81,7 @@ public class ReportApiController : ControllerBase
                         Name = entity.Name,
                         Email = entity.Email,
                         Address = entity.Address,
-                        ContactPhone = entity.ContactPhone
+                        ContactPhone = entity.ContactPhone,
                     };
                 }
             }
@@ -86,7 +91,7 @@ public class ReportApiController : ControllerBase
                 ReportId = createdReport.Id,
                 OccurrenceId = occurrence.Id,
                 OccurrenceStatus = occurrence.Status,
-                ResponsibleEntity = responsibleDto
+                ResponsibleEntity = responsibleDto,
             };
 
             return CreatedAtAction(nameof(GetById), new { id = createdReport.Id }, response);
@@ -109,9 +114,11 @@ public class ReportApiController : ControllerBase
     [HttpGet("{id:int}")]
     public IActionResult GetById([FromRoute] int id)
     {
-        if (id <= 0) return BadRequest("Invalid id.");
+        if (id <= 0)
+            return BadRequest("Invalid id.");
         var report = reportRepository.GetById(id);
-        if (report is null) return NotFound();
+        if (report is null)
+            return NotFound();
         return Ok(report);
     }
 }

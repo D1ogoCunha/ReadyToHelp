@@ -46,13 +46,13 @@ public class ReportServiceImpl : IReportService
         if (report is null)
             throw new ArgumentNullException(nameof(report));
         if (string.IsNullOrWhiteSpace(report.Title))
-            throw new ArgumentException("Title is required.", nameof(report.Title));
+            throw new ArgumentException("Title is required.", nameof(report));
         if (string.IsNullOrWhiteSpace(report.Description))
-            throw new ArgumentException("Description is required.", nameof(report.Description));
+            throw new ArgumentException("Description is required.", nameof(report));
         if (report.UserId <= 0)
-            throw new ArgumentException("UserId must be greater than zero.", nameof(report.UserId));
+            throw new ArgumentException("UserId must be greater than zero.", nameof(report));
         if (report.Location is null)
-            throw new ArgumentException("Location is required.", nameof(report.Location));
+            throw new ArgumentException("Location is required.", nameof(report));
 
         var responsibleEntity = responsibleEntityService.FindResponsibleEntity(
             report.Type,

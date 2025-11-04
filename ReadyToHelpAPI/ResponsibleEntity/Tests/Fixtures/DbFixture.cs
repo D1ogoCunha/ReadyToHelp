@@ -1,4 +1,4 @@
-namespace readytohelpapi.Report.Tests;
+namespace readytohelpapi.ResponsibleEntity.Tests.Fixtures;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,48 +14,45 @@ public class DbFixture : IDisposable
     private bool disposed;
 
     /// <summary>
-    ///  Initializes a new instance of the <see cref="DbFixture"/> class.
+    ///   Initializes a new instance of the <see cref="DbFixture"/> class.
     /// </summary>
     public DbFixture()
     {
-        var host = Environment.GetEnvironmentVariable("POSTGRES_HOST") ?? "localhost";
-        var port = Environment.GetEnvironmentVariable("POSTGRES_PORT") ?? "5432";
-        var user =
-            Environment.GetEnvironmentVariable("POSTGRES_USERNAME")
-            ?? Environment.GetEnvironmentVariable("POSTGRES_USER")
-            ?? "readytohelp";
-        var pwd = Environment.GetEnvironmentVariable("POSTGRES_PASSWORD") ?? "readytohelppwd";
+        var postgresHost = Environment.GetEnvironmentVariable("POSTGRES_HOST") ?? "localhost";
+        var postgresPort = Environment.GetEnvironmentVariable("POSTGRES_PORT") ?? "5432";
+        var postgresUser = Environment.GetEnvironmentVariable("POSTGRES_USERNAME") ?? "readytohelp";
+        var postgresPwd =
+            Environment.GetEnvironmentVariable("POSTGRES_PASSWORD") ?? "readytohelppwd";
+        databaseName = $"responsibleentity_tests_{Guid.NewGuid():N}";
 
-        databaseName = $"report_test_db_{Guid.NewGuid():N}";
-
-        var services = new ServiceCollection()
-            .AddDbContext<AppDbContext>(opts =>
-                opts.UseNpgsql(
-                    $"Host={host};Port={port};Database={databaseName};Username={user};Password={pwd}",
+        var sp = new ServiceCollection()
+            .AddDbContext<AppDbContext>(options =>
+                options.UseNpgsql(
+                    $"Host={postgresHost};Port={postgresPort};Database={databaseName};Username={postgresUser};Password={postgresPwd}",
                     npgsqlOptions => npgsqlOptions.UseNetTopologySuite()
                 )
             )
             .BuildServiceProvider();
 
-        Context = services.GetRequiredService<AppDbContext>();
+        Context = sp.GetRequiredService<AppDbContext>();
         Context.Database.EnsureCreated();
     }
 
     /// <summary>
-    ///  Gets the AppDbContext instance for database operations in tests.
+    ///   Gets the database context for the fixture.
     /// </summary>
     public AppDbContext Context { get; }
 
     /// <summary>
-    ///  Resets the database by clearing tracked entities and removing all reports.
+    ///   Resets the database by clearing tracked entities and removing all occurrences.
     /// </summary>
     public void ResetDatabase()
     {
         Context.ChangeTracker.Clear();
-        var all = Context.Reports.AsNoTracking().ToList();
+        var all = Context.ResponsibleEntities.AsNoTracking().ToList();
         if (all.Any())
         {
-            Context.Reports.RemoveRange(all);
+            Context.ResponsibleEntities.RemoveRange(all);
             Context.SaveChanges();
         }
         Context.ChangeTracker.Clear();

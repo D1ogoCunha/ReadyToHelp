@@ -1,16 +1,16 @@
 namespace readytohelpapi.Report.Tests;
 
+using Microsoft.EntityFrameworkCore;
+using readytohelpapi.Common.Data;
+using readytohelpapi.GeoPoint.Models;
+using readytohelpapi.Occurrence.Models;
 using readytohelpapi.Report.Services;
 using readytohelpapi.Report.Tests.Fixtures;
-using readytohelpapi.Occurrence.Models;
-using readytohelpapi.GeoPoint.Models;
-using Xunit;
-using readytohelpapi.Common.Data;
-using readytohelpapi.User.Models;
 using readytohelpapi.User.Tests.Fixtures;
+using Xunit;
 
 /// <summary>
-/// This class cointains all tests related to ReportRepository.
+/// This class contains all integration tests related to ReportRepository.
 /// </summary>
 [Trait("Category", "Integration")]
 public class TestReportRepository : IClassFixture<DbFixture>
@@ -37,9 +37,7 @@ public class TestReportRepository : IClassFixture<DbFixture>
     [Fact]
     public void Create_Valid_ReturnsCreated()
     {
-        var user = UserFixture.CreateOrUpdateUser(
-            email: $"test-{Guid.NewGuid():N}@example.com"
-        );
+        var user = UserFixture.CreateOrUpdateUser(email: $"test-{Guid.NewGuid():N}@example.com");
         ctx.Users.Add(user);
         ctx.SaveChanges();
 
@@ -70,12 +68,9 @@ public class TestReportRepository : IClassFixture<DbFixture>
     [Fact]
     public void GetById_WhenExists_ReturnsEntity()
     {
-        var user = UserFixture.CreateOrUpdateUser(
-            email: $"test-{Guid.NewGuid():N}@example.com"
-        );
+        var user = UserFixture.CreateOrUpdateUser(email: $"test-{Guid.NewGuid():N}@example.com");
         ctx.Users.Add(user);
         ctx.SaveChanges();
-
 
         var toAdd = ReportFixture.CreateOrUpdate(title: "Teste Get", userId: user.Id);
         ctx.Reports.Add(toAdd);
@@ -96,5 +91,47 @@ public class TestReportRepository : IClassFixture<DbFixture>
     {
         var found = repo.GetById(999999);
         Assert.Null(found);
+    }
+
+    /// <summary>
+    /// Tests the GetById method with invalid IDs (zero and negative).
+    /// </summary>
+    [Fact]
+    public void GetById_InvalidId_ReturnsNull_ForZeroAndNegative()
+    {
+        Assert.Null(repo.GetById(0));
+        Assert.Null(repo.GetById(-10));
+    }
+
+    /// <summary>
+    /// Tests creating a report with a duplicate ID throws a DbUpdateException.
+    /// </summary>
+    [Fact]
+    public void Create_DuplicateId_ThrowsDbUpdateException()
+    {
+        var user = UserFixture.CreateOrUpdateUser(email: $"dup-{Guid.NewGuid():N}@example.com");
+        ctx.Users.Add(user);
+        ctx.SaveChanges();
+
+        var report1 = ReportFixture.CreateOrUpdate(
+            id: 999999,
+            title: "Dup1",
+            description: "first",
+            userId: user.Id
+        );
+
+        var created1 = repo.Create(report1);
+        Assert.NotNull(created1);
+
+        var report2 = ReportFixture.CreateOrUpdate(
+            id: created1.Id,
+            title: "Dup2",
+            description: "second",
+            userId: user.Id
+        );
+
+        var ex = Assert.Throws<DbUpdateException>(() => repo.Create(report2));
+        Assert.NotNull(ex.InnerException);
+        Assert.True(ex.InnerException.Message.Length > 0);
     }
 }

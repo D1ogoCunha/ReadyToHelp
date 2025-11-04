@@ -15,17 +15,17 @@ public class ResponsibleEntity
     /// <summary>
     /// Gets or sets the name of the responsible entity.
     /// </summary>
-    public string Name { get; set; }
+    public string? Name { get; set; }
 
     /// <summary>
     /// Gets or sets the email of the responsible entity.
     /// </summary>
-    public string Email { get; set; }
+    public string? Email { get; set; }
 
     /// <summary>
     /// Gets or sets the address of the responsible entity.
     /// </summary>
-    public string Address { get; set; }
+    public string? Address { get; set; }
 
     /// <summary>
     /// Gets or sets the contact phone number of the responsible entity.
