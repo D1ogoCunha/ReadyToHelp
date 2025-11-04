@@ -12,16 +12,16 @@ using GeoPointModel = readytohelpapi.GeoPoint.Models.GeoPoint;
 ///  This class contains unit tests related to the occurrence service.
 /// </summary>
 [Trait("Category", "Unit")]
-public class TestOccurrenceService_Unit
+public class TestOccurrenceService
 {
     private readonly Mock<IOccurrenceRepository> mockRepo;
     private readonly Mock<IResponsibleEntityService> mockResponsibleEntityService;
     private readonly IOccurrenceService service;
 
     /// <summary>
-    ///  Initializes a new instance of the <see cref="TestOccurrenceService_Unit"/> class.
+    ///  Initializes a new instance of the <see cref="TestOccurrenceService"/> class.
     /// </summary>
-    public TestOccurrenceService_Unit()
+    public TestOccurrenceService()
     {
         mockRepo = new Mock<IOccurrenceRepository>();
         mockResponsibleEntityService = new Mock<IResponsibleEntityService>();

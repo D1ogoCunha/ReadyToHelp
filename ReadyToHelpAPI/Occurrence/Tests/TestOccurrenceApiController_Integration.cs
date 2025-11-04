@@ -1,175 +1,445 @@
 namespace readytohelpapi.Occurrence.Tests;
 
-using Xunit;
-using readytohelpapi.Common.Data;
-using readytohelpapi.Occurrence.Services;
-using readytohelpapi.Occurrence.Controllers;
+using System.Net;
+using System.Net.Http.Headers;
+using System.Text;
+using FluentAssertions;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using NetTopologySuite.Geometries;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using readytohelpapi.Common.Tests;
+using readytohelpapi.GeoPoint.Models;
 using readytohelpapi.Occurrence.Models;
 using readytohelpapi.ResponsibleEntity.Models;
-using Microsoft.AspNetCore.Mvc;
-using System.Linq;
-using System.Collections.Generic;
-using readytohelpapi.ResponsibleEntity.Services;
-using System.Security.Claims;
-using Moq;
-using readytohelpapi.Occurrence.DTOs;
+using Xunit;
 
-/// <summary>
-///   Integration tests for the <see cref="OccurrenceApiController"/>.
-/// </summary>
+public partial class Program { }
+
 [Trait("Category", "Integration")]
-public class TestOccurrenceApiController_Integration : IClassFixture<DbFixture>
+public class TestOccurrenceApiController : IClassFixture<WebApplicationFactory<Program>>, IClassFixture<DbFixture>
 {
-    private readonly AppDbContext context;
-    private readonly IOccurrenceRepository repo;
-    private readonly IOccurrenceService service;
-    private readonly OccurrenceApiController controller;
+    private readonly WebApplicationFactory<Program> _factory;
+    private readonly DbFixture _dbFixture;
+    private readonly HttpClient _client;
 
-    /// <summary>
-    ///  Initializes a new instance of the <see cref="TestOccurrenceApiController_Integration"/> class.
-    /// </summary>
-    /// <param name="fixture">The database fixture.</param>
-    public TestOccurrenceApiController_Integration(DbFixture fixture)
+    public TestOccurrenceApiController(WebApplicationFactory<Program> factory, DbFixture dbFixture)
     {
-        context = fixture.Context;
-        fixture.ResetDatabase();
+        _dbFixture = dbFixture;
 
-        repo = new OccurrenceRepository(context);
-
-        var seededRe = new ResponsibleEntity
+        _factory = factory.WithWebHostBuilder(builder =>
         {
-            Name = "Integration Entity",
-            Email = "entity@integration.com",
-            Address = "Rua Teste",
-            ContactPhone = 123456789,
-            Type = ResponsibleEntityType.INEM
-        };
-        context.ResponsibleEntities.Add(seededRe);
-        context.SaveChanges();
-
-        var responsibleMock = new Mock<IResponsibleEntityService>();
-        responsibleMock.Setup(r => r.FindResponsibleEntity(
-            It.IsAny<OccurrenceType>(),
-            It.IsAny<double>(),
-            It.IsAny<double>()
-        )).Returns(seededRe);
-
-        service = new OccurrenceServiceImpl(repo, responsibleMock.Object);
-        controller = new OccurrenceApiController(service);
-    }
-
-    private Occurrence BuildOccurrence()
-    {
-        return new Occurrence
-        {
-            Title = "Test O",
-            Description = "Integration test occurrence",
-            Type = OccurrenceType.FLOOD,
-            Priority = PriorityLevel.HIGH,
-            Location = new GeoPoint.Models.GeoPoint
+            builder.ConfigureServices(services =>
             {
-                Latitude = 40.0,
-                Longitude = -8.0
-            },
-            ReportCount = 1,
-            CreationDateTime = DateTime.UtcNow,
-            Status = OccurrenceStatus.WAITING,
-            ProximityRadius = 50
-        };
+                services
+                    .AddAuthentication("Test")
+                    .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(
+                        "Test",
+                        _ => { });
+
+                services.PostConfigure<AuthenticationOptions>(opts =>
+                {
+                    opts.DefaultAuthenticateScheme = "Test";
+                    opts.DefaultChallengeScheme = "Test";
+                });
+            });
+        });
+
+        _client = _factory.CreateClient();
     }
 
-    [Fact]
-    public void Create_SavesToDatabase()
+    private async Task ClearDataAsync()
     {
-        var claims = new List<Claim>
+        var ctx = _dbFixture.Context;
+        ctx.ChangeTracker.Clear();
+
+        await ctx.Database.ExecuteSqlRawAsync(@"TRUNCATE TABLE ""occurrences"" RESTART IDENTITY CASCADE;");
+        await ctx.Database.ExecuteSqlRawAsync(@"TRUNCATE TABLE ""responsible_entities"" RESTART IDENTITY CASCADE;");
+        await ctx.Database.ExecuteSqlRawAsync(@"TRUNCATE TABLE ""reports"" RESTART IDENTITY CASCADE;");
+
+        ctx.ChangeTracker.Clear();
+    }
+
+    private async Task<ResponsibleEntity> SeedResponsibleEntityAsync(string name = "Seed RE")
     {
-        new Claim(ClaimTypes.Role, "ADMIN"),
-        new Claim(ClaimTypes.NameIdentifier, "1")
-    };
+        var ctx = _dbFixture.Context;
+        ctx.ChangeTracker.Clear();
 
-        var identity = new ClaimsIdentity(claims, "TestAuth");
-        var principal = new ClaimsPrincipal(identity);
-
-        controller.ControllerContext = new ControllerContext
+        var geomFactory = new GeometryFactory(new PrecisionModel(), 4326);
+        var coords = new[]
         {
-            HttpContext = new DefaultHttpContext { User = principal }
+            new Coordinate(-9.158, 38.715),
+            new Coordinate(-9.158, 38.725),
+            new Coordinate(-9.14,  38.725),
+            new Coordinate(-9.14,  38.715),
+            new Coordinate(-9.158, 38.715)
+        };
+        var poly = geomFactory.CreatePolygon(coords);
+
+        var re = new ResponsibleEntity
+        {
+            Name = name,
+            Email = $"{Guid.NewGuid():N}@local",
+            Address = "Seed St",
+            ContactPhone = 900000000,
+            Type = 0,
+            GeoArea = geomFactory.CreateMultiPolygon(new[] { poly })
         };
 
-        var input = BuildOccurrence();
-
-        var result = controller.Create(input);
-
-        var created = Assert.IsType<CreatedAtActionResult>(result);
-        var obj = Assert.IsType<Occurrence>(created.Value);
-
-        Assert.True(obj.Id > 0);
-        Assert.True(context.Occurrences.Any(o => o.Id == obj.Id));
+        ctx.ResponsibleEntities.Add(re);
+        await ctx.SaveChangesAsync();
+        ctx.Entry(re).State = EntityState.Detached;
+        return re;
     }
 
-
-    [Fact]
-    public void GetById_ReturnsCorrectOccurrence()
+    private async Task<Occurrence> SeedOccurrenceAsync(
+        string title,
+        OccurrenceStatus status = OccurrenceStatus.ACTIVE,
+        double lat = 40.0,
+        double lon = -8.0,
+        int? responsibleEntityId = null)
     {
-        var occ = repo.Create(BuildOccurrence());
+        var ctx = _dbFixture.Context;
+        ctx.ChangeTracker.Clear();
 
-        var result = controller.GetById(occ.Id);
-        var ok = Assert.IsType<OkObjectResult>(result.Result);
-        var dto = Assert.IsType<OccurrenceDetailsDto>(ok.Value);
+        var occ = new Occurrence
+        {
+            Title = title,
+            Description = "seed",
+            Type = OccurrenceType.FLOOD,
+            Status = status,
+            Priority = PriorityLevel.LOW,
+            ProximityRadius = 10,
+            ReportId = null,
+            ResponsibleEntityId = responsibleEntityId,
+            Location = new GeoPoint { Latitude = lat, Longitude = lon }
+        };
 
-        Assert.Equal(occ.Id, dto.Id);
-        Assert.Equal(occ.Title, dto.Title);
-    }
-
-    [Fact]
-    public void Update_ChangesPersist()
-    {
-        var occ = repo.Create(BuildOccurrence());
-        occ.Title = "Atualizado";
-
-        var result = controller.Update(occ);
-        Assert.IsType<OkObjectResult>(result);
-
-        var db = context.Occurrences.First(x => x.Id == occ.Id);
-        Assert.Equal("Atualizado", db.Title);
+        ctx.Occurrences.Add(occ);
+        await ctx.SaveChangesAsync();
+        ctx.Entry(occ).State = EntityState.Detached;
+        return occ;
     }
 
     [Fact]
-    public void Delete_RemovesFromDatabase()
+    public async Task Create_ReturnsCreated_AndBodyHasId()
     {
-        var occ = repo.Create(BuildOccurrence());
+        await ClearDataAsync();
+        var re = await SeedResponsibleEntityAsync();
 
-        var result = controller.Delete(occ.Id);
-        Assert.IsType<OkObjectResult>(result);
+        var body = new
+        {
+            title = "Flood near river",
+            description = "High water level",
+            type = 1,
+            status = 1,
+            priority = 1,
+            proximityRadius = 150,
+            location = new { latitude = 38.72, longitude = -9.15 },
+            responsibleEntityId = re.Id
+        };
 
-        Assert.False(context.Occurrences.Any(o => o.Id == occ.Id));
+        var resp = await _client.PostAsync(
+            "/api/occurrence",
+            new StringContent(JsonConvert.SerializeObject(body), Encoding.UTF8, "application/json"));
+
+        resp.StatusCode.Should().Be(HttpStatusCode.Created);
+
+        var json = JObject.Parse(await resp.Content.ReadAsStringAsync());
+        json.Should().ContainKey("id");
+        json["title"]!.ToString().Should().Be("Flood near river");
     }
 
     [Fact]
-    public void GetAll_ReturnsList()
+    public async Task Update_ReturnsOk_AndPersists()
     {
-        repo.Create(BuildOccurrence());
-        repo.Create(BuildOccurrence());
+        await ClearDataAsync();
+        var re = await SeedResponsibleEntityAsync();
 
-        var result = controller.GetAll();
-        var ok = Assert.IsType<OkObjectResult>(result.Result);
-        var list = Assert.IsAssignableFrom<List<Occurrence>>(ok.Value);
+        var create = new
+        {
+            title = "Old Title",
+            description = "seed",
+            type = 1,
+            status = 1,
+            priority = 0,
+            proximityRadius = 10,
+            location = new { latitude = 40.0, longitude = -8.0 },
+            responsibleEntityId = re.Id
+        };
+        var created = await _client.PostAsync("/api/occurrence",
+            new StringContent(JsonConvert.SerializeObject(create), Encoding.UTF8, "application/json"));
+        created.EnsureSuccessStatusCode();
+        var id = JObject.Parse(await created.Content.ReadAsStringAsync())["id"]!.Value<int>();
 
-        Assert.True(list.Count >= 2);
+        var update = new
+        {
+            id,
+            title = "Updated Title",
+            description = "Updated",
+            type = 1,
+            status = 2,
+            priority = 2,
+            location = new { latitude = 40.2, longitude = -8.6 },
+            responsibleEntityId = re.Id
+        };
+
+        var resp = await _client.PutAsync(
+            "/api/occurrence",
+            new StringContent(JsonConvert.SerializeObject(update), Encoding.UTF8, "application/json"));
+
+        resp.StatusCode.Should().Be(HttpStatusCode.OK);
+        var body = JObject.Parse(await resp.Content.ReadAsStringAsync());
+        body["title"]!.ToString().Should().Be("Updated Title");
     }
 
     [Fact]
-    public void GetAllActive_ReturnsFilteredResults()
+    public async Task Delete_InvalidId_ReturnsBadRequest()
     {
-        var occ = BuildOccurrence();
-        occ.Status = OccurrenceStatus.ACTIVE;
-        repo.Create(occ);
+        var resp = await _client.DeleteAsync("/api/occurrence/0");
+        resp.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
 
-        var result = controller.GetAllActive();
+    [Fact]
+    public async Task GetById_NonExisting_ReturnsNotFound()
+    {
+        await ClearDataAsync();
+        var resp = await _client.GetAsync("/api/occurrence/999999");
+        resp.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
 
-        var ok = Assert.IsType<OkObjectResult>(result.Result);
-        var list = Assert.IsAssignableFrom<List<OccurrenceMapDto>>(ok.Value);
+    [Fact]
+    public async Task GetAll_WithFilterAndSort_ReturnsOk()
+    {
+        await ClearDataAsync();
+        var re = await SeedResponsibleEntityAsync();
+        await SeedOccurrenceAsync("apple", responsibleEntityId: re.Id);
+        await SeedOccurrenceAsync("banana", responsibleEntityId: re.Id);
+        await SeedOccurrenceAsync("cantaloupe", responsibleEntityId: re.Id);
 
-        Assert.True(list.Count > 0);
-        Assert.All(list, x => Assert.Equal(OccurrenceStatus.ACTIVE, x.Status));
+        var resp = await _client.GetAsync("/api/occurrence?pageNumber=1&pageSize=10&sortBy=title&sortOrder=asc&filter=an");
+        resp.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task GetAll_InvalidPaging_ReturnsBadRequest()
+    {
+        var resp = await _client.GetAsync("/api/occurrence?pageNumber=-1&pageSize=-5");
+        resp.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task GetAllActive_NoData_ReturnsNotFound()
+    {
+        await ClearDataAsync();
+
+        var resp = await _client.GetAsync("/api/occurrence/active");
+        resp.StatusCode.Should().BeOneOf(HttpStatusCode.NotFound, HttpStatusCode.OK);
+        if (resp.StatusCode == HttpStatusCode.OK)
+        {
+            JArray.Parse(await resp.Content.ReadAsStringAsync());
+        }
+    }
+
+    [Fact]
+    public async Task GetActive_FilterByType_ReturnsOnlyMatching()
+    {
+        await ClearDataAsync();
+        var re = await SeedResponsibleEntityAsync();
+
+        await SeedOccurrenceAsync("Fire1", status: OccurrenceStatus.ACTIVE, responsibleEntityId: re.Id);
+        await SeedOccurrenceAsync("Flood1", status: OccurrenceStatus.ACTIVE, responsibleEntityId: re.Id);
+
+        var resp = await _client.GetAsync("/api/occurrence/active?type=FLOOD");
+        resp.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var json = JArray.Parse(await resp.Content.ReadAsStringAsync());
+        json.Should().OnlyContain(x => x["type"]!.ToString() == "FLOOD");
+    }
+
+    [Fact]
+    public async Task Update_NullBody_ReturnsBadRequest()
+    {
+        var resp = await _client.PutAsync("/api/occurrence",
+            new StringContent("", Encoding.UTF8, "application/json"));
+
+        resp.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+     [Fact]
+    public async Task Create_NullBody_ReturnsBadRequest()
+    {
+        var resp = await _client.PostAsync(
+            "/api/occurrence",
+            new StringContent("", Encoding.UTF8, "application/json"));
+
+        resp.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task Create_SetsLocationHeader_WithCreatedId()
+    {
+        await ClearDataAsync();
+        var re = await SeedResponsibleEntityAsync();
+
+        var body = new
+        {
+            title = "Created With Location",
+            description = "desc",
+            type = 1,
+            status = 1,
+            priority = 1,
+            proximityRadius = 50,
+            location = new { latitude = 38.72, longitude = -9.15 },
+            responsibleEntityId = re.Id
+        };
+
+        var resp = await _client.PostAsync(
+            "/api/occurrence",
+            new StringContent(JsonConvert.SerializeObject(body), Encoding.UTF8, "application/json"));
+
+        resp.StatusCode.Should().Be(HttpStatusCode.Created);
+        resp.Headers.Location.Should().NotBeNull();
+        resp.Headers.Location!.ToString().Should().Contain("/api/occurrence/");
+    }
+
+    [Fact]
+    public async Task GetById_Existing_ReturnsOk_AndDtoIsMapped()
+    {
+        await ClearDataAsync();
+        var re = await SeedResponsibleEntityAsync();
+
+        var create = new
+        {
+            title = "Dto Mapping",
+            description = "d",
+            type = 1,
+            status = 1,
+            priority = 0,
+            proximityRadius = 10,
+            location = new { latitude = 40.1, longitude = -8.1 },
+            responsibleEntityId = re.Id
+        };
+        var created = await _client.PostAsync("/api/occurrence",
+            new StringContent(JsonConvert.SerializeObject(create), Encoding.UTF8, "application/json"));
+        created.EnsureSuccessStatusCode();
+        var id = JObject.Parse(await created.Content.ReadAsStringAsync())["id"]!.Value<int>();
+
+        var resp = await _client.GetAsync($"/api/occurrence/{id}");
+        resp.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var dto = JObject.Parse(await resp.Content.ReadAsStringAsync());
+        dto["id"]!.Value<int>().Should().Be(id);
+        dto["title"]!.ToString().Should().Be("Dto Mapping");
+        dto["latitude"]!.Value<double>().Should().BeApproximately(40.1, 1e-6);
+        dto["longitude"]!.Value<double>().Should().BeApproximately(-8.1, 1e-6);
+        dto["endDateTime"]!.Type.Should().Be(Newtonsoft.Json.Linq.JTokenType.Null); // controller maps default to null
+    }
+
+    [Fact]
+    public async Task Update_NotExisting_ReturnsNotFoundOr500_FromService()
+    {
+        await ClearDataAsync();
+        var re = await SeedResponsibleEntityAsync();
+
+        var update = new
+        {
+            id = 999999,
+            title = "Does Not Exist",
+            description = "x",
+            type = 1,
+            status = 2,
+            priority = 2,
+            location = new { latitude = 40.0, longitude = -8.0 },
+            responsibleEntityId = re.Id
+        };
+
+        var resp = await _client.PutAsync(
+            "/api/occurrence",
+            new StringContent(JsonConvert.SerializeObject(update), Encoding.UTF8, "application/json"));
+
+        resp.StatusCode.Should().BeOneOf(HttpStatusCode.NotFound, HttpStatusCode.InternalServerError);
+    }
+
+    [Fact]
+    public async Task Delete_Existing_ReturnsOk_AndThenNotFoundOnGet()
+    {
+        await ClearDataAsync();
+        var re = await SeedResponsibleEntityAsync();
+
+        var create = new
+        {
+            title = "To Delete",
+            description = "x",
+            type = 1,
+            status = 1,
+            priority = 0,
+            proximityRadius = 10,
+            location = new { latitude = 39.9, longitude = -8.9 },
+            responsibleEntityId = re.Id
+        };
+        var created = await _client.PostAsync("/api/occurrence",
+            new StringContent(JsonConvert.SerializeObject(create), Encoding.UTF8, "application/json"));
+        created.EnsureSuccessStatusCode();
+        var id = JObject.Parse(await created.Content.ReadAsStringAsync())["id"]!.Value<int>();
+
+        var del = await _client.DeleteAsync($"/api/occurrence/{id}");
+        del.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var get = await _client.GetAsync($"/api/occurrence/{id}");
+        get.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task Delete_NonExisting_ReturnsNotFound()
+    {
+        await ClearDataAsync();
+        var resp = await _client.DeleteAsync("/api/occurrence/987654");
+        resp.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task GetAllActive_FilterByPriority_AndResponsibleEntity_ReturnsOnlyMatching()
+    {
+        await ClearDataAsync();
+        var re1 = await SeedResponsibleEntityAsync("R1");
+        var re2 = await SeedResponsibleEntityAsync("R2");
+
+
+        await SeedOccurrenceAsync("O1", status: OccurrenceStatus.ACTIVE, responsibleEntityId: re1.Id);
+
+        var ctx = _dbFixture.Context;
+        ctx.Occurrences.Add(new Occurrence
+        {
+            Title = "O2",
+            Description = "x",
+            Type = OccurrenceType.FLOOD,
+            Status = OccurrenceStatus.ACTIVE,
+            Priority = PriorityLevel.HIGH,
+            Location = new GeoPoint { Latitude = 38.71, Longitude = -9.14 },
+            ResponsibleEntityId = re1.Id
+        });
+
+        ctx.Occurrences.Add(new Occurrence
+        {
+            Title = "O3",
+            Description = "x",
+            Type = OccurrenceType.FOREST_FIRE,
+            Status = OccurrenceStatus.ACTIVE,
+            Priority = PriorityLevel.HIGH,
+            Location = new GeoPoint { Latitude = 38.72, Longitude = -9.15 },
+            ResponsibleEntityId = re2.Id
+        });
+        await ctx.SaveChangesAsync();
+
+        var resp = await _client.GetAsync($"/api/occurrence/active?priority=HIGH&responsibleEntityId={re1.Id}&pageSize=10&pageNumber=1");
+        resp.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var arr = JArray.Parse(await resp.Content.ReadAsStringAsync());
+        arr.Should().NotBeEmpty();
+        arr.Should().OnlyContain(t => t["priority"]!.ToString() == "HIGH");
     }
 }

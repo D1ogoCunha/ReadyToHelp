@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using readytohelpapi.Common.Tests;
 using readytohelpapi.Dashboard.DTOs;
 using Xunit;
 
@@ -18,6 +19,7 @@ public partial class Program { }
 /// <summary>
 /// This class contains all integration tests for Dashboard API controller.
 /// </summary>
+[Trait("Category", "Integration")] 
 public class TestDashboardApiController : IClassFixture<WebApplicationFactory<Program>>
 {
     private readonly HttpClient _client;
@@ -120,35 +122,5 @@ public class TestDashboardApiController : IClassFixture<WebApplicationFactory<Pr
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var dto = await response.Content.ReadFromJsonAsync<ResponsibleEntityStatsDto>();
         Assert.NotNull(dto);
-    }
-
-    /// <summary>
-    /// A test authentication handler that simulates an authenticated user with ADMIN and MANAGER roles.
-    /// </summary>
-    private class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions>
-    {
-        public TestAuthHandler(
-            IOptionsMonitor<AuthenticationSchemeOptions> options,
-            ILoggerFactory logger,
-            UrlEncoder encoder
-        )
-            : base(options, logger, encoder) { }
-
-        /// <summary>
-        /// Handles the authentication process for the test user.
-        /// </summary>
-        protected override Task<AuthenticateResult> HandleAuthenticateAsync()
-        {
-            var claims = new[]
-            {
-                new Claim(ClaimTypes.Name, "testuser"),
-                new Claim(ClaimTypes.Role, "ADMIN"),
-                new Claim(ClaimTypes.Role, "MANAGER"),
-            };
-            var identity = new ClaimsIdentity(claims, "Test");
-            var principal = new ClaimsPrincipal(identity);
-            var ticket = new AuthenticationTicket(principal, "Test");
-            return Task.FromResult(AuthenticateResult.Success(ticket));
-        }
     }
 }

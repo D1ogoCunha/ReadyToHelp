@@ -141,6 +141,7 @@ public class OccurrenceServiceImpl : IOccurrenceService
         );
         occurrence.ResponsibleEntityId = responsibleEntity?.Id ?? 0;
 
+        occurrence.CreationDateTime = DateTime.UtcNow;
         occurrence.ReportId = null;
         occurrence.ReportCount = 0;
         occurrence.Priority = ComputePriority(occurrence.Type, occurrence.ReportCount);
