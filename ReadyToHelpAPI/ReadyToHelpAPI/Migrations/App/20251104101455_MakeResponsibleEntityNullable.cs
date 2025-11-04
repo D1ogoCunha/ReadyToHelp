@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace ReadyToHelpAPI.ReadyToHelpAPI.Migrations.App
+namespace ReadyToHelpAPI.ReadyToHelpAPI.Migrations
 {
     /// <inheritdoc />
     public partial class MakeResponsibleEntityNullable : Migration
@@ -14,9 +14,11 @@ namespace ReadyToHelpAPI.ReadyToHelpAPI.Migrations.App
                 name: "ResponsibleEntityId",
                 table: "occurrences",
                 type: "integer",
-                nullable: true,
+                nullable: false,
+                defaultValue: 0,
                 oldClrType: typeof(int),
-                oldType: "integer");
+                oldType: "integer",
+                oldNullable: true);
         }
 
         /// <inheritdoc />
@@ -26,11 +28,9 @@ namespace ReadyToHelpAPI.ReadyToHelpAPI.Migrations.App
                 name: "ResponsibleEntityId",
                 table: "occurrences",
                 type: "integer",
-                nullable: false,
-                defaultValue: 0,
+                nullable: true,
                 oldClrType: typeof(int),
-                oldType: "integer",
-                oldNullable: true);
+                oldType: "integer");
         }
     }
 }

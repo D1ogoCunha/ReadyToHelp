@@ -10,10 +10,10 @@ using readytohelpapi.Common.Data;
 
 #nullable disable
 
-namespace ReadyToHelpAPI.ReadyToHelpAPI.Migrations.App
+namespace ReadyToHelpAPI.ReadyToHelpAPI.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251103182107_MakeResponsibleEntityNullable")]
+    [Migration("20251104101455_MakeResponsibleEntityNullable")]
     partial class MakeResponsibleEntityNullable
     {
         /// <inheritdoc />
@@ -90,7 +90,7 @@ namespace ReadyToHelpAPI.ReadyToHelpAPI.Migrations.App
                     b.Property<int?>("ReportId")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("ResponsibleEntityId")
+                    b.Property<int>("ResponsibleEntityId")
                         .HasColumnType("integer");
 
                     b.Property<string>("Status")
@@ -257,6 +257,7 @@ namespace ReadyToHelpAPI.ReadyToHelpAPI.Migrations.App
                         .WithMany()
                         .HasForeignKey("ResponsibleEntityId")
                         .OnDelete(DeleteBehavior.SetNull)
+                        .IsRequired()
                         .HasConstraintName("FK_occurrences_responsible_entity");
 
                     b.OwnsOne("readytohelpapi.GeoPoint.Models.GeoPoint", "Location", b1 =>

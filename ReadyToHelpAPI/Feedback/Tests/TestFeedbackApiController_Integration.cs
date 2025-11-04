@@ -16,6 +16,9 @@ using readytohelpapi.ResponsibleEntity.Services;
 using readytohelpapi.User.Models;
 using Xunit;
 
+/// <summary>
+///   This class contains all integration tests related to the FeedbackApiController.
+/// </summary>
 [Trait("Category", "Integration")]
 public class TestFeedbackApiController_Integration : IClassFixture<DbFixture>
 {
@@ -23,6 +26,10 @@ public class TestFeedbackApiController_Integration : IClassFixture<DbFixture>
     private readonly AppDbContext context;
     private readonly FeedbackApiController controller;
 
+    /// <summary>
+    ///  Initializes a new instance of the <see cref="TestFeedbackApiController_Integration"/> class.
+    /// </summary>
+    /// <param name="fixture">The database fixture.</param>
     public TestFeedbackApiController_Integration(DbFixture fixture)
     {
         this.fixture = fixture;
@@ -62,15 +69,16 @@ public class TestFeedbackApiController_Integration : IClassFixture<DbFixture>
             ProximityRadius = 25,
             CreationDateTime = DateTime.UtcNow,
             ReportCount = 0,
-            Location = new GeoPoint { Latitude = 41.0, Longitude = -8.0 },
-            ReportId = null,
-            ResponsibleEntityId = null
+            Location = new GeoPoint { Latitude = 41.0, Longitude = -8.0 }
         };
         context.Occurrences.Add(occ);
         context.SaveChanges();
         return occ;
     }
 
+    /// <summary>
+    ///   Tests the Create method persists the feedback in the database.
+    /// </summary>
     [Fact]
     public void Create_PersistsFeedback_InDatabase()
     {
@@ -79,8 +87,9 @@ public class TestFeedbackApiController_Integration : IClassFixture<DbFixture>
 
         var result = controller.Create(new Feedback { UserId = user.Id, OccurrenceId = occ.Id, IsConfirmed = true });
 
-        var created = Assert.IsType<CreatedAtActionResult>(result);
-        var fb = Assert.IsType<Feedback>(created.Value);
+        var obj = Assert.IsType<ObjectResult>(result);
+        Assert.Equal(201, obj.StatusCode);
+        var fb = Assert.IsType<Feedback>(obj.Value);
         Assert.True(fb.Id > 0);
 
         var inDb = context.Feedbacks.FirstOrDefault(f => f.Id == fb.Id);
@@ -89,6 +98,9 @@ public class TestFeedbackApiController_Integration : IClassFixture<DbFixture>
         Assert.Equal(occ.Id, inDb.OccurrenceId);
     }
 
+    /// <summary>
+    ///   Tests the Create method returns NotFound when the user does not exist.
+    /// </summary>
     [Fact]
     public void Create_ReturnsNotFound_WhenUserDoesNotExist()
     {
@@ -99,103 +111,15 @@ public class TestFeedbackApiController_Integration : IClassFixture<DbFixture>
         Assert.IsType<NotFoundObjectResult>(res);
     }
 
+    /// <summary>
+    ///  Tests the Create method returns NotFound when the occurrence does not exist.
+    /// </summary>
     [Fact]
     public void Create_ReturnsNotFound_WhenOccurrenceDoesNotExist()
     {
         var user = CreateUser();
 
         var res = controller.Create(new Feedback { UserId = user.Id, OccurrenceId = 999999 });
-
-        Assert.IsType<NotFoundObjectResult>(res);
-    }
-
-    [Fact]
-    public void GetById_ReturnsOk_WhenExists()
-    {
-        var user = CreateUser();
-        var occ = CreateOccurrence();
-        var fb = new Feedback { UserId = user.Id, OccurrenceId = occ.Id, IsConfirmed = true, FeedbackDateTime = DateTime.UtcNow };
-        context.Feedbacks.Add(fb);
-        context.SaveChanges();
-
-        var res = controller.GetById(fb.Id);
-
-        var ok = Assert.IsType<OkObjectResult>(res);
-        var payload = Assert.IsType<Feedback>(ok.Value);
-        Assert.Equal(fb.Id, payload.Id);
-    }
-
-    [Fact]
-    public void GetById_ReturnsNotFound_WhenMissing()
-    {
-        var res = controller.GetById(123456);
-        Assert.IsType<NotFoundObjectResult>(res);
-    }
-
-    [Fact]
-    public void GetAll_ReturnsOk_WhenHasItems()
-    {
-        var user = CreateUser();
-        var occ = CreateOccurrence();
-        context.Feedbacks.Add(new Feedback { UserId = user.Id, OccurrenceId = occ.Id, IsConfirmed = true, FeedbackDateTime = DateTime.UtcNow });
-        context.SaveChanges();
-
-        var res = controller.GetAll();
-        var ok = Assert.IsType<OkObjectResult>(res);
-        Assert.NotNull(ok.Value);
-    }
-
-    [Fact]
-    public void GetAll_ReturnsNotFound_WhenEmpty()
-    {
-        var res = controller.GetAll();
-        Assert.IsType<NotFoundObjectResult>(res);
-    }
-
-    [Fact]
-    public void GetByUserId_ReturnsOk_ListForUser()
-    {
-        var user = CreateUser();
-        var occ = CreateOccurrence();
-        context.Feedbacks.Add(new Feedback { UserId = user.Id, OccurrenceId = occ.Id, IsConfirmed = false, FeedbackDateTime = DateTime.UtcNow });
-        context.SaveChanges();
-
-        var res = controller.GetByUserId(user.Id);
-
-        var ok = Assert.IsType<OkObjectResult>(res);
-        Assert.NotNull(ok.Value);
-    }
-
-    [Fact]
-    public void GetByUserId_ReturnsNotFound_WhenNone()
-    {
-        var user = CreateUser();
-
-        var res = controller.GetByUserId(user.Id);
-
-        Assert.IsType<NotFoundObjectResult>(res);
-    }
-
-    [Fact]
-    public void GetByOccurrenceId_ReturnsOk_ListForOccurrence()
-    {
-        var user = CreateUser();
-        var occ = CreateOccurrence();
-        context.Feedbacks.Add(new Feedback { UserId = user.Id, OccurrenceId = occ.Id, IsConfirmed = true, FeedbackDateTime = DateTime.UtcNow });
-        context.SaveChanges();
-
-        var res = controller.GetByOccurrenceId(occ.Id);
-
-        var ok = Assert.IsType<OkObjectResult>(res);
-        Assert.NotNull(ok.Value);
-    }
-
-    [Fact]
-    public void GetByOccurrenceId_ReturnsNotFound_WhenNone()
-    {
-        var occ = CreateOccurrence();
-
-        var res = controller.GetByOccurrenceId(occ.Id);
 
         Assert.IsType<NotFoundObjectResult>(res);
     }

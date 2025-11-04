@@ -2,12 +2,13 @@ namespace readytohelpapi.Feedback.Controllers;
 
 using System;
 using System.Linq;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using readytohelpapi.Feedback.Models;
 using readytohelpapi.Feedback.Services;
 
 /// <summary>
-/// Controller for managing feedbacks.
+///   Provides API endpoints for managing feedbacks.
 /// </summary>
 [ApiController]
 [Route("api/feedback")]
@@ -16,17 +17,16 @@ public class FeedbackApiController : ControllerBase
     private readonly IFeedbackService service;
 
     /// <summary>
-    /// Constructor for FeedbackApiController.
+    ///   Initializes a new instance of the <see cref="FeedbackApiController"/> class.
     /// </summary>
     /// <param name="service">The feedback service.</param>
-    /// <exception cref="ArgumentNullException">Thrown when service is null.</exception>
     public FeedbackApiController(IFeedbackService service)
     {
-        this.service = service ?? throw new ArgumentNullException(nameof(service));
+        this.service = service;
     }
 
     /// <summary>
-    /// Create a new feedback.
+    ///   Creates a new feedback.
     /// </summary>
     /// <param name="feedback">The feedback to create.</param>
     /// <returns>The created feedback.</returns>
@@ -40,120 +40,8 @@ public class FeedbackApiController : ControllerBase
         try
         {
             var created = service.Create(feedback);
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
-        }
-        catch (ArgumentException ex)
-        {
-            if (
-                !string.IsNullOrEmpty(ex.Message)
-                && ex.Message.Contains("does not exist", StringComparison.OrdinalIgnoreCase)
-            )
-                return NotFound(new { error = ex.Message });
-
-            return BadRequest(new { error = ex.Message });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { error = ex.Message });
-        }
-    }
-
-    /// <summary>
-    /// Get all feedbacks.
-    /// </summary>
-    /// <returns>A list of all feedbacks.</returns>
-    [HttpGet]
-    public IActionResult GetAll()
-    {
-        try
-        {
-            var list = service.GetAllFeedbacks();
-            if (list == null || !list.Any())
-                return NotFound(new { error = "No feedbacks found" });
-
-            return Ok(list);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { error = ex.Message });
-        }
-    }
-
-    /// <summary>
-    /// Get feedbacks by userId.
-    /// </summary>
-    /// <param name="userId">The user ID to filter feedbacks.</param>
-    /// <returns>A list of feedbacks for the specified user.</returns>
-    [HttpGet("user/{userId:int}")]
-    public IActionResult GetByUserId(int userId)
-    {
-        try
-        {
-            var list = service.GetFeedbacksByUserId(userId);
-            if (list == null || !list.Any())
-                return NotFound(new { error = $"No feedbacks found for user {userId}" });
-
-            return Ok(list);
-        }
-        catch (ArgumentException ex)
-        {
-            if (
-                !string.IsNullOrEmpty(ex.Message)
-                && ex.Message.Contains("does not exist", StringComparison.OrdinalIgnoreCase)
-            )
-                return NotFound(new { error = ex.Message });
-
-            return BadRequest(new { error = ex.Message });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { error = ex.Message });
-        }
-    }
-
-    /// <summary>
-    /// Get feedback by feedbackId.
-    /// </summary>
-    /// <param name="id">The feedback ID.</param>
-    /// <returns>The feedback with the specified ID.</returns>
-    [HttpGet("{id:int}")]
-    public IActionResult GetById(int id)
-    {
-        try
-        {
-            var fb = service.GetFeedbackById(id);
-            if (fb == null)
-                return NotFound(new { error = $"Feedback with id {id} does not exist" });
-
-            return Ok(fb);
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { error = ex.Message });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { error = ex.Message });
-        }
-    }
-
-    /// <summary>
-    /// Get feedbacks by occurrenceId.
-    /// </summary>
-    /// <param name="occurrenceId">The occurrence ID to filter feedbacks.</param>
-    /// <returns>A list of feedbacks for the specified occurrence.</returns>
-    [HttpGet("occurrence/{occurrenceId:int}")]
-    public IActionResult GetByOccurrenceId(int occurrenceId)
-    {
-        try
-        {
-            var list = service.GetFeedbacksByOccurrenceId(occurrenceId);
-            if (list == null || !list.Any())
-                return NotFound(
-                    new { error = $"No feedbacks found for occurrence {occurrenceId}" }
-                );
-
-            return Ok(list);
+            // Em vez de CreatedAtAction(GetById,...)
+            return StatusCode(StatusCodes.Status201Created, created);
         }
         catch (ArgumentException ex)
         {
