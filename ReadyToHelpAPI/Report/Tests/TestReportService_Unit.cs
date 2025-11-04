@@ -9,6 +9,7 @@ using readytohelpapi.Occurrence.Services;
 using readytohelpapi.Report.Models;
 using readytohelpapi.Report.Services;
 using readytohelpapi.Report.Tests.Fixtures;
+using readytohelpapi.ResponsibleEntity.Models;
 using readytohelpapi.ResponsibleEntity.Services;
 using Xunit;
 using static System.Reflection.BindingFlags;
@@ -193,7 +194,7 @@ public class TestReportService_Unit
                     input.Location.Longitude
                 )
             )
-            .Returns((ResponsibleEntity.Models.ResponsibleEntity?)null);
+            .Returns((ResponsibleEntity?)null);
         mockOccSvc.Setup(s => s.GetOccurrencesByType(input.Type)).Returns(new List<Occurrence>());
         mockRepo.Setup(r => r.Create(It.IsAny<Report>())).Returns(createdReport);
 
@@ -274,7 +275,7 @@ public class TestReportService_Unit
                     input.Location.Longitude
                 )
             )
-            .Returns((ResponsibleEntity.Models.ResponsibleEntity?)null);
+            .Returns((ResponsibleEntity?)null);
         mockOccSvc
             .Setup(s => s.GetOccurrencesByType(input.Type))
             .Returns(new List<Occurrence> { existingOcc });
@@ -358,7 +359,7 @@ public class TestReportService_Unit
                     input.Location.Longitude
                 )
             )
-            .Returns((ResponsibleEntity.Models.ResponsibleEntity?)null);
+            .Returns((ResponsibleEntity?)null);
         mockOccSvc
             .Setup(s => s.GetOccurrencesByType(input.Type))
             .Returns(new List<Occurrence> { existingOcc });
@@ -432,7 +433,7 @@ public class TestReportService_Unit
                     input.Location.Longitude
                 )
             )
-            .Returns((ResponsibleEntity.Models.ResponsibleEntity?)null);
+            .Returns((ResponsibleEntity?)null);
         mockOccSvc
             .Setup(s => s.GetOccurrencesByType(input.Type))
             .Returns(new List<Occurrence> { existingOcc });
