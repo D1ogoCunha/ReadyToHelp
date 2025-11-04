@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using readytohelpapi.Common.Data;
 using readytohelpapi.User.Controllers;
@@ -31,6 +28,9 @@ public class TestUserApiController_Integration : IClassFixture<DbFixture>
         controller = new UserApiController(svc);
     }
 
+    /// <summary>
+    ///   Creates a user and verifies persistence and DTO response.
+    /// </summary>
     [Fact]
     public void CreateUser_StoresInDatabase()
     {
@@ -55,6 +55,9 @@ public class TestUserApiController_Integration : IClassFixture<DbFixture>
         Assert.True(inDb!.Id > 0);
     }
 
+    /// <summary>
+    ///   Gets a user by id and checks the returned DTO fields.
+    /// </summary>
     [Fact]
     public void GetUserById_ReturnsStoredUser_Dto()
     {
@@ -76,6 +79,9 @@ public class TestUserApiController_Integration : IClassFixture<DbFixture>
         Assert.Equal(u.Name, returned.Name);
     }
 
+    /// <summary>
+    ///   Lists users and ensures an OK with a list of DTOs.
+    /// </summary>
     [Fact]
     public void GetAll_ReturnsOkWithList_OfDto()
     {

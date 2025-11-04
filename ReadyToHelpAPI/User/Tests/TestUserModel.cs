@@ -4,11 +4,14 @@ using Xunit;
 namespace readytohelpapi.User.Tests;
 
 /// <summary>
-///   Unit tests for the User model (construtores e propriedades).
+///   Unit tests for the User model (constructors and properties).
 /// </summary>
 [Trait("Category", "Unit")]
 public class TestUserModel
 {
+    /// <summary>
+    ///   Ensures default constructor sets expected defaults.
+    /// </summary>
     [Fact]
     public void DefaultConstructor_InitializesDefaults()
     {
@@ -22,6 +25,9 @@ public class TestUserModel
         Assert.True(System.Enum.IsDefined(typeof(Profile), u.Profile));
     }
 
+    /// <summary>
+    ///   Ensures parameterized constructor sets all properties.
+    /// </summary>
     [Fact]
     public void ParameterizedConstructor_SetsAllProperties()
     {
@@ -41,7 +47,7 @@ public class TestUserModel
     }
 
     /// <summary>
-    ///   Verifica que os setters atualizam as propriedades corretamente.
+    ///   Ensures setters update properties correctly.
     /// </summary>
     [Fact]
     public void PropertySetters_UpdateValues()

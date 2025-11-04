@@ -69,7 +69,7 @@ public class UserApiController : ControllerBase
     /// </summary>
     /// <param name="user"></param>
     /// <returns>The created user.</returns>
-    [Authorize(Roles = "ADMIN")]
+    [Authorize(Roles = "ADMIN,MANAGER")]
     [HttpPost]
     public IActionResult Create([FromBody] User? user)
     {

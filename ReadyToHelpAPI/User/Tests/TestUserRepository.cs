@@ -274,7 +274,7 @@ public class TestUserRepositoryTest : IClassFixture<DbFixture>
         var result = _userRepository.GetAllUsers(1, 10, "Name", "desc", string.Empty);
 
         Assert.True(result.Count >= 2);
-        Assert.Equal("Zulu", result.First().Name);
+        Assert.Equal("Zulu", result[0].Name);
     }
 
     /// <summary>
