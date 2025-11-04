@@ -1,11 +1,12 @@
-using readytohelpapi.Occurrence.Models;
-
 namespace readytohelpapi.Occurrence.DTOs;
 
+using readytohelpapi.Occurrence.Models;
+using readytohelpapi.GeoPoint.Models;
+
 /// <summary>
-///  Data Transfer Object for detailed occurrence information.
+/// Data transfer object for creating an Occurrence to reduce constructor parameters.
 /// </summary>
-public class OccurrenceDetailsDto
+public class OccurrenceCreateDto
 {
     public int Id { get; set; }
     public string Title { get; set; } = string.Empty;
@@ -13,10 +14,11 @@ public class OccurrenceDetailsDto
     public OccurrenceType Type { get; set; }
     public OccurrenceStatus Status { get; set; }
     public PriorityLevel Priority { get; set; }
-    public double Latitude { get; set; }
-    public double Longitude { get; set; }
+    public double ProximityRadius { get; set; }
     public DateTime CreationDateTime { get; set; }
-    public DateTime? EndDateTime { get; set; }
-    public int? ResponsibleEntityId { get; set; }
+    public DateTime EndDateTime { get; set; }
     public int ReportCount { get; set; }
+    public int? ReportId { get; set; }
+    public int ResponsibleEntityId { get; set; }
+    public GeoPoint Location { get; set; } = new GeoPoint();
 }

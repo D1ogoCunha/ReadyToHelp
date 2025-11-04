@@ -2,6 +2,7 @@ namespace readytohelpapi.Report.Services;
 
 using readytohelpapi.GeoPoint.Miscellaneous;
 using readytohelpapi.Notifications;
+using readytohelpapi.Occurrence.DTOs;
 using readytohelpapi.Occurrence.Models;
 using readytohelpapi.Occurrence.Services;
 using readytohelpapi.Report.Models;
@@ -123,18 +124,20 @@ public class ReportServiceImpl : IReportService
         ResponsibleEntity.Models.ResponsibleEntity? responsibleEntity
     )
     {
-        var occurrence = new Occurrence
-        {
-            Title = createdReport.Title,
-            Description = createdReport.Description,
-            Type = report.Type,
-            Status = OccurrenceStatus.WAITING,
-            EndDateTime = default,
-            ReportCount = 1,
-            ReportId = createdReport.Id,
-            ResponsibleEntityId = responsibleEntity?.Id ?? 0,
-            Location = report.Location,
-        };
+        var occurrence = new Occurrence(
+            new OccurrenceCreateDto
+            {
+                Title = createdReport.Title,
+                Description = createdReport.Description,
+                Type = report.Type,
+                Status = OccurrenceStatus.WAITING,
+                EndDateTime = default,
+                ReportCount = 1,
+                ReportId = createdReport.Id,
+                ResponsibleEntityId = responsibleEntity?.Id ?? 0,
+                Location = report.Location,
+            }
+        );
 
         return occurrenceService.Create(occurrence);
     }

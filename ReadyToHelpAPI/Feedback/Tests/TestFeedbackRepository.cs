@@ -11,6 +11,7 @@ using readytohelpapi.Report.Models;
 using readytohelpapi.Feedback.Tests.Fixtures;
 using readytohelpapi.ResponsibleEntity.Models;
 using Xunit;
+using readytohelpapi.Occurrence.DTOs;
 
 /// <summary>
 ///  This class contains all integration tests related to the feedback repository.
@@ -79,16 +80,18 @@ public class TestFeedbackRepository : IClassFixture<DbFixture>
 
         var reId = CreateResponsibleEntityHelper();
 
-        var occ = new Occurrence
-        {
-            Title = "o",
-            Description = "teste ocorrencia",
-            Type = OccurrenceType.ROAD_DAMAGE,
-            Status = OccurrenceStatus.WAITING,
-            Location = new GeoPoint { Latitude = 41.3678, Longitude = -8.2012 },
-            ReportId = report.Id,
-            ResponsibleEntityId = reId
-        };
+        var occ = new Occurrence(
+            new OccurrenceCreateDto
+            {
+                Title = "o",
+                Description = "teste ocorrencia",
+                Type = OccurrenceType.ROAD_DAMAGE,
+                Status = OccurrenceStatus.WAITING,
+                Location = new GeoPoint { Latitude = 41.3678, Longitude = -8.2012 },
+                ReportId = report.Id,
+                ResponsibleEntityId = reId
+            }
+        );
         this.context.Occurrences.Add(occ);
         this.context.SaveChanges();
 
@@ -125,16 +128,18 @@ public class TestFeedbackRepository : IClassFixture<DbFixture>
 
         var reId = CreateResponsibleEntityHelper();
 
-        var occ = new Occurrence
-        {
-            Title = "o2",
-            Description = "teste ocorrencia",
-            Type = OccurrenceType.ROAD_DAMAGE,
-            Status = OccurrenceStatus.WAITING,
-            Location = new GeoPoint { Latitude = 41.3678, Longitude = -8.2012 },
-            ReportId = report.Id,
-            ResponsibleEntityId = reId
-        };
+        var occ = new Occurrence(
+            new OccurrenceCreateDto
+            {
+                Title = "o2",
+                Description = "teste ocorrencia",
+                Type = OccurrenceType.ROAD_DAMAGE,
+                Status = OccurrenceStatus.WAITING,
+                Location = new GeoPoint { Latitude = 41.3678, Longitude = -8.2012 },
+                ReportId = report.Id,
+                ResponsibleEntityId = reId
+            }
+        );
         this.context.Occurrences.Add(occ);
         this.context.SaveChanges();
 
@@ -181,16 +186,18 @@ public class TestFeedbackRepository : IClassFixture<DbFixture>
 
         var reId = CreateResponsibleEntityHelper();
 
-        var occ = new Occurrence
-        {
-            Title = "o3",
-            Description = "teste ocorrencia",
-            Type = OccurrenceType.ROAD_DAMAGE,
-            Status = OccurrenceStatus.WAITING,
-            Location = new GeoPoint { Latitude = 41.3678, Longitude = -8.2012 },
-            ReportId = report.Id,
-            ResponsibleEntityId = reId
-        };
+        var occ = new Occurrence(
+            new OccurrenceCreateDto
+            {
+                Title = "o3",
+                Description = "teste ocorrencia",
+                Type = OccurrenceType.ROAD_DAMAGE,
+                Status = OccurrenceStatus.WAITING,
+                Location = new GeoPoint { Latitude = 41.3678, Longitude = -8.2012 },
+                ReportId = report.Id,
+                ResponsibleEntityId = reId
+            }
+        );
         this.context.Occurrences.Add(occ);
         this.context.SaveChanges();
 
@@ -226,16 +233,18 @@ public class TestFeedbackRepository : IClassFixture<DbFixture>
         this.context.SaveChanges();
 
         var reId = CreateResponsibleEntityHelper();
-        var occ = new Occurrence
-        {
-            Title = "o4",
-            Description = "teste ocorrencia",
-            Type = OccurrenceType.ROAD_DAMAGE,
-            Status = OccurrenceStatus.WAITING,
-            Location = new GeoPoint { Latitude = 41.3678, Longitude = -8.2012 },
-            ReportId = report.Id,
-            ResponsibleEntityId = reId
-        };
+        var occ = new Occurrence(
+            new OccurrenceCreateDto
+            {
+                Title = "o4",
+                Description = "teste ocorrencia",
+                Type = OccurrenceType.ROAD_DAMAGE,
+                Status = OccurrenceStatus.WAITING,
+                Location = new GeoPoint { Latitude = 41.3678, Longitude = -8.2012 },
+                ReportId = report.Id,
+                ResponsibleEntityId = reId
+            }
+        );
         this.context.Occurrences.Add(occ);
         this.context.SaveChanges();
 
@@ -274,16 +283,18 @@ public class TestFeedbackRepository : IClassFixture<DbFixture>
 
         var reId = CreateResponsibleEntityHelper();
 
-        var occ = new Occurrence
-        {
-            Title = "o5",
-            Description = "teste ocorrencia",
-            Type = OccurrenceType.ROAD_DAMAGE,
-            Status = OccurrenceStatus.WAITING,
-            Location = new GeoPoint { Latitude = 41.3678, Longitude = -8.2012 },
-            ReportId = report.Id,
-            ResponsibleEntityId = reId
-        };
+        var occ = new Occurrence(
+            new OccurrenceCreateDto
+            {
+                Title = "o5",
+                Description = "teste ocorrencia",
+                Type = OccurrenceType.ROAD_DAMAGE,
+                Status = OccurrenceStatus.WAITING,
+                Location = new GeoPoint { Latitude = 41.3678, Longitude = -8.2012 },
+                ReportId = report.Id,
+                ResponsibleEntityId = reId
+            }
+        );
         this.context.Occurrences.Add(occ);
         this.context.SaveChanges();
 
@@ -322,16 +333,18 @@ public class TestFeedbackRepository : IClassFixture<DbFixture>
 
         var reId = CreateResponsibleEntityHelper();
 
-        var occ = new Occurrence
-        {
-            Title = "o6",
-            Description = "teste ocorrencia",
-            Type = OccurrenceType.ROAD_DAMAGE,
-            Status = OccurrenceStatus.WAITING,
-            Location = new GeoPoint { Latitude = 41.3678, Longitude = -8.2012 },
-            ReportId = report.Id,
-            ResponsibleEntityId = reId
-        };
+        var occ = new Occurrence(
+            new OccurrenceCreateDto
+            {
+                Title = "o6",
+                Description = "teste ocorrencia",
+                Type = OccurrenceType.ROAD_DAMAGE,
+                Status = OccurrenceStatus.WAITING,
+                Location = new GeoPoint { Latitude = 41.3678, Longitude = -8.2012 },
+                ReportId = report.Id,
+                ResponsibleEntityId = reId
+            }
+        );
         this.context.Occurrences.Add(occ);
         this.context.SaveChanges();
 
@@ -365,16 +378,18 @@ public class TestFeedbackRepository : IClassFixture<DbFixture>
 
         var reId = CreateResponsibleEntityHelper();
 
-        var occ = new Occurrence
-        {
-            Title = "o7",
-            Description = "teste ocorrencia",
-            Type = OccurrenceType.ROAD_DAMAGE,
-            Status = OccurrenceStatus.WAITING,
-            Location = new GeoPoint { Latitude = 41.3678, Longitude = -8.2012 },
-            ReportId = report.Id,
-            ResponsibleEntityId = reId
-        };
+        var occ = new Occurrence(
+            new OccurrenceCreateDto
+            {
+                Title = "o7",
+                Description = "teste ocorrencia",
+                Type = OccurrenceType.ROAD_DAMAGE,
+                Status = OccurrenceStatus.WAITING,
+                Location = new GeoPoint { Latitude = 41.3678, Longitude = -8.2012 },
+                ReportId = report.Id,
+                ResponsibleEntityId = reId
+            }
+        );
         this.context.Occurrences.Add(occ);
         this.context.SaveChanges();
 
