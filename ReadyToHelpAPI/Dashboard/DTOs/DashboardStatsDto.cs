@@ -11,7 +11,7 @@ public class DashboardStatsDto
     public int TotalOccurrences { get; set; }
 
     /// <summary>
-    /// Gets or sets the total number of responsible entities.
+    /// Gets or sets the total number of users.
     /// </summary>
     public int TotalUsers { get; set; }
 
