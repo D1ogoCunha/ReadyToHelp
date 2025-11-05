@@ -1,101 +1,432 @@
-using Microsoft.AspNetCore.Mvc;
-using readytohelpapi.Common.Data;
-using readytohelpapi.User.Controllers;
-using readytohelpapi.User.DTOs;
-using readytohelpapi.User.Models;
-using readytohelpapi.User.Services;
-using Xunit;
-
 namespace readytohelpapi.User.Tests;
 
-/// <summary>
-///   Integration tests for UserApiController.
-/// </summary>
+using System.Net;
+using System.Net.Http.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.DependencyInjection;
+using readytohelpapi.Common.Tests;
+using readytohelpapi.User.Models;
+using Xunit;
+using System.Net.Http;
+using System.Text;
+
+public partial class Program { }
+
 [Trait("Category", "Integration")]
-public class TestUserApiController_Integration : IClassFixture<DbFixture>
+public class TestUserApiController_Integration : IClassFixture<WebApplicationFactory<Program>>
 {
-    private readonly AppDbContext ctx;
-    private readonly IUserRepository repo;
-    private readonly IUserService svc;
-    private readonly UserApiController controller;
+    private readonly HttpClient _client;
+    private readonly WebApplicationFactory<Program> _factory;
 
-    public TestUserApiController_Integration(DbFixture fixture)
+    public TestUserApiController_Integration(WebApplicationFactory<Program> factory)
     {
-        fixture.ResetDatabase();
-        ctx = fixture.Context;
-        repo = new UserRepository(ctx);
-        svc = new UserServiceImpl(repo);
-        controller = new UserApiController(svc);
+        _factory = factory;
+        var customized = factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
+            {
+                services
+                    .AddAuthentication("Test")
+                    .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(
+                        "Test",
+                        _ => { });
+
+                services.PostConfigure<AuthenticationOptions>(opts =>
+                {
+                    opts.DefaultAuthenticateScheme = "Test";
+                    opts.DefaultChallengeScheme = "Test";
+                });
+            });
+        });
+
+        _client = customized.CreateClient();
     }
 
-    /// <summary>
-    ///   Creates a user and verifies persistence and DTO response.
-    /// </summary>
-    [Fact]
-    public void CreateUser_StoresInDatabase()
+    private static readonly JsonSerializerOptions JsonOpts = new(JsonSerializerDefaults.Web)
     {
-        var email = $"int_create_{Guid.NewGuid():N}@example.com";
-        var input = new Models.User
+        Converters = { new JsonStringEnumConverter() }
+    };
+
+    private static string UniqueEmail() => $"it_{Guid.NewGuid():N}@example.com";
+
+    private static async Task<int> ReadIdAsync(HttpResponseMessage resp)
+    {
+        var doc = await resp.Content.ReadFromJsonAsync<JsonDocument>();
+        return doc!.RootElement.GetProperty("id").GetInt32();
+    }
+
+    [Fact]
+    public async Task Register_ReturnsCreated_AndDto()
+    {
+        var payload = new { name = "Reg User", email = UniqueEmail(), password = "Secret123!" };
+
+        var response = await _client.PostAsJsonAsync("/api/user/register", payload);
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+
+        var doc = await response.Content.ReadFromJsonAsync<JsonDocument>();
+        Assert.NotNull(doc);
+        Assert.True(doc!.RootElement.TryGetProperty("id", out _));
+        Assert.Equal("Reg User", doc.RootElement.GetProperty("name").GetString());
+    }
+
+    [Fact]
+    public async Task GetUserById_Existing_ReturnsOk()
+    {
+        var email = UniqueEmail();
+        var reg = await _client.PostAsJsonAsync("/api/user/register", new { name = "User A", email, password = "Secret123!" });
+        reg.EnsureSuccessStatusCode();
+        var id = await ReadIdAsync(reg);
+
+        var response = await _client.GetAsync($"/api/user/{id}");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var user = await response.Content.ReadFromJsonAsync<User>(JsonOpts);
+        Assert.NotNull(user);
+        Assert.Equal(id, user!.Id);
+        Assert.Equal("User A", user.Name);
+        Assert.Equal(email, user.Email);
+    }
+
+    [Fact]
+    public async Task GetUserByEmail_Existing_ReturnsOk()
+    {
+        var email = UniqueEmail();
+        var reg = await _client.PostAsJsonAsync("/api/user/register", new { name = "User B", email, password = "Secret123!" });
+        reg.EnsureSuccessStatusCode();
+
+        var response = await _client.GetAsync($"/api/user/email/{email}");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var user = await response.Content.ReadFromJsonAsync<User>(JsonOpts);
+        Assert.NotNull(user);
+        Assert.Equal(email, user!.Email);
+    }
+
+    [Fact]
+    public async Task GetAll_ReturnsOk_WithAtLeastOne()
+    {
+        await _client.PostAsJsonAsync("/api/user/register", new { name = "List User", email = UniqueEmail(), password = "Secret123!" });
+
+        var response = await _client.GetAsync("/api/user?pageNumber=1&pageSize=10&sortBy=Name&sortOrder=asc");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var list = await response.Content.ReadFromJsonAsync<List<User>>(JsonOpts);
+        Assert.NotNull(list);
+        Assert.True(list!.Count >= 1);
+    }
+
+    [Fact]
+    public async Task Create_Admin_ReturnsCreated()
+    {
+        var payload = new
         {
-            Name = "Int Create",
-            Email = email,
-            Password = "password",
-            Profile = Profile.CITIZEN
+            name = "Admin Created",
+            email = UniqueEmail(),
+            password = "Secret123!",
+            profile = Profile.MANAGER
         };
 
-        var result = controller.Create(input);
-        var created = Assert.IsType<CreatedAtActionResult>(result);
-        Assert.Equal(nameof(controller.GetUserById), created.ActionName);
-        var dto = Assert.IsType<UserResponseDto>(created.Value);
-        Assert.Equal(input.Name, dto.Name);
-        Assert.Equal(input.Email, dto.Email);
+        var response = await _client.PostAsJsonAsync("/api/user", payload);
 
-        var inDb = ctx.Users.AsQueryable().FirstOrDefault(u => u.Email == email);
-        Assert.NotNull(inDb);
-        Assert.True(inDb!.Id > 0);
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var doc = await response.Content.ReadFromJsonAsync<JsonDocument>();
+        Assert.NotNull(doc);
+        Assert.Equal("Admin Created", doc!.RootElement.GetProperty("name").GetString());
+        Assert.True(doc.RootElement.TryGetProperty("id", out _));
     }
 
-    /// <summary>
-    ///   Gets a user by id and checks the returned DTO fields.
-    /// </summary>
     [Fact]
-    public void GetUserById_ReturnsStoredUser_Dto()
+    public async Task Update_Admin_ReturnsOk_AndPersists()
     {
-        var u = new Models.User
-        {
-            Name = "John Doe",
-            Email = $"john_{Guid.NewGuid():N}@example.com",
-            Password = "pwd",
-            Profile = Profile.CITIZEN
-        };
-        ctx.Users.Add(u);
-        ctx.SaveChanges();
+        var email = UniqueEmail();
+        var created = await _client.PostAsJsonAsync("/api/user", new { name = "To Update", email, password = "Secret123!", profile = Profile.CITIZEN });
+        created.EnsureSuccessStatusCode();
+        var id = await ReadIdAsync(created);
 
-        var result = controller.GetUserById(u.Id);
-        var ok = Assert.IsType<OkObjectResult>(result);
-        var returned = Assert.IsType<UserResponseDto>(ok.Value);
-        Assert.Equal(u.Id, returned.Id);
-        Assert.Equal(u.Email, returned.Email);
-        Assert.Equal(u.Name, returned.Name);
+        var response = await _client.PutAsJsonAsync($"/api/user/{id}", new { id, name = "Updated Name", email, password = "Secret123!", profile = Profile.CITIZEN });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var updated = await response.Content.ReadFromJsonAsync<User>(JsonOpts);
+        Assert.NotNull(updated);
+        Assert.Equal("Updated Name", updated!.Name);
+
+        var get = await _client.GetAsync($"/api/user/{id}");
+        get.EnsureSuccessStatusCode();
+        var got = await get.Content.ReadFromJsonAsync<User>(JsonOpts);
+        Assert.NotNull(got);
+        Assert.Equal("Updated Name", got!.Name);
     }
 
-    /// <summary>
-    ///   Lists users and ensures an OK with a list of DTOs.
-    /// </summary>
     [Fact]
-    public void GetAll_ReturnsOkWithList_OfDto()
+    public async Task Delete_Admin_ReturnsOk_ThenNotFoundOnGet()
     {
-        var u1 = new Models.User { Name = "U1", Email = $"u1_{Guid.NewGuid():N}@ex.com", Password = "p", Profile = Profile.CITIZEN };
-        var u2 = new Models.User { Name = "U2", Email = $"u2_{Guid.NewGuid():N}@ex.com", Password = "p", Profile = Profile.CITIZEN };
-        ctx.Users.AddRange(u1, u2);
-        ctx.SaveChanges();
+        var created = await _client.PostAsJsonAsync("/api/user", new { name = "To Delete", email = UniqueEmail(), password = "Secret123!", profile = Profile.CITIZEN });
+        created.EnsureSuccessStatusCode();
+        var id = await ReadIdAsync(created);
 
-        var action = controller.GetAll();
-        var actionResult = Assert.IsType<ActionResult<List<UserResponseDto>>>(action);
-        var ok = Assert.IsType<OkObjectResult>(actionResult.Result);
-        var list = Assert.IsType<List<UserResponseDto>>(ok.Value);
-        Assert.True(list.Count >= 2);
-        Assert.Contains(list, d => d.Email == u1.Email);
-        Assert.Contains(list, d => d.Email == u2.Email);
+        var del = await _client.DeleteAsync($"/api/user/{id}");
+        Assert.Equal(HttpStatusCode.OK, del.StatusCode);
+
+        var get = await _client.GetAsync($"/api/user/{id}");
+        Assert.Equal(HttpStatusCode.NotFound, get.StatusCode);
+    }
+
+
+    [Fact]
+    public async Task Register_DuplicateEmail_ReturnsConflict()
+    {
+        var email = UniqueEmail();
+        var payload = new { name = "Dup User", email, password = "Secret123!" };
+
+        var first = await _client.PostAsJsonAsync("/api/user/register", payload);
+        first.EnsureSuccessStatusCode();
+
+        var second = await _client.PostAsJsonAsync("/api/user/register", payload);
+        Assert.Equal(HttpStatusCode.Conflict, second.StatusCode);
+    }
+
+    [Fact]
+    public async Task Register_InvalidFields_ReturnsBadRequest()
+    {
+        var payload = new { name = "", email = "", password = "" };
+
+        var resp = await _client.PostAsJsonAsync("/api/user/register", payload);
+
+        Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetUserByEmail_NotFound_ReturnsNotFound()
+    {
+        var resp = await _client.GetAsync($"/api/user/email/{UniqueEmail()}");
+        Assert.Equal(HttpStatusCode.NotFound, resp.StatusCode);
+    }
+
+    [Fact]
+    public async Task Update_NullBody_ReturnsBadRequest()
+    {
+        var created = await _client.PostAsJsonAsync("/api/user", new { name = "Null Body", email = UniqueEmail(), password = "Secret123!", profile = Profile.CITIZEN });
+        created.EnsureSuccessStatusCode();
+        var id = await ReadIdAsync(created);
+
+        var resp = await _client.PutAsync($"/api/user/{id}", new StringContent("", Encoding.UTF8, "application/json"));
+        Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
+    }
+
+    [Fact]
+    public async Task Delete_NonExisting_ReturnsNotFound()
+    {
+        var resp = await _client.DeleteAsync("/api/user/9999999");
+        Assert.Equal(HttpStatusCode.NotFound, resp.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetAll_SortByName_Desc_Paging_Works()
+    {
+        var prefix = $"p_{Guid.NewGuid():N}".Substring(0, 8);
+
+        var e1 = $"{prefix}_alpha@example.com";
+        var e2 = $"{prefix}_beta@example.com";
+        var e3 = $"{prefix}_zeta@example.com";
+
+        await _client.PostAsJsonAsync("/api/user", new { name = $"{prefix}_Alpha", email = e1, password = "Secret123!", profile = Profile.CITIZEN });
+        await _client.PostAsJsonAsync("/api/user", new { name = $"{prefix}_Beta", email = e2, password = "Secret123!", profile = Profile.CITIZEN });
+        await _client.PostAsJsonAsync("/api/user", new { name = $"{prefix}_Zeta", email = e3, password = "Secret123!", profile = Profile.CITIZEN });
+
+        var page1 = await _client.GetAsync($"/api/user?pageNumber=1&pageSize=2&sortBy=Name&sortOrder=desc&filter={prefix}");
+        Assert.Equal(HttpStatusCode.OK, page1.StatusCode);
+        var list1 = await page1.Content.ReadFromJsonAsync<List<User>>(JsonOpts);
+        Assert.NotNull(list1);
+        Assert.Equal(2, list1!.Count);
+        Assert.Equal($"{prefix}_Zeta", list1[0].Name);
+        Assert.Equal($"{prefix}_Beta", list1[1].Name);
+
+        var page2 = await _client.GetAsync($"/api/user?pageNumber=2&pageSize=2&sortBy=Name&sortOrder=desc&filter={prefix}");
+        Assert.Equal(HttpStatusCode.OK, page2.StatusCode);
+        var list2 = await page2.Content.ReadFromJsonAsync<List<User>>(JsonOpts);
+        Assert.NotNull(list2);
+        Assert.Single(list2!);
+        Assert.Equal($"{prefix}_Alpha", list2[0].Name);
+    }
+
+    [Fact]
+    public async Task Update_ChangeProfile_Persists()
+    {
+        var email = UniqueEmail();
+        var created = await _client.PostAsJsonAsync("/api/user", new { name = "Prof User", email, password = "Secret123!", profile = Profile.CITIZEN });
+        created.EnsureSuccessStatusCode();
+        var id = await ReadIdAsync(created);
+
+        var resp = await _client.PutAsJsonAsync($"/api/user/{id}", new { id, name = "Prof User", email, password = "Secret123!", profile = Profile.MANAGER });
+        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+
+        var got = await _client.GetAsync($"/api/user/{id}");
+        got.EnsureSuccessStatusCode();
+        var user = await got.Content.ReadFromJsonAsync<User>(JsonOpts);
+        Assert.NotNull(user);
+        Assert.Equal(Profile.MANAGER, user!.Profile);
+    }
+
+    [Fact]
+    public async Task Create_DuplicateEmail_ReturnsConflict()
+    {
+        var email = UniqueEmail();
+        var body = new { name = "Dup Admin", email, password = "Secret123!", profile = Profile.CITIZEN };
+
+        var first = await _client.PostAsJsonAsync("/api/user", body);
+        first.EnsureSuccessStatusCode();
+
+        var second = await _client.PostAsJsonAsync("/api/user", body);
+        Assert.Equal(HttpStatusCode.Conflict, second.StatusCode);
+    }
+
+    [Fact]
+    public async Task Create_Unauthenticated_ReturnsUnauthorized()
+    {
+        using var unauth = _factory.CreateClient();
+        var resp = await unauth.PostAsJsonAsync("/api/user", new { name = "No Auth", email = UniqueEmail(), password = "Secret123!", profile = Profile.CITIZEN });
+        Assert.Equal(HttpStatusCode.Unauthorized, resp.StatusCode);
+    }
+
+    [Fact]
+    public async Task Register_TrimsAndSetsCitizenProfile()
+    {
+        var payload = new { name = "  Trim Name  ", email = $"  {UniqueEmail()}  ", password = "Secret123!" };
+
+        var response = await _client.PostAsJsonAsync("/api/user/register", payload);
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+
+        var user = await response.Content.ReadFromJsonAsync<User>(JsonOpts);
+        Assert.NotNull(user);
+        Assert.Equal("  Trim Name  ", user!.Name);
+        Assert.Equal(Profile.CITIZEN, user.Profile);
+    }
+
+    [Fact]
+    public async Task Register_SetsLocationHeader()
+    {
+        var response = await _client.PostAsJsonAsync("/api/user/register", new { name = "Loc User", email = UniqueEmail(), password = "Secret123!" });
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        Assert.NotNull(response.Headers.Location);
+        var id = await ReadIdAsync(response);
+        Assert.EndsWith($"/api/user/{id}", response.Headers.Location!.AbsolutePath);
+    }
+
+    [Fact]
+    public async Task GetUserById_NonExisting_ReturnsNotFound()
+    {
+        var resp = await _client.GetAsync("/api/user/99999999");
+        Assert.Equal(HttpStatusCode.NotFound, resp.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetUserById_InvalidId_ReturnsBadRequest()
+    {
+        var resp = await _client.GetAsync("/api/user/-1");
+        Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
+    }
+
+    [Fact]
+    public async Task Update_NonExisting_ReturnsNotFound()
+    {
+        var email = UniqueEmail();
+        var resp = await _client.PutAsJsonAsync("/api/user/987654321",
+            new { id = 987654321, name = "No One", email, password = "Secret123!", profile = Profile.CITIZEN });
+        Assert.Equal(HttpStatusCode.NotFound, resp.StatusCode);
+    }
+
+    [Fact]
+    public async Task Delete_IdZero_ReturnsBadRequest()
+    {
+        var resp = await _client.DeleteAsync("/api/user/0");
+        Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetAll_InvalidPaging_ReturnsBadRequest()
+    {
+        var resp1 = await _client.GetAsync("/api/user?pageNumber=0&pageSize=10");
+        Assert.Equal(HttpStatusCode.BadRequest, resp1.StatusCode);
+
+        var resp2 = await _client.GetAsync("/api/user?pageNumber=1&pageSize=0");
+        Assert.Equal(HttpStatusCode.BadRequest, resp2.StatusCode);
+    }
+
+    [Fact]
+    public async Task Create_NullBody_ReturnsBadRequest()
+    {
+        var resp = await _client.PostAsync("/api/user", new StringContent("", Encoding.UTF8, "application/json"));
+        Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
+    }
+
+    [Fact]
+    public async Task Create_SetsLocationHeader_AndProfileAsString_WithoutPassword()
+    {
+        var email = UniqueEmail();
+        var resp = await _client.PostAsJsonAsync("/api/user", new { name = "Hdr User", email, password = "Secret123!", profile = Profile.MANAGER });
+        Assert.Equal(HttpStatusCode.Created, resp.StatusCode);
+        Assert.NotNull(resp.Headers.Location);
+
+        var doc = await resp.Content.ReadFromJsonAsync<JsonDocument>();
+        Assert.NotNull(doc);
+
+        var id = doc!.RootElement.GetProperty("id").GetInt32();
+        Assert.EndsWith($"/api/user/{id}", resp.Headers.Location!.AbsolutePath);
+
+        Assert.True(doc.RootElement.TryGetProperty("profile", out var prof));
+        Assert.Equal("MANAGER", prof.GetString());
+        Assert.False(doc.RootElement.TryGetProperty("password", out _));
+    }
+
+    [Fact]
+    public async Task Register_Response_DoesNotContainPassword()
+    {
+        var resp = await _client.PostAsJsonAsync("/api/user/register", new { name = "Safe User", email = UniqueEmail(), password = "Secret123!" });
+        Assert.Equal(HttpStatusCode.Created, resp.StatusCode);
+
+        var doc = await resp.Content.ReadFromJsonAsync<JsonDocument>();
+        Assert.NotNull(doc);
+        Assert.False(doc!.RootElement.TryGetProperty("password", out _));
+    }
+
+    [Fact]
+    public async Task GetAll_Filter_NoMatches_ReturnsOkWithEmptyList()
+    {
+        var prefix = $"nohit_{Guid.NewGuid():N}";
+        var resp = await _client.GetAsync($"/api/user?pageNumber=1&pageSize=5&sortBy=Name&sortOrder=asc&filter={prefix}");
+        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+
+        var list = await resp.Content.ReadFromJsonAsync<List<User>>(JsonOpts);
+        Assert.NotNull(list);
+        Assert.Empty(list!);
+    }
+
+    [Fact]
+    public async Task Update_Unauthenticated_ReturnsUnauthorized()
+    {
+        var email = UniqueEmail();
+        var created = await _client.PostAsJsonAsync("/api/user", new { name = "NoAuth Upd", email, password = "Secret123!", profile = Profile.CITIZEN });
+        created.EnsureSuccessStatusCode();
+        var id = await ReadIdAsync(created);
+
+        using var unauth = _factory.CreateClient();
+        var resp = await unauth.PutAsJsonAsync($"/api/user/{id}", new { id, name = "X", email, password = "Secret123!", profile = Profile.CITIZEN });
+        Assert.Equal(HttpStatusCode.Unauthorized, resp.StatusCode);
+    }
+
+    [Fact]
+    public async Task Delete_Unauthenticated_ReturnsUnauthorized()
+    {
+        var created = await _client.PostAsJsonAsync("/api/user", new { name = "NoAuth Del", email = UniqueEmail(), password = "Secret123!", profile = Profile.CITIZEN });
+        created.EnsureSuccessStatusCode();
+        var id = await ReadIdAsync(created);
+
+        using var unauth = _factory.CreateClient();
+        var resp = await unauth.DeleteAsync($"/api/user/{id}");
+        Assert.Equal(HttpStatusCode.Unauthorized, resp.StatusCode);
     }
 }

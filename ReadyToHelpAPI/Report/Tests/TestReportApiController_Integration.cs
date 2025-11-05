@@ -1,5 +1,6 @@
 namespace readytohelpapi.Report.Tests;
 
+using System.Net;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging.Abstractions;
 using NetTopologySuite.Geometries;
@@ -192,7 +193,7 @@ public class TestReportApiController_Integration : IClassFixture<DbFixture>
             CancellationToken cancellationToken
         )
         {
-            var resp = new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+            var resp = new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = new StringContent(
                     "{\"ok\":true}",

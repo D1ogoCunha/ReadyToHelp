@@ -62,9 +62,9 @@ public class DbFixture : IDisposable
     }
 
     /// <summary>
-    ///  Disposes of the database context and deletes the test database.
-    ///  Implements the dispose pattern for inheritable types.
+    /// Disposes the database context and deletes the test database.
     /// </summary>
+    /// <param name="disposing">Indicates whether the call is from Dispose (true) or from a finalizer (false).</param>
     protected virtual void Dispose(bool disposing)
     {
         if (disposed)
@@ -86,7 +86,7 @@ public class DbFixture : IDisposable
     }
 
     /// <summary>
-    /// Releases all resources used by the <see cref="DbFixture"/>.
+    /// Disposes the database context and deletes the test database.
     /// </summary>
     public void Dispose()
     {

@@ -73,18 +73,23 @@ integration-tests:
     - name: postgis/postgis:15-3.3
       alias: postgres
   variables:
+    ASPNETCORE_ENVIRONMENT: Testing
     POSTGRES_USER: readytohelp
     POSTGRES_PASSWORD: readytohelppwd
     POSTGRES_DB: readytohelp_db
     POSTGRES_HOST: postgres
     POSTGRES_PORT: 5432
-    ASPNETCORE_ENVIRONMENT: Testing
   script:
+    - apt-get update && apt-get install -y curl postgresql-client
     - ./wait-for-it.sh postgres:5432 -- echo "PostgreSQL is up"
-    - dotnet test ReadyToHelpAPI.sln --filter "Category=Integration" --collect:"XPlat Code Coverage" --logger:"trx;LogFileName=IntegrationTestResults.trx"
+    - PGPASSWORD="$POSTGRES_PASSWORD" psql -h "$POSTGRES_HOST" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "CREATE EXTENSION IF NOT EXISTS postgis;"
+    - export PATH="$PATH:/root/.dotnet/tools"
+    - dotnet tool install -g dotnet-ef
+    - dotnet restore ReadyToHelpAPI.sln
+    - dotnet ef database update --project ReadyToHelpAPI/ReadyToHelpAPI.csproj --startup-project ReadyToHelpAPI/ReadyToHelpAPI.csproj
+    - dotnet test ReadyToHelpAPI.sln --filter "Category=Integration" --collect:"XPlat Code Coverage"
   artifacts:
     paths:
       - IntegrationTestResults.trx
-    expire_in: 1 week
   only:
     - merge_requests

@@ -66,6 +66,8 @@ public class AppDbContext : DbContext
             entity.Property(o => o.CreationDateTime).IsRequired();
             entity.Property(o => o.EndDateTime);
             entity.Property(o => o.ReportCount).IsRequired();
+            entity.Property(o => o.ReportId).IsRequired(false);
+            entity.Property(o => o.ResponsibleEntityId).IsRequired(false);
 
             entity.OwnsOne(
                 o => o.Location,

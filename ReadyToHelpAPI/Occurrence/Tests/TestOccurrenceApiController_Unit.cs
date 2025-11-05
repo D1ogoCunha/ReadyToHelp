@@ -18,7 +18,7 @@ using readytohelpapi.Occurrence.DTOs;
 ///   following the same approach and documentation used in TestUserApiController.
 /// </summary>
 [Trait("Category", "Unit")]
-public class TestOccurrenceApiController
+public class TestOccurrenceApiController_Unit
 {
     private readonly Mock<IOccurrenceService> mockOccurrenceService;
     private readonly OccurrenceApiController controller;
@@ -26,7 +26,7 @@ public class TestOccurrenceApiController
     /// <summary>
     ///   Initializes a new instance of TestOccurrenceApiController.
     /// </summary>
-    public TestOccurrenceApiController()
+    public TestOccurrenceApiController_Unit()
     {
         mockOccurrenceService = new Mock<IOccurrenceService>();
         controller = new OccurrenceApiController(mockOccurrenceService.Object);

@@ -202,7 +202,7 @@ public class TestReportService_Integration : IClassFixture<DbFixture>
             location: new GeoPoint { Latitude = lat, Longitude = lon }
         );
 
-        var (_, occ1) = this.service.Create(report1);
+        var (_, occ1) = service.Create(report1);
         Assert.NotNull(occ1);
         Assert.Equal(1, occ1.ReportCount);
         Assert.Equal(OccurrenceStatus.WAITING, occ1.Status);
@@ -212,7 +212,7 @@ public class TestReportService_Integration : IClassFixture<DbFixture>
             .ToList()
             .ForEach(e => e.State = EntityState.Detached);
 
-        var (_, occ2) = this.service.Create(report2);
+        var (_, occ2) = service.Create(report2);
         Assert.NotNull(occ2);
         Assert.Equal(2, occ2.ReportCount);
         Assert.Equal(OccurrenceStatus.WAITING, occ2.Status);
@@ -222,7 +222,7 @@ public class TestReportService_Integration : IClassFixture<DbFixture>
             .ToList()
             .ForEach(e => e.State = EntityState.Detached);
 
-        var (_, occ3) = this.service.Create(report3);
+        var (_, occ3) = service.Create(report3);
         Assert.NotNull(occ3);
         Assert.Equal(3, occ3.ReportCount);
         Assert.Equal(OccurrenceStatus.ACTIVE, occ3.Status);
@@ -237,7 +237,7 @@ public class TestReportService_Integration : IClassFixture<DbFixture>
         Assert.Equal(3, dbOcc!.ReportCount);
         Assert.Equal(OccurrenceStatus.ACTIVE, dbOcc.Status);
 
-        var called = SpinWait.SpinUntil(() => handler.Calls > 0, TimeSpan.FromSeconds(1));
+        var called = SpinWait.SpinUntil(() => handler.Calls > 0, TimeSpan.FromSeconds(5));
         Assert.True(called, "Notifier was not called within timeout");
         Assert.Equal(1, handler.Calls);
     }

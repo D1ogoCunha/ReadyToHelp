@@ -9,6 +9,7 @@ using readytohelpapi.Occurrence.Services;
 using readytohelpapi.Report.Models;
 using readytohelpapi.Report.Services;
 using readytohelpapi.Report.Tests.Fixtures;
+using readytohelpapi.ResponsibleEntity.Models;
 using readytohelpapi.ResponsibleEntity.Services;
 using Xunit;
 using static System.Reflection.BindingFlags;
@@ -17,7 +18,7 @@ using static System.Reflection.BindingFlags;
 ///  This class contains all unit tests for the ReportServiceImpl.
 /// </summary>
 [Trait("Category", "Unit")]
-public class TestReportService
+public class TestReportService_Unit
 {
     private readonly Mock<IReportRepository> mockRepo = new();
     private readonly Mock<IOccurrenceService> mockOccSvc = new();
@@ -26,9 +27,9 @@ public class TestReportService
     private readonly IReportService service;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="TestReportService"/> class.
+    /// Initializes a new instance of the <see cref="TestReportService_Unit"/> class.
     /// </summary>
-    public TestReportService()
+    public TestReportService_Unit()
     {
         mockNotifier
             .Setup(n =>
@@ -193,7 +194,7 @@ public class TestReportService
                     input.Location.Longitude
                 )
             )
-            .Returns((ResponsibleEntity.Models.ResponsibleEntity?)null);
+            .Returns((ResponsibleEntity?)null);
         mockOccSvc.Setup(s => s.GetOccurrencesByType(input.Type)).Returns(new List<Occurrence>());
         mockRepo.Setup(r => r.Create(It.IsAny<Report>())).Returns(createdReport);
 
@@ -274,7 +275,7 @@ public class TestReportService
                     input.Location.Longitude
                 )
             )
-            .Returns((ResponsibleEntity.Models.ResponsibleEntity?)null);
+            .Returns((ResponsibleEntity?)null);
         mockOccSvc
             .Setup(s => s.GetOccurrencesByType(input.Type))
             .Returns(new List<Occurrence> { existingOcc });
@@ -358,7 +359,7 @@ public class TestReportService
                     input.Location.Longitude
                 )
             )
-            .Returns((ResponsibleEntity.Models.ResponsibleEntity?)null);
+            .Returns((ResponsibleEntity?)null);
         mockOccSvc
             .Setup(s => s.GetOccurrencesByType(input.Type))
             .Returns(new List<Occurrence> { existingOcc });
@@ -432,7 +433,7 @@ public class TestReportService
                     input.Location.Longitude
                 )
             )
-            .Returns((ResponsibleEntity.Models.ResponsibleEntity?)null);
+            .Returns((ResponsibleEntity?)null);
         mockOccSvc
             .Setup(s => s.GetOccurrencesByType(input.Type))
             .Returns(new List<Occurrence> { existingOcc });

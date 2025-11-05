@@ -65,17 +65,17 @@ public class OccurrenceStatsDto
     /// </summary>
     public int MostReportedOccurrenceId { get; set; }
 
-    /// <summary> 
-    /// Gets or sets the title of the occurrence with the most reports. 
+    /// <summary>
+    /// Gets or sets the title of the occurrence with the most reports.
     /// </summary>
     public string? MostReportedOccurrenceTitle { get; set; }
 
-    /// <summary> 
+    /// <summary>
     /// Gets or sets the number of reports for the occurrence with the most reports.
     /// </summary>
     public int MostReports { get; set; }
 
-    /// <summary> 
+    /// <summary>
     /// Gets or sets the breakdown of occurrences by type.
     /// </summary>
     public Dictionary<string, int> ByType { get; set; } = new();

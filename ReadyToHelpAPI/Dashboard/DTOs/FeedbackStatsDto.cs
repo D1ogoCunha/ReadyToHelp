@@ -65,12 +65,12 @@ public class FeedbackStatsDto
     /// </summary>
     public int TopFeedbackUserCount { get; set; }
 
-    /// <summary> 
-    /// Gets or sets the date of the first feedback. 
+    /// <summary>
+    /// Gets or sets the date of the first feedback.
     /// </summary>
     public DateTime? FirstFeedbackDate { get; set; }
 
-    /// <summary> 
+    /// <summary>
     /// Gets or sets the date of the last feedback.
     /// </summary>
     public DateTime? LastFeedbackDate { get; set; }

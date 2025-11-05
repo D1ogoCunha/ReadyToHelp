@@ -7,13 +7,13 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using readytohelpapi.Authentication.Service;
 using readytohelpapi.Common.Data;
+using readytohelpapi.Dashboard.Service;
 using readytohelpapi.Feedback.Services;
+using readytohelpapi.Notifications;
 using readytohelpapi.Occurrence.Services;
 using readytohelpapi.Report.Services;
 using readytohelpapi.ResponsibleEntity.Services;
 using readytohelpapi.User.Services;
-using readytohelpapi.Notifications;
-using readytohelpapi.Dashboard.Service;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -42,9 +42,10 @@ builder.Services.AddCors(options =>
     );
 });
 
-var notifierUrl = Environment.GetEnvironmentVariable("NOTIFIER_URL")
-                 ?? builder.Configuration["Notifier:BaseUrl"]
-                 ?? "http://localhost:5088";
+var notifierUrl =
+    Environment.GetEnvironmentVariable("NOTIFIER_URL")
+    ?? builder.Configuration["Notifier:BaseUrl"]
+    ?? "http://localhost:5088";
 
 var postgresHost = Environment.GetEnvironmentVariable("POSTGRES_HOST") ?? "localhost";
 var pgUsername = Environment.GetEnvironmentVariable("POSTGRES_USERNAME") ?? "readytohelp";

@@ -78,9 +78,9 @@ public class ReportApiController : ControllerBase
                 {
                     responsibleDto = new ResponsibleEntityContactDto
                     {
-                        Name = entity.Name,
-                        Email = entity.Email,
-                        Address = entity.Address,
+                        Name = entity.Name ?? string.Empty,
+                        Email = entity.Email ?? string.Empty,
+                        Address = entity.Address ?? string.Empty,
                         ContactPhone = entity.ContactPhone,
                     };
                 }
