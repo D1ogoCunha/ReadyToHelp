@@ -19,7 +19,7 @@ public partial class Program { }
 /// <summary>
 /// This class contains all integration tests for Dashboard API controller.
 /// </summary>
-[Trait("Category", "Integration")] 
+[Trait("Category", "Integration")]
 public class TestDashboardApiController : IClassFixture<WebApplicationFactory<Program>>
 {
     private readonly HttpClient _client;

@@ -17,7 +17,7 @@ public class TestStartup : IHost
 
     public static void ConfigureServices(IServiceCollection services)
     {
-        services.AddSingleton<IOccurrenceService, OccurrenceServiceImpl>(); 
+        services.AddSingleton<IOccurrenceService, OccurrenceServiceImpl>();
     }
 
     public static void Configure(IApplicationBuilder app, IWebHostEnvironment env)

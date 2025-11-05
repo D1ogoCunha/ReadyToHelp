@@ -12,7 +12,7 @@ namespace readytohelpapi.User.Tests;
 public class TestUserRepositoryTest : IClassFixture<DbFixture>
 {
     private readonly DbFixture fixture;
-    private readonly AppDbContext _userContext;
+    private readonly AppDbContext userContext;
     private readonly IUserRepository _userRepository;
 
     /// <summary>
@@ -22,8 +22,8 @@ public class TestUserRepositoryTest : IClassFixture<DbFixture>
     {
         this.fixture = fixture;
         this.fixture.ResetDatabase();
-        _userContext = this.fixture.Context;
-        _userRepository = new UserRepository(_userContext);
+        userContext = this.fixture.Context;
+        _userRepository = new UserRepository(userContext);
     }
 
     /// <summary>
@@ -39,8 +39,8 @@ public class TestUserRepositoryTest : IClassFixture<DbFixture>
             Password = "pwd",
             Profile = Profile.CITIZEN,
         };
-        _userContext.Users.Add(user);
-        _userContext.SaveChanges();
+        userContext.Users.Add(user);
+        userContext.SaveChanges();
 
         var result = _userRepository.GetUserById(user.Id);
 
@@ -71,8 +71,8 @@ public class TestUserRepositoryTest : IClassFixture<DbFixture>
             Password = "pwd",
             Profile = Profile.CITIZEN,
         };
-        _userContext.Users.Add(user);
-        _userContext.SaveChanges();
+        userContext.Users.Add(user);
+        userContext.SaveChanges();
 
         var result = _userRepository.GetUserByEmail("alice@example.com");
 
@@ -154,8 +154,8 @@ public class TestUserRepositoryTest : IClassFixture<DbFixture>
             Password = "pwd",
             Profile = Profile.CITIZEN,
         };
-        _userContext.Users.Add(user);
-        _userContext.SaveChanges();
+        userContext.Users.Add(user);
+        userContext.SaveChanges();
 
         var result = _userRepository.GetUserByEmail("casesensitive@example.com");
 
@@ -214,8 +214,8 @@ public class TestUserRepositoryTest : IClassFixture<DbFixture>
             Password = "p",
             Profile = Profile.CITIZEN,
         };
-        _userContext.Users.AddRange(u1, u2);
-        _userContext.SaveChanges();
+        userContext.Users.AddRange(u1, u2);
+        userContext.SaveChanges();
 
         var result = _userRepository.GetUserByName("John");
 
@@ -239,8 +239,8 @@ public class TestUserRepositoryTest : IClassFixture<DbFixture>
             Password = "pwd",
             Profile = Profile.CITIZEN,
         };
-        _userContext.Users.Add(user);
-        _userContext.SaveChanges();
+        userContext.Users.Add(user);
+        userContext.SaveChanges();
 
         var result = _userRepository.GetAllUsers(1, 10, "Name", "asc", "jane");
 
@@ -268,13 +268,13 @@ public class TestUserRepositoryTest : IClassFixture<DbFixture>
             Password = "p",
             Profile = Profile.CITIZEN,
         };
-        _userContext.Users.AddRange(a, z);
-        _userContext.SaveChanges();
+        userContext.Users.AddRange(a, z);
+        userContext.SaveChanges();
 
         var result = _userRepository.GetAllUsers(1, 10, "Name", "desc", string.Empty);
 
         Assert.True(result.Count >= 2);
-        Assert.Equal("Zulu", result.First().Name);
+        Assert.Equal("Zulu", result[0].Name);
     }
 
     /// <summary>
@@ -297,8 +297,8 @@ public class TestUserRepositoryTest : IClassFixture<DbFixture>
             Password = "pwd",
             Profile = Profile.CITIZEN,
         };
-        _userContext.Users.AddRange(user1, user2);
-        _userContext.SaveChanges();
+        userContext.Users.AddRange(user1, user2);
+        userContext.SaveChanges();
 
         var result = _userRepository.GetAllUsers(1, 10, "Name", "asc", "specific@domain");
 
@@ -349,8 +349,8 @@ public class TestUserRepositoryTest : IClassFixture<DbFixture>
             Password = "pwd",
             Profile = Profile.CITIZEN,
         };
-        _userContext.Users.Add(user);
-        _userContext.SaveChanges();
+        userContext.Users.Add(user);
+        userContext.SaveChanges();
 
         user.Email = "updated@example.com";
         var updated = _userRepository.Update(user);
@@ -401,8 +401,8 @@ public class TestUserRepositoryTest : IClassFixture<DbFixture>
             Password = "oldpwd",
             Profile = Profile.CITIZEN,
         };
-        _userContext.Users.Add(user);
-        _userContext.SaveChanges();
+        userContext.Users.Add(user);
+        userContext.SaveChanges();
 
         user.Name = "Updated Name";
         user.Email = "updated@example.com";
@@ -431,8 +431,8 @@ public class TestUserRepositoryTest : IClassFixture<DbFixture>
             Password = "pwd",
             Profile = Profile.CITIZEN,
         };
-        _userContext.Users.Add(user);
-        _userContext.SaveChanges();
+        userContext.Users.Add(user);
+        userContext.SaveChanges();
 
         var deleted = _userRepository.Delete(user.Id);
 

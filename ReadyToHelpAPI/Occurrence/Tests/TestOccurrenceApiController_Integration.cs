@@ -20,13 +20,13 @@ using Xunit;
 public partial class Program { }
 
 [Trait("Category", "Integration")]
-public class TestOccurrenceApiController : IClassFixture<WebApplicationFactory<Program>>, IClassFixture<DbFixture>
+public class TestOccurrenceApiController_Integration : IClassFixture<WebApplicationFactory<Program>>, IClassFixture<DbFixture>
 {
     private readonly WebApplicationFactory<Program> _factory;
     private readonly DbFixture _dbFixture;
     private readonly HttpClient _client;
 
-    public TestOccurrenceApiController(WebApplicationFactory<Program> factory, DbFixture dbFixture)
+    public TestOccurrenceApiController_Integration(WebApplicationFactory<Program> factory, DbFixture dbFixture)
     {
         _dbFixture = dbFixture;
 
@@ -269,7 +269,7 @@ public class TestOccurrenceApiController : IClassFixture<WebApplicationFactory<P
         resp.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
-     [Fact]
+    [Fact]
     public async Task Create_NullBody_ReturnsBadRequest()
     {
         var resp = await _client.PostAsync(
