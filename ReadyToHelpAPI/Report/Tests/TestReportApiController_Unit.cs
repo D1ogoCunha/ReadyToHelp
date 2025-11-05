@@ -1,6 +1,8 @@
 namespace readytohelpapi.Report.Tests;
 
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Moq;
 using readytohelpapi.Common.Data;
 using readytohelpapi.GeoPoint.Models;
@@ -10,6 +12,7 @@ using readytohelpapi.Report.DTOs;
 using readytohelpapi.Report.Models;
 using readytohelpapi.Report.Services;
 using readytohelpapi.Report.Tests.Fixtures;
+using readytohelpapi.ResponsibleEntity.Models;
 using Xunit;
 
 /// <summary>
@@ -317,5 +320,189 @@ public class TestReportApiController_Unit
         var result = controller.Create(dto);
 
         Assert.IsType<BadRequestObjectResult>(result);
+    }
+
+        [Fact]
+    public void Create_WithResponsibleEntity_MapsContactInfo()
+    {
+        // usar AppDbContext real em memória para poder consultar ResponsibleEntities
+        var opts = new DbContextOptionsBuilder<AppDbContext>()
+            .UseInMemoryDatabase($"reports-{Guid.NewGuid():N}")
+            .Options;
+        using var realCtx = new AppDbContext(opts);
+
+        realCtx.ResponsibleEntities.Add(new ResponsibleEntity
+        {
+            Id = 55,
+            Name = "Entidade XPTO",
+            Email = "xpto@example.com",
+            Address = "Rua A, 123",
+            ContactPhone = 999111222
+        });
+        realCtx.SaveChanges();
+
+        var localService = new Mock<IReportService>();
+        var localRepo = new Mock<IReportRepository>();
+        var localController = new ReportApiController(localService.Object, localRepo.Object, realCtx);
+
+        var dto = new CreateReportDto
+        {
+            Title = "T",
+            Description = "D",
+            Type = OccurrenceType.FLOOD,
+            UserId = 2,
+            Latitude = 41.1,
+            Longitude = -8.6
+        };
+
+        var createdReport = ReportFixture.CreateOrUpdate(id: 777, title: dto.Title, description: dto.Description, userId: dto.UserId, location: Pt());
+        var createdOccurrence = new Occurrence
+        {
+            Id = 888,
+            ReportId = 777,
+            Status = OccurrenceStatus.WAITING,
+            Type = dto.Type,
+            ResponsibleEntityId = 55,
+            Location = Pt()
+        };
+
+        localService
+            .Setup(s => s.Create(It.IsAny<Report>()))
+            .Returns((createdReport, createdOccurrence));
+
+        var result = localController.Create(dto);
+
+        var created = Assert.IsType<CreatedAtActionResult>(result);
+        var response = Assert.IsType<ReportResponseDto>(created.Value);
+        Assert.NotNull(response.ResponsibleEntity);
+        Assert.Equal("Entidade XPTO", response.ResponsibleEntity!.Name);
+        Assert.Equal("xpto@example.com", response.ResponsibleEntity.Email);
+        Assert.Equal("Rua A, 123", response.ResponsibleEntity.Address);
+        Assert.Equal(999111222, response.ResponsibleEntity.ContactPhone);
+    }
+
+       [Fact]
+    public void Create_WithResponsibleEntity_NotFound_LeavesNull()
+    {
+        var dto = new CreateReportDto
+        {
+            Title = "T",
+            Description = "D",
+            Type = OccurrenceType.FLOOD,
+            UserId = 2,
+            Latitude = 41.1,
+            Longitude = -8.6
+        };
+
+        var opts = new DbContextOptionsBuilder<AppDbContext>()
+            .UseInMemoryDatabase($"reports-{Guid.NewGuid():N}")
+            .Options;
+        using var realCtx = new AppDbContext(opts);
+
+        var createdReport = ReportFixture.CreateOrUpdate(id: 10, title: dto.Title, description: dto.Description, userId: dto.UserId, location: Pt());
+        var createdOccurrence = new Occurrence
+        {
+            Id = 20,
+            ReportId = 10,
+            Status = OccurrenceStatus.WAITING,
+            Type = dto.Type,
+            ResponsibleEntityId = 999, // não existe
+            Location = Pt()
+        };
+
+        var localService = new Mock<IReportService>();
+        var localRepo = new Mock<IReportRepository>();
+        localService
+            .Setup(s => s.Create(It.IsAny<Report>()))
+            .Returns((createdReport, createdOccurrence));
+
+        var localController = new ReportApiController(localService.Object, localRepo.Object, realCtx);
+
+        var result = localController.Create(dto);
+
+        var created = Assert.IsType<CreatedAtActionResult>(result);
+        var response = Assert.IsType<ReportResponseDto>(created.Value);
+        Assert.Null(response.ResponsibleEntity);
+    }
+
+    [Fact]
+    public void Create_PassesLatLon_ToService()
+    {
+        var dto = new CreateReportDto
+        {
+            Title = "LL",
+            Description = "geo",
+            Type = OccurrenceType.ROAD_DAMAGE,
+            UserId = 3,
+            Latitude = 40.1234,
+            Longitude = -7.5678
+        };
+
+        Report? captured = null;
+        mockReportService
+            .Setup(s => s.Create(It.IsAny<Report>()))
+            .Callback<Report>(r => captured = r)
+            .Returns((ReportFixture.CreateOrUpdate(id: 1, title: dto.Title, description: dto.Description, userId: dto.UserId, location: Pt()),
+                      new Occurrence { Id = 2, ReportId = 1, Status = OccurrenceStatus.WAITING, Type = dto.Type, Location = Pt() }));
+
+        var result = controller.Create(dto);
+
+        Assert.IsType<CreatedAtActionResult>(result);
+        Assert.NotNull(captured);
+        Assert.NotNull(captured!.Location);
+        Assert.Equal(dto.Latitude, captured.Location!.Latitude);
+        Assert.Equal(dto.Longitude, captured.Location.Longitude);
+    }
+
+    [Fact]
+    public void GetById_Found_ReturnsOk_WithReport()
+    {
+        var report = ReportFixture.CreateOrUpdate(id: 42, title: "R", description: "D", userId: 1, location: Pt());
+        mockReportRepository.Setup(r => r.GetById(42)).Returns(report);
+
+        var result = controller.GetById(42);
+
+        var ok = Assert.IsType<OkObjectResult>(result);
+        Assert.Same(report, ok.Value);
+        mockReportRepository.Verify(r => r.GetById(42), Times.Once);
+    }
+
+    [Fact]
+    public void GetById_NotFound_ReturnsNotFound()
+    {
+        mockReportRepository.Setup(r => r.GetById(It.IsAny<int>())).Returns((Report?)null);
+
+        var result = controller.GetById(1234);
+
+        Assert.IsType<NotFoundResult>(result);
+        mockReportRepository.Verify(r => r.GetById(1234), Times.Once);
+    }
+
+    [Fact]
+    public void Create_ServiceValidationError_ReturnsBadRequest_WithShape()
+    {
+        var dto = new CreateReportDto
+        {
+            Title = "X",
+            Description = "Y",
+            Type = OccurrenceType.FOREST_FIRE,
+            UserId = 9,
+            Latitude = 41,
+            Longitude = -8
+        };
+
+        mockReportService
+            .Setup(s => s.Create(It.IsAny<Report>()))
+            .Throws(new ArgumentException("Title is required."));
+
+        var result = controller.Create(dto);
+
+        var bad = Assert.IsType<BadRequestObjectResult>(result);
+
+        var json = JsonSerializer.Serialize(bad.Value);
+        var dict = JsonSerializer.Deserialize<Dictionary<string, object>>(json);
+        Assert.NotNull(dict);
+        Assert.Equal("validation_error", dict!["error"].ToString());
+        Assert.Equal("Title is required.", dict["detail"].ToString());
     }
 }
