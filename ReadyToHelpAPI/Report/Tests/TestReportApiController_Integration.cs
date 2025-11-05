@@ -10,11 +10,13 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using NetTopologySuite.Geometries;
 using readytohelpapi.Common.Data;
 using readytohelpapi.Common.Tests;
 using readytohelpapi.Report.DTOs;
 using readytohelpapi.Report.Models;
 using readytohelpapi.User.Models;
+using readytohelpapi.ResponsibleEntity.Models;
 using Xunit;
 
 
@@ -30,7 +32,7 @@ public class TestReportApiController_Integration : IClassFixture<WebApplicationF
         Converters = { new JsonStringEnumConverter() }
     };
 
-        public TestReportApiController_Integration(WebApplicationFactory<Program> factory)
+    public TestReportApiController_Integration(WebApplicationFactory<Program> factory)
     {
         _factory = factory.WithWebHostBuilder(builder =>
         {
@@ -79,10 +81,42 @@ public class TestReportApiController_Integration : IClassFixture<WebApplicationF
         return user.Id;
     }
 
+    private void SeedResponsibleEntityCovering(double lat, double lon)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var ctx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        var gf = new GeometryFactory(new PrecisionModel(), 4326);
+        var coords = new[]
+        {
+            new Coordinate(lon - 0.01, lat - 0.01),
+            new Coordinate(lon - 0.01, lat + 0.01),
+            new Coordinate(lon + 0.01, lat + 0.01),
+            new Coordinate(lon + 0.01, lat - 0.01),
+            new Coordinate(lon - 0.01, lat - 0.01),
+        };
+        var poly = gf.CreatePolygon(coords);
+        var multi = gf.CreateMultiPolygon(new[] { poly });
+
+        var entity = new ResponsibleEntity
+        {
+            Name = "Entidade Teste",
+            Email = "re@test.local",
+            Address = "Rua X",
+            ContactPhone = 123456789,
+            Type = ResponsibleEntityType.BOMBEIROS,
+            GeoArea = multi
+        };
+
+        ctx.ResponsibleEntities.Add(entity);
+        ctx.SaveChanges();
+    }
+
     [Fact]
     public async Task Create_ReturnsCreated_AndResponseHasIds()
     {
         var userId = SeedUser();
+        SeedResponsibleEntityCovering(41.15, -8.61);
 
         var payload = new
         {
@@ -101,13 +135,14 @@ public class TestReportApiController_Integration : IClassFixture<WebApplicationF
         Assert.NotNull(dto);
         Assert.True(dto!.ReportId > 0);
         Assert.True(dto.OccurrenceId > 0);
-        // ResponsibleEntity pode ser null (não forçamos mapeamento nos testes)
     }
 
     [Fact]
     public async Task GetById_Existing_ReturnsOk_WithReport()
     {
         var userId = SeedUser();
+
+        SeedResponsibleEntityCovering(41.2, -8.5);
 
         var create = await client.PostAsJsonAsync("/api/reports", new
         {
