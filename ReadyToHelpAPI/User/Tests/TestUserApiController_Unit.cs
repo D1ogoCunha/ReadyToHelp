@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using readytohelpapi.User.Controllers;
+using readytohelpapi.User.DTOs;
 using readytohelpapi.User.Models;
 using readytohelpapi.User.Services;
 using Xunit;
@@ -90,7 +91,11 @@ public class TestUserApiController_Unit
         var result = controller.Update(10, body);
 
         var ok = Assert.IsType<OkObjectResult>(result);
-        Assert.Same(updated, ok.Value);
+        var dto = Assert.IsType<UserResponseDto>(ok.Value);
+        Assert.Equal(updated.Id, dto.Id);
+        Assert.Equal(updated.Name, dto.Name);
+        Assert.Equal(updated.Email, dto.Email);
+        Assert.Equal(updated.Profile, dto.Profile);
     }
 
     [Fact]
@@ -126,7 +131,7 @@ public class TestUserApiController_Unit
 
         var result = controller.Update(8, NewUser(id: 8));
 
-        Assert.IsType<BadRequestObjectResult>(result);
+        Assert.IsType<ConflictObjectResult>(result);
     }
 
     [Fact]
@@ -163,7 +168,11 @@ public class TestUserApiController_Unit
         var result = controller.Delete(4);
 
         var ok = Assert.IsType<OkObjectResult>(result);
-        Assert.Same(deleted, ok.Value);
+        var dto = Assert.IsType<UserResponseDto>(ok.Value);
+        Assert.Equal(deleted.Id, dto.Id);
+        Assert.Equal(deleted.Name, dto.Name);
+        Assert.Equal(deleted.Email, dto.Email);
+        Assert.Equal(deleted.Profile, dto.Profile);
     }
 
     [Fact]
@@ -222,7 +231,11 @@ public class TestUserApiController_Unit
         var result = controller.GetUserById(6);
 
         var ok = Assert.IsType<OkObjectResult>(result);
-        Assert.Same(user, ok.Value);
+        var dto = Assert.IsType<UserResponseDto>(ok.Value);
+        Assert.Equal(user.Id, dto.Id);
+        Assert.Equal(user.Name, dto.Name);
+        Assert.Equal(user.Email, dto.Email);
+        Assert.Equal(user.Profile, dto.Profile);
     }
 
     [Fact]
@@ -335,8 +348,10 @@ public class TestUserApiController_Unit
         var result = controller.GetAll();
 
         var ok = Assert.IsType<OkObjectResult>(result.Result);
-        var returned = Assert.IsType<List<User>>(ok.Value);
+        var returned = Assert.IsType<List<UserResponseDto>>(ok.Value);
         Assert.Equal(2, returned.Count);
+        Assert.Equal(list[0].Id, returned[0].Id);
+        Assert.Equal(list[1].Id, returned[1].Id);
     }
 
     [Fact]
@@ -383,7 +398,11 @@ public class TestUserApiController_Unit
         var result = controller.GetUserByEmail("find@example.com");
 
         var ok = Assert.IsType<OkObjectResult>(result);
-        Assert.Same(user, ok.Value);
+        var dto = Assert.IsType<UserResponseDto>(ok.Value);
+        Assert.Equal(user.Id, dto.Id);
+        Assert.Equal(user.Name, dto.Name);
+        Assert.Equal(user.Email, dto.Email);
+        Assert.Equal(user.Profile, dto.Profile);
     }
 
     [Fact]

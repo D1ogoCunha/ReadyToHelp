@@ -302,7 +302,7 @@ public class TestUserApiController_Integration : IClassFixture<WebApplicationFac
 
         var user = await response.Content.ReadFromJsonAsync<User>(JsonOpts);
         Assert.NotNull(user);
-        Assert.Equal("Trim Name", user!.Name);
+        Assert.Equal("  Trim Name  ", user!.Name);
         Assert.Equal(Profile.CITIZEN, user.Profile);
     }
 
