@@ -324,7 +324,7 @@ public class TestUserApiController_Unit
         Assert.Equal(500, obj.StatusCode);
     }
 
-[Fact]
+    [Fact]
     public void GetAll_ReturnsOkWithList()
     {
         var list = new List<User> { NewUser(id: 1), NewUser(id: 2) };

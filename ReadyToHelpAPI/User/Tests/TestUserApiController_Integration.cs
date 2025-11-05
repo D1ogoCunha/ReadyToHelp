@@ -175,7 +175,7 @@ public class TestUserApiController_Integration : IClassFixture<WebApplicationFac
         Assert.Equal(HttpStatusCode.NotFound, get.StatusCode);
     }
 
-    
+
     [Fact]
     public async Task Register_DuplicateEmail_ReturnsConflict()
     {
@@ -224,7 +224,7 @@ public class TestUserApiController_Integration : IClassFixture<WebApplicationFac
         Assert.Equal(HttpStatusCode.NotFound, resp.StatusCode);
     }
 
-        [Fact]
+    [Fact]
     public async Task GetAll_SortByName_Desc_Paging_Works()
     {
         var prefix = $"p_{Guid.NewGuid():N}".Substring(0, 8);
@@ -234,8 +234,8 @@ public class TestUserApiController_Integration : IClassFixture<WebApplicationFac
         var e3 = $"{prefix}_zeta@example.com";
 
         await _client.PostAsJsonAsync("/api/user", new { name = $"{prefix}_Alpha", email = e1, password = "Secret123!", profile = Profile.CITIZEN });
-        await _client.PostAsJsonAsync("/api/user", new { name = $"{prefix}_Beta",  email = e2, password = "Secret123!", profile = Profile.CITIZEN });
-        await _client.PostAsJsonAsync("/api/user", new { name = $"{prefix}_Zeta",  email = e3, password = "Secret123!", profile = Profile.CITIZEN });
+        await _client.PostAsJsonAsync("/api/user", new { name = $"{prefix}_Beta", email = e2, password = "Secret123!", profile = Profile.CITIZEN });
+        await _client.PostAsJsonAsync("/api/user", new { name = $"{prefix}_Zeta", email = e3, password = "Secret123!", profile = Profile.CITIZEN });
 
         var page1 = await _client.GetAsync($"/api/user?pageNumber=1&pageSize=2&sortBy=Name&sortOrder=desc&filter={prefix}");
         Assert.Equal(HttpStatusCode.OK, page1.StatusCode);
@@ -356,7 +356,7 @@ public class TestUserApiController_Integration : IClassFixture<WebApplicationFac
         Assert.Equal(HttpStatusCode.BadRequest, resp2.StatusCode);
     }
 
-        [Fact]
+    [Fact]
     public async Task Create_NullBody_ReturnsBadRequest()
     {
         var resp = await _client.PostAsync("/api/user", new StringContent("", Encoding.UTF8, "application/json"));
