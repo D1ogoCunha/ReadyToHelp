@@ -322,7 +322,7 @@ public class TestReportApiController_Unit
         Assert.IsType<BadRequestObjectResult>(result);
     }
 
-        [Fact]
+    [Fact]
     public void Create_WithResponsibleEntity_MapsContactInfo()
     {
         // usar AppDbContext real em memória para poder consultar ResponsibleEntities
@@ -381,7 +381,7 @@ public class TestReportApiController_Unit
         Assert.Equal(999111222, response.ResponsibleEntity.ContactPhone);
     }
 
-       [Fact]
+    [Fact]
     public void Create_WithResponsibleEntity_NotFound_LeavesNull()
     {
         var dto = new CreateReportDto

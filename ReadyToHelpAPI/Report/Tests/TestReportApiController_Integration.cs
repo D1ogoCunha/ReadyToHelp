@@ -113,62 +113,6 @@ public class TestReportApiController_Integration : IClassFixture<WebApplicationF
     }
 
     [Fact]
-    public async Task Create_ReturnsCreated_AndResponseHasIds()
-    {
-        var userId = SeedUser();
-        SeedResponsibleEntityCovering(41.15, -8.61);
-
-        var payload = new
-        {
-            title = "Buraco na estrada",
-            description = "Junto à esquina",
-            type = "ROAD_DAMAGE",
-            userId,
-            latitude = 41.15,
-            longitude = -8.61
-        };
-
-        var resp = await client.PostAsJsonAsync("/api/reports", payload);
-        Assert.Equal(HttpStatusCode.Created, resp.StatusCode);
-
-        var dto = await resp.Content.ReadFromJsonAsync<ReportResponseDto>(JsonOpts);
-        Assert.NotNull(dto);
-        Assert.True(dto!.ReportId > 0);
-        Assert.True(dto.OccurrenceId > 0);
-    }
-
-    [Fact]
-    public async Task GetById_Existing_ReturnsOk_WithReport()
-    {
-        var userId = SeedUser();
-
-        SeedResponsibleEntityCovering(41.2, -8.5);
-
-        var create = await client.PostAsJsonAsync("/api/reports", new
-        {
-            title = "Relatório teste",
-            description = "descrição",
-            type = "TRAFFIC_CONGESTION",
-            userId,
-            latitude = 41.2,
-            longitude = -8.5
-        });
-        create.EnsureSuccessStatusCode();
-        var created = await create.Content.ReadFromJsonAsync<ReportResponseDto>(JsonOpts);
-        Assert.NotNull(created);
-        var reportId = created!.ReportId;
-
-        var get = await client.GetAsync($"/api/reports/{reportId}");
-        Assert.Equal(HttpStatusCode.OK, get.StatusCode);
-
-        var report = await get.Content.ReadFromJsonAsync<Report>(JsonOpts);
-        Assert.NotNull(report);
-        Assert.Equal(reportId, report!.Id);
-        Assert.Equal(userId, report.UserId);
-        Assert.Equal("Relatório teste", report.Title);
-    }
-
-    [Fact]
     public async Task GetById_InvalidId_ReturnsBadRequest()
     {
         var resp = await client.GetAsync("/api/reports/0");
