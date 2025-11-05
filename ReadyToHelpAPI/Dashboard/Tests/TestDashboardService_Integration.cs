@@ -17,16 +17,16 @@ using Xunit;
 /// This class contains all integration tests for DashboardServiceImpl.
 /// </summary>
 [Trait("Category", "Integration")]
-public class TestDashboardService : IClassFixture<DbFixture>
+public class TestDashboardService_Integration : IClassFixture<DbFixture>
 {
     private readonly AppDbContext ctx;
     private readonly DashboardServiceImpl svc;
     private readonly DbFixture fixture;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="TestDashboardService"/> class.
+    /// Initializes a new instance of the <see cref="TestDashboardService_Integration_Integration"/> class.
     /// </summary>
-    public TestDashboardService(DbFixture fixture)
+    public TestDashboardService_Integration(DbFixture fixture)
     {
         this.fixture = fixture;
         fixture.ResetDatabase();
