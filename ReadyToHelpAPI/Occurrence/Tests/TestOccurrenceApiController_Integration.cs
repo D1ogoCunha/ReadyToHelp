@@ -113,23 +113,14 @@ public class TestOccurrenceApiController : IClassFixture<WebApplicationFactory<P
         };
 
         var response = await _client.PostAsJsonAsync("/api/occurrence", occ);
-
-        if (response.StatusCode != HttpStatusCode.Created)
-        {
-            var body = await response.Content.ReadAsStringAsync();
-            Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-            Assert.Fail($"Create failed body: {body}");
-        }
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
         var location = response.Headers.Location;
         Assert.NotNull(location);
 
-        var get = await _client.GetAsync(location);
-        Assert.Equal(HttpStatusCode.OK, get.StatusCode);
-
         var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
         options.Converters.Add(new JsonStringEnumConverter());
-        var createdDto = await get.Content.ReadFromJsonAsync<OccurrenceDetailsDto>(options);
+        var createdDto = await _client.GetFromJsonAsync<OccurrenceDetailsDto>(location, options);
         Assert.NotNull(createdDto);
         Assert.Equal("integration create", createdDto.Title);
     }
@@ -140,21 +131,15 @@ public class TestOccurrenceApiController : IClassFixture<WebApplicationFactory<P
     [Fact]
     public async Task Update_ReturnsOk_WhenExists()
     {
-        var occ = new Occurrence
+        var payload = new Occurrence
         {
             Title = "to update",
             Description = "desc update",
             Type = OccurrenceType.FLOOD,
             Location = new GeoPoint { Latitude = 40.0, Longitude = -8.0 },
         };
-        var createResp = await _client.PostAsJsonAsync("/api/occurrence", occ);
-
-        if (createResp.StatusCode != HttpStatusCode.Created)
-        {
-            var body = await createResp.Content.ReadAsStringAsync();
-            Assert.Equal(HttpStatusCode.Created, createResp.StatusCode);
-            Assert.Fail($"Create for update failed body: {body}");
-        }
+        var createResp = await _client.PostAsJsonAsync("/api/occurrence", payload);
+        Assert.Equal(HttpStatusCode.Created, createResp.StatusCode);
 
         var location = createResp.Headers.Location;
         Assert.NotNull(location);
@@ -162,12 +147,10 @@ public class TestOccurrenceApiController : IClassFixture<WebApplicationFactory<P
         var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
         options.Converters.Add(new JsonStringEnumConverter());
 
-        var createdDto = await (
-            await _client.GetAsync(location)
-        ).Content.ReadFromJsonAsync<OccurrenceDetailsDto>(options);
+        var createdDto = await _client.GetFromJsonAsync<OccurrenceDetailsDto>(location, options);
         Assert.NotNull(createdDto);
 
-        var updateOcc = new Occurrence
+        var updatePayload = new Occurrence
         {
             Id = createdDto.Id,
             Title = "updated title",
@@ -185,14 +168,8 @@ public class TestOccurrenceApiController : IClassFixture<WebApplicationFactory<P
             Priority = createdDto.Priority,
         };
 
-        var put = await _client.PutAsJsonAsync("/api/occurrence", updateOcc);
-
-        if (put.StatusCode != HttpStatusCode.OK)
-        {
-            var body = await put.Content.ReadAsStringAsync();
-            Assert.Equal(HttpStatusCode.OK, put.StatusCode);
-            Assert.Fail($"Update failed body: {body}");
-        }
+        var put = await _client.PutAsJsonAsync("/api/occurrence", updatePayload);
+        Assert.Equal(HttpStatusCode.OK, put.StatusCode);
 
         var fetched = await _client.GetFromJsonAsync<OccurrenceDetailsDto>(
             $"/api/occurrences/{createdDto.Id}",
@@ -216,12 +193,7 @@ public class TestOccurrenceApiController : IClassFixture<WebApplicationFactory<P
             Location = new GeoPoint { Latitude = 40.0, Longitude = -8.0 },
         };
         var createResp = await _client.PostAsJsonAsync("/api/occurrence", occ);
-        if (createResp.StatusCode != HttpStatusCode.Created)
-        {
-            var body = await createResp.Content.ReadAsStringAsync();
-            Assert.Equal(HttpStatusCode.Created, createResp.StatusCode);
-            Assert.Fail($"Create for delete failed body: {body}");
-        }
+        Assert.Equal(HttpStatusCode.Created, createResp.StatusCode);
 
         var location = createResp.Headers.Location;
         Assert.NotNull(location);
