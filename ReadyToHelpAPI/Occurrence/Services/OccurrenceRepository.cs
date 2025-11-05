@@ -102,7 +102,13 @@ public class OccurrenceRepository : IOccurrenceRepository
     }
 
     /// <inheritdoc />
-    public List<Occurrence> GetAllOccurrences(int pageNumber, int pageSize, string sortBy, string sortOrder, string filter)
+    public List<Occurrence> GetAllOccurrences(
+        int pageNumber,
+        int pageSize,
+        string sortBy,
+        string sortOrder,
+        string filter
+    )
     {
         if (pageNumber <= 0)
             pageNumber = 1;
@@ -168,7 +174,13 @@ public class OccurrenceRepository : IOccurrenceRepository
     }
 
     /// <inheritdoc />
-    public List<Occurrence> GetAllActiveOccurrences(int pageNumber, int pageSize, OccurrenceType? type, PriorityLevel? priority, int? responsibleEntityId)
+    public List<Occurrence> GetAllActiveOccurrences(
+        int pageNumber,
+        int pageSize,
+        OccurrenceType? type,
+        PriorityLevel? priority,
+        int? responsibleEntityId
+    )
     {
         if (pageNumber <= 0)
             pageNumber = 1;

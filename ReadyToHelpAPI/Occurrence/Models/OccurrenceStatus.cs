@@ -9,5 +9,5 @@ public enum OccurrenceStatus
     ACTIVE,
     IN_PROGRESS,
     RESOLVED,
-    CLOSED
+    CLOSED,
 }

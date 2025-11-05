@@ -26,5 +26,5 @@ public enum OccurrenceType
     INJURED_ANIMAL,
     POLLUTION,
     MEDICAL_EMERGENCY,
-    WORK_ACCIDENT
+    WORK_ACCIDENT,
 }

@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using readytohelpapi.Common.Data;
 
 namespace readytohelpapi.Occurrence.Tests;
@@ -22,7 +21,8 @@ public class DbFixture : IDisposable
         var postgresHost = Environment.GetEnvironmentVariable("POSTGRES_HOST") ?? "localhost";
         var postgresPort = Environment.GetEnvironmentVariable("POSTGRES_PORT") ?? "5432";
         var postgresUser = Environment.GetEnvironmentVariable("POSTGRES_USERNAME") ?? "readytohelp";
-        var postgresPwd = Environment.GetEnvironmentVariable("POSTGRES_PASSWORD") ?? "readytohelppwd";
+        var postgresPwd =
+            Environment.GetEnvironmentVariable("POSTGRES_PASSWORD") ?? "readytohelppwd";
 
         databaseName = $"occ_tests_{Guid.NewGuid():N}";
 
@@ -65,7 +65,8 @@ public class DbFixture : IDisposable
     /// </summary>
     protected virtual void Dispose(bool disposing)
     {
-        if (disposed) return;
+        if (disposed)
+            return;
 
         if (disposing && Context != null)
         {
@@ -73,9 +74,9 @@ public class DbFixture : IDisposable
             {
                 Context.Database.EnsureDeleted();
             }
-            catch
+            catch (Exception ex)
             {
-                // Ignore exceptions during database deletion
+                Console.WriteLine($"Error occurred while deleting database: {ex.Message}");
             }
             Context.Dispose();
         }

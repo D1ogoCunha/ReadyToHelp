@@ -1,7 +1,7 @@
 namespace readytohelpapi.Occurrence.DTOs;
 
-using readytohelpapi.Occurrence.Models;
 using readytohelpapi.GeoPoint.Models;
+using readytohelpapi.Occurrence.Models;
 
 /// <summary>
 /// Data transfer object for creating an Occurrence to reduce constructor parameters.
