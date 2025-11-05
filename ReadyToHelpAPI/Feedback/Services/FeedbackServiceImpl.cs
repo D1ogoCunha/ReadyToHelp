@@ -34,13 +34,13 @@ public class FeedbackServiceImpl : IFeedbackService
         if (!repo.UserExists(feedback.UserId))
             throw new ArgumentException(
                 $"User with id {feedback.UserId} does not exist",
-                nameof(feedback.UserId)
+                nameof(feedback)
             );
 
         if (!repo.OccurrenceExists(feedback.OccurrenceId))
             throw new ArgumentException(
                 $"Occurrence with id {feedback.OccurrenceId} does not exist",
-                nameof(feedback.OccurrenceId)
+                nameof(feedback)
             );
 
         var occCheck = occurrenceService.GetOccurrenceById(feedback.OccurrenceId);

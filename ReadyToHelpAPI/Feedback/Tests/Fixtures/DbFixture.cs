@@ -11,11 +11,12 @@ using readytohelpapi.User.Models;
 
 
 /// <summary>
-/// Test DB fixture for Feedback tests. Creates a unique PostgreSQL test database per fixture instance.
+///  Fixture for setting up and managing the test database related to feedback.
 /// </summary>
 public class DbFixture : IDisposable
 {
     private readonly string _databaseName;
+    private bool disposed;
 
     /// <summary>
     ///   Initializes a new instance of the <see cref="DbFixture"/> class.
@@ -48,21 +49,6 @@ public class DbFixture : IDisposable
     public AppDbContext Context { get; }
 
     /// <summary>
-    ///   Disposes the database context.
-    /// </summary>
-    public void Dispose()
-    {
-        try
-        {
-            this.Context.Database.EnsureDeleted();
-        }
-        finally
-        {
-            this.Context.Dispose();
-        }
-    }
-
-    /// <summary>
     /// Clear tracked entities and remove all feedback-related data for a clean test start.
     /// </summary>
     public void ResetDatabase()
@@ -92,4 +78,37 @@ public class DbFixture : IDisposable
 
         this.Context.ChangeTracker.Clear();
     }
+
+    /// <summary>
+    ///  Disposes of the database context and deletes the test database.
+    ///  Implements the dispose pattern for inheritable types.
+    /// </summary>
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposed) return;
+
+        if (disposing && Context != null)
+        {
+            try
+            {
+                Context.Database.EnsureDeleted();
+            }
+            catch
+            {
+                // Ignore exceptions during database deletion
+            }
+            Context.Dispose();
+        }
+        disposed = true;
+    }
+
+    /// <summary>
+    /// Releases all resources used by the <see cref="DbFixture"/>.
+    /// </summary>
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
 }
