@@ -1,7 +1,6 @@
 namespace readytohelpapi.Feedback.Controllers;
 
 using System;
-using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using readytohelpapi.Feedback.Models;
@@ -10,6 +9,7 @@ using readytohelpapi.Feedback.Services;
 /// <summary>
 ///   Provides API endpoints for managing feedbacks.
 /// </summary>
+[Authorize]
 [ApiController]
 [Route("api/feedback")]
 public class FeedbackApiController : ControllerBase
@@ -40,7 +40,6 @@ public class FeedbackApiController : ControllerBase
         try
         {
             var created = service.Create(feedback);
-            // Em vez de CreatedAtAction(GetById,...)
             return StatusCode(StatusCodes.Status201Created, created);
         }
         catch (ArgumentException ex)

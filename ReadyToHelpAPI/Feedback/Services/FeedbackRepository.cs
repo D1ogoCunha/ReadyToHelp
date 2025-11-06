@@ -1,5 +1,6 @@
 namespace readytohelpapi.Feedback.Services;
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
@@ -61,4 +62,11 @@ public class FeedbackRepository : IFeedbackRepository
 
     /// <inheritdoc />
     public bool OccurrenceExists(int occurrenceId) => context.Occurrences.Any(o => o.Id == occurrenceId);
+
+    /// <inheritdoc />
+    public bool HasRecentFeedback(int userId, int occurrenceId, DateTime since) =>
+        context.Feedbacks.Any(f =>
+            f.UserId == userId
+            && f.OccurrenceId == occurrenceId
+            && f.FeedbackDateTime >= since);
 }

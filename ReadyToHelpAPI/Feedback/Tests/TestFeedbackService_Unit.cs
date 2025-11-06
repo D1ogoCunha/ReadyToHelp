@@ -6,7 +6,6 @@ using Moq;
 using Xunit;
 using readytohelpapi.Feedback.Models;
 using readytohelpapi.Feedback.Services;
-using readytohelpapi.Feedback.Tests.Fixtures;
 using readytohelpapi.Occurrence.Services;
 using readytohelpapi.Occurrence.Models;
 
@@ -35,7 +34,7 @@ public class TestFeedbackService_Unit
     [Fact]
     public void Create_NullFeedback_ThrowsArgumentNullException()
     {
-        Assert.Throws<ArgumentNullException>(() => service.Create(null));
+        Assert.Throws<ArgumentNullException>(() => service.Create(null!));
     }
 
     /// <summary>
@@ -359,15 +358,33 @@ public class TestFeedbackService_Unit
     }
 
     /// <summary>
-    /// Tests the Create method when the repository returns null.
+    /// Tests the Create method when the same user already submitted feedback within the last hour.
     /// </summary>
     [Fact]
-    public void Create_RepoReturnsNull_ReturnsNull()
+    public void Create_DuplicateWithinHour_ThrowsArgumentException()
     {
         var fb = new Feedback { UserId = 1, OccurrenceId = 2, IsConfirmed = true };
 
         mockRepo.Setup(r => r.UserExists(1)).Returns(true);
         mockRepo.Setup(r => r.OccurrenceExists(2)).Returns(true);
+        mockRepo.Setup(r => r.HasRecentFeedback(1, 2, It.IsAny<DateTime>())).Returns(true);
+
+        var ex = Assert.Throws<ArgumentException>(() => service.Create(fb));
+        Assert.Contains("within the last hour", ex.Message, StringComparison.OrdinalIgnoreCase);
+        mockRepo.Verify(r => r.Create(It.IsAny<Feedback>()), Times.Never);
+    }
+
+    /// <summary>
+    /// Tests the Create method when the repository returns null.
+    /// </summary>
+    [Fact]
+    public void Create_RepoReturnsNull_ThrowsInvalidOperationException()
+    {
+        var fb = new Feedback { UserId = 1, OccurrenceId = 2, IsConfirmed = true };
+
+        mockRepo.Setup(r => r.UserExists(1)).Returns(true);
+        mockRepo.Setup(r => r.OccurrenceExists(2)).Returns(true);
+        mockRepo.Setup(r => r.HasRecentFeedback(1, 2, It.IsAny<DateTime>())).Returns(false);
         mockRepo.Setup(r => r.Create(It.IsAny<Feedback>())).Returns((Feedback)null!);
 
         var mockOccurrenceService = new Mock<IOccurrenceService>();
@@ -376,9 +393,8 @@ public class TestFeedbackService_Unit
 
         var svc = new FeedbackServiceImpl(mockRepo.Object, mockOccurrenceService.Object);
 
-        var result = svc.Create(fb);
-
-        Assert.Null(result);
+        var ex = Assert.Throws<InvalidOperationException>(() => svc.Create(fb));
+        Assert.Contains("Failed to create feedback", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 }
 

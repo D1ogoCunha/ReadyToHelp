@@ -1,6 +1,7 @@
 namespace readytohelpapi.Feedback.Tests;
 
 using System;
+using Microsoft.EntityFrameworkCore;
 using readytohelpapi.Common.Data;
 using readytohelpapi.Feedback.Models;
 using readytohelpapi.Feedback.Services;
@@ -403,5 +404,96 @@ public class TestFeedbackRepository : IClassFixture<DbFixture>
 
         var got = this.repository.GetFeedbackById(fb.Id);
         Assert.Null(got);
+    }
+
+    /// <summary>
+    /// Tests HasRecentFeedback returns true when a feedback exists within the window.
+    /// </summary>
+    [Fact]
+    public void HasRecentFeedback_ReturnsTrue_WithinWindow()
+    {
+        var user = new User { Name = "u8", Email = "u8@example.com", Password = "p", Profile = Profile.CITIZEN };
+        this.context.Users.Add(user);
+        this.context.SaveChanges();
+
+        var reId = CreateResponsibleEntityHelper();
+
+        var occ = new Occurrence(
+            new OccurrenceCreateDto
+            {
+                Title = "o8",
+                Description = "teste ocorrencia",
+                Type = OccurrenceType.ROAD_DAMAGE,
+                Status = OccurrenceStatus.ACTIVE,
+                Location = new GeoPoint { Latitude = 41.3678, Longitude = -8.2012 },
+                ResponsibleEntityId = reId
+            }
+        );
+        this.context.Occurrences.Add(occ);
+        this.context.SaveChanges();
+
+        var fb = new Feedback { UserId = user.Id, OccurrenceId = occ.Id, IsConfirmed = false, FeedbackDateTime = DateTime.UtcNow.AddMinutes(-30) };
+        this.context.Feedbacks.Add(fb);
+        this.context.SaveChanges();
+
+        var since = DateTime.UtcNow.AddHours(-1);
+        Assert.True(this.repository.HasRecentFeedback(user.Id, occ.Id, since));
+    }
+
+    /// <summary>
+    /// Tests HasRecentFeedback returns false when only older feedbacks exist.
+    /// </summary>
+    [Fact]
+    public void HasRecentFeedback_ReturnsFalse_OutsideWindow()
+    {
+        var user = new User { Name = "u9", Email = "u9@example.com", Password = "p", Profile = Profile.CITIZEN };
+        this.context.Users.Add(user);
+        this.context.SaveChanges();
+
+        var reId = CreateResponsibleEntityHelper();
+
+        var occ = new Occurrence(
+            new OccurrenceCreateDto
+            {
+                Title = "o9",
+                Description = "teste ocorrencia",
+                Type = OccurrenceType.ROAD_DAMAGE,
+                Status = OccurrenceStatus.ACTIVE,
+                Location = new GeoPoint { Latitude = 41.3678, Longitude = -8.2012 },
+                ResponsibleEntityId = reId
+            }
+        );
+        this.context.Occurrences.Add(occ);
+        this.context.SaveChanges();
+
+        var fb = new Feedback { UserId = user.Id, OccurrenceId = occ.Id, IsConfirmed = true, FeedbackDateTime = DateTime.UtcNow.AddHours(-2) };
+        this.context.Feedbacks.Add(fb);
+        this.context.SaveChanges();
+
+        var since = DateTime.UtcNow.AddHours(-1);
+        Assert.False(this.repository.HasRecentFeedback(user.Id, occ.Id, since));
+    }
+
+    /// <summary>
+    /// Tests that Create wraps persistence failures in DbUpdateException (catch coverage).
+    /// </summary>
+    [Fact]
+    public void Create_InvalidForeignKey_ThrowsDbUpdateException()
+    {
+        var user = new User { Name = "u_fk", Email = "u_fk@example.com", Password = "p", Profile = Profile.CITIZEN };
+        this.context.Users.Add(user);
+        this.context.SaveChanges();
+
+        var nonExistingOccurrenceId = 999_999;
+        var fb = new Feedback
+        {
+            UserId = user.Id,
+            OccurrenceId = nonExistingOccurrenceId,
+            IsConfirmed = true
+        };
+
+        var ex = Assert.Throws<DbUpdateException>(() => this.repository.Create(fb));
+        Assert.Contains("Failed to create feedback", ex.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.NotNull(ex.InnerException);
     }
 }
