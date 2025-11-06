@@ -2,25 +2,16 @@ namespace readytohelpapi.Dashboard.Tests;
 
 using System.Net;
 using System.Net.Http.Json;
-using System.Security.Claims;
-using System.Text.Encodings.Web;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using readytohelpapi.Common.Tests;
 using readytohelpapi.Dashboard.DTOs;
 using Xunit;
-
-public partial class Program { }
 
 /// <summary>
 /// This class contains all integration tests for Dashboard API controller.
 /// </summary>
 [Trait("Category", "Integration")]
-public class TestDashboardApiController : IClassFixture<WebApplicationFactory<Program>>
+public class TestDashboardApiController : IClassFixture<TestWebApplicationFactory>
 {
     private readonly HttpClient _client;
 
@@ -28,28 +19,9 @@ public class TestDashboardApiController : IClassFixture<WebApplicationFactory<Pr
     /// Initializes a new instance of the <see cref="TestDashboardApiController"/> class.
     /// </summary>
     /// <param name="factory">The web application factory.</param>
-    public TestDashboardApiController(WebApplicationFactory<Program> factory)
+    public TestDashboardApiController(TestWebApplicationFactory factory)
     {
-        var customized = factory.WithWebHostBuilder(builder =>
-        {
-            builder.ConfigureServices(services =>
-            {
-                services
-                    .AddAuthentication("Test")
-                    .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(
-                        "Test",
-                        options => { }
-                    );
-
-                services.PostConfigure<AuthenticationOptions>(opts =>
-                {
-                    opts.DefaultAuthenticateScheme = "Test";
-                    opts.DefaultChallengeScheme = "Test";
-                });
-            });
-        });
-
-        _client = customized.CreateClient();
+        _client = factory.CreateClient();
     }
 
     /// <summary>

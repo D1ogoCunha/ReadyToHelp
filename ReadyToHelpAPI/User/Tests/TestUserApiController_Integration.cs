@@ -7,7 +7,6 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,28 +16,21 @@ using readytohelpapi.Common.Tests;
 using readytohelpapi.User.Models;
 using Xunit;
 
-public partial class Program { }
-
 [Trait("Category", "Integration")]
 public class TestUserApiController_Integration
-    : IClassFixture<WebApplicationFactory<Program>>,
+    : IClassFixture<TestWebApplicationFactory>,
         IClassFixture<DbFixture>
 {
     private readonly HttpClient _client;
-    private readonly WebApplicationFactory<Program> _factory;
-    private readonly DbFixture _dbFixture;
+    private readonly DbFixture fixtureDB;
 
-    public TestUserApiController_Integration(
-        WebApplicationFactory<Program> factory,
-        DbFixture dbFixture
-    )
+    public TestUserApiController_Integration(TestWebApplicationFactory factory, DbFixture dbFixture)
     {
-        _factory = factory;
-        _dbFixture = dbFixture;
+        fixtureDB = dbFixture;
 
-        _dbFixture.ResetDatabase();
+        fixtureDB.ResetDatabase();
 
-        var connection = _dbFixture.Context.Database.GetDbConnection();
+        var connection = fixtureDB.Context.Database.GetDbConnection();
         if (connection.State != ConnectionState.Open)
             connection.Open();
 
@@ -52,16 +44,6 @@ public class TestUserApiController_Integration
                 services.AddDbContext<AppDbContext>(options =>
                 {
                     options.UseNpgsql(connection, npgsql => npgsql.UseNetTopologySuite());
-                });
-
-                services
-                    .AddAuthentication("Test")
-                    .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>("Test", _ => { });
-
-                services.PostConfigure<AuthenticationOptions>(opts =>
-                {
-                    opts.DefaultAuthenticateScheme = "Test";
-                    opts.DefaultChallengeScheme = "Test";
                 });
             });
         });
@@ -446,7 +428,7 @@ public class TestUserApiController_Integration
     [Fact]
     public async Task Create_Unauthenticated_ReturnsUnauthorized()
     {
-        using var unauth = _factory.CreateClient();
+        using var unauth = new WebApplicationFactory<Program>().CreateClient();
         var resp = await unauth.PostAsJsonAsync(
             "/api/user",
             new
@@ -635,7 +617,7 @@ public class TestUserApiController_Integration
         created.EnsureSuccessStatusCode();
         var id = await ReadIdAsync(created);
 
-        using var unauth = _factory.CreateClient();
+        using var unauth = new WebApplicationFactory<Program>().CreateClient();
         var resp = await unauth.PutAsJsonAsync(
             $"/api/user/{id}",
             new
@@ -666,7 +648,7 @@ public class TestUserApiController_Integration
         created.EnsureSuccessStatusCode();
         var id = await ReadIdAsync(created);
 
-        using var unauth = _factory.CreateClient();
+        using var unauth = new WebApplicationFactory<Program>().CreateClient();
         var resp = await unauth.DeleteAsync($"/api/user/{id}");
         Assert.Equal(HttpStatusCode.Unauthorized, resp.StatusCode);
     }

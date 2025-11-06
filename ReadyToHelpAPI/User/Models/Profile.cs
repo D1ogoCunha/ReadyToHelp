@@ -7,5 +7,5 @@ public enum Profile
 {
     ADMIN,
     CITIZEN,
-    MANAGER
+    MANAGER,
 }

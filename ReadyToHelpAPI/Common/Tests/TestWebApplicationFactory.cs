@@ -26,9 +26,10 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
         {
             var host = Environment.GetEnvironmentVariable("POSTGRES_HOST") ?? "localhost";
             var port = Environment.GetEnvironmentVariable("POSTGRES_PORT") ?? "5432";
-            var user = Environment.GetEnvironmentVariable("POSTGRES_USERNAME")
-                       ?? Environment.GetEnvironmentVariable("POSTGRES_USER")
-                       ?? "readytohelp";
+            var user =
+                Environment.GetEnvironmentVariable("POSTGRES_USERNAME")
+                ?? Environment.GetEnvironmentVariable("POSTGRES_USER")
+                ?? "readytohelp";
             var pwd = Environment.GetEnvironmentVariable("POSTGRES_PASSWORD") ?? "readytohelppwd";
 
             services.RemoveAll<DbContextOptions<AppDbContext>>();
@@ -40,14 +41,19 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
                 )
             );
 
-            services.AddAuthentication(o =>
-            {
-                o.DefaultAuthenticateScheme = "Test";
-                o.DefaultChallengeScheme = "Test";
-            }).AddScheme<AuthenticationSchemeOptions, TestAuthHandler>("Test", _ => { });
+            services
+                .AddAuthentication(o =>
+                {
+                    o.DefaultAuthenticateScheme = "Test";
+                    o.DefaultChallengeScheme = "Test";
+                })
+                .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>("Test", _ => { });
 
             services.RemoveAll<NotifierClient>();
-            var http = new HttpClient(new OkHandler()) { BaseAddress = new Uri("http://localhost") };
+            var http = new HttpClient(new OkHandler())
+            {
+                BaseAddress = new Uri("http://localhost"),
+            };
             services.AddSingleton(new NotifierClient(http, NullLogger<NotifierClient>.Instance));
 
             using var sp = services.BuildServiceProvider();
