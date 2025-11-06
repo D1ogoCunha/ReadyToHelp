@@ -1,13 +1,11 @@
-# -------------------------------
-# ReadyToHelp - CI Pipeline
-# -------------------------------
+# -------------------------------------------
+# ReadyToHelp - Optimized CI Pipeline
+# -------------------------------------------
 
 stages:
-  - setup
   - build
   - lint
   - test
-  - deploy
 
 image: mcr.microsoft.com/dotnet/sdk:8.0
 
@@ -16,6 +14,7 @@ variables:
   POSTGRES_PASSWORD: readytohelppwd
   POSTGRES_DB: readytohelp_db
   POSTGRES_HOST: postgres
+  ASPNETCORE_ENVIRONMENT: Testing
 
 before_script:
   - apt-get update && apt-get install -y curl
@@ -23,23 +22,14 @@ before_script:
   - chmod +x wait-for-it.sh
   - export PATH="$PATH:/root/.dotnet/tools"
 
-setup-database:
-  stage: setup
-  services:
-    - name: postgis/postgis:15-3.3
-      alias: postgres
-  script:
-    - ./wait-for-it.sh postgres:5432 -- echo "PostgreSQL pronto"
-
 build:
   stage: build
+  script:
+    - dotnet restore ReadyToHelpAPI.sln
+    - dotnet build ReadyToHelpAPI.sln --configuration Release --no-restore
   only:
     - branches
     - merge_requests
-  script:
-    - echo "Building ReadyToHelp API..."
-    - dotnet restore ReadyToHelpAPI.sln
-    - dotnet build ReadyToHelpAPI.sln --configuration Release --no-restore
 
 lint:
   stage: lint
@@ -53,14 +43,18 @@ lint:
 
 unit-tests:
   stage: test
-  image: mcr.microsoft.com/dotnet/sdk:8.0
-  variables:
-    ASPNETCORE_ENVIRONMENT: Testing
   script:
-    - dotnet test --filter "Category=Unit" /p:CollectCoverage=true /p:CoverletOutputFormat=opencover /p:CoverletOutput=./TestResults/coverage.xml "/p:ExcludeByFile=**/ReadyToHelpAPI/Migrations/**"
+    - dotnet test ReadyToHelpAPI.sln \
+        --filter "Category=Unit" \
+        --logger:"trx;LogFileName=UnitTestResults.trx" \
+        /p:CollectCoverage=true \
+        /p:CoverletOutputFormat=opencover \
+        /p:CoverletOutput=./TestResults/coverage.xml \
+        "/p:ExcludeByFile=**/ReadyToHelpAPI/Migrations/**"
   artifacts:
     paths:
       - UnitTestResults.trx
+      - TestResults/
     expire_in: 1 week
   only:
     - branches
@@ -68,28 +62,22 @@ unit-tests:
 
 integration-tests:
   stage: test
-  image: mcr.microsoft.com/dotnet/sdk:8.0
   services:
     - name: postgis/postgis:15-3.3
       alias: postgres
-  variables:
-    ASPNETCORE_ENVIRONMENT: Testing
-    POSTGRES_USER: readytohelp
-    POSTGRES_PASSWORD: readytohelppwd
-    POSTGRES_DB: readytohelp_db
-    POSTGRES_HOST: postgres
-    POSTGRES_PORT: 5432
   script:
-    - apt-get update && apt-get install -y curl postgresql-client
     - ./wait-for-it.sh postgres:5432 -- echo "PostgreSQL is up"
-    - PGPASSWORD="$POSTGRES_PASSWORD" psql -h "$POSTGRES_HOST" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "CREATE EXTENSION IF NOT EXISTS postgis;"
-    - export PATH="$PATH:/root/.dotnet/tools"
-    - dotnet tool install -g dotnet-ef
-    - dotnet restore ReadyToHelpAPI.sln
-    - dotnet ef database update --project ReadyToHelpAPI/ReadyToHelpAPI.csproj --startup-project ReadyToHelpAPI/ReadyToHelpAPI.csproj
-    - dotnet test --filter "Category=Integration" /p:CollectCoverage=true /p:CoverletOutputFormat=opencover /p:CoverletOutput=./TestResults/coverage.xml "/p:ExcludeByFile=**/ReadyToHelpAPI/Migrations/**"
+    - dotnet test ReadyToHelpAPI.sln \
+        --filter "Category=Integration" \
+        --logger:"trx;LogFileName=IntegrationTestResults.trx" \
+        /p:CollectCoverage=true \
+        /p:CoverletOutputFormat=opencover \
+        /p:CoverletOutput=./TestResults/coverage.xml \
+        "/p:ExcludeByFile=**/ReadyToHelpAPI/Migrations/**"
   artifacts:
     paths:
       - IntegrationTestResults.trx
+      - TestResults/
+    expire_in: 1 week
   only:
     - merge_requests
