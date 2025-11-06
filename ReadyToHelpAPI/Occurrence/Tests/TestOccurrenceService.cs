@@ -975,10 +975,10 @@ public class TestOccurrenceService
     }
 
     /// <summary>
-    ///  Tests CreateAdminOccurrence sets ResponsibleEntityId = 0 if none is found.
+    ///  Tests CreateAdminOccurrence when no ResponsibleEntity is found.
     /// </summary>
     [Fact]
-    public void CreateAdminOccurrence_NoResponsibleEntity_SetsResponsibleEntityIdToZero()
+    public void CreateAdminOccurrence_NoResponsibleEntity()
     {
         var occurrence = new Occurrence(
             new OccurrenceCreateDto
@@ -1014,7 +1014,7 @@ public class TestOccurrenceService
         var result = service.CreateAdminOccurrence(occurrence);
 
         Assert.Equal(5, result.Id);
-        Assert.Equal(0, result.ResponsibleEntityId);
+        Assert.Null(result.ResponsibleEntityId);
     }
 
     /// <summary>

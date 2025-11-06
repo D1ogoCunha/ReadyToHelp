@@ -121,7 +121,7 @@ public class OccurrenceServiceImpl : IOccurrenceService
             occurrence.Location.Latitude,
             occurrence.Location.Longitude
         );
-        occurrence.ResponsibleEntityId = responsibleEntity?.Id ?? 0;
+        occurrence.ResponsibleEntityId = responsibleEntity?.Id;
 
         occurrence.CreationDateTime = DateTime.UtcNow;
         occurrence.ReportId = null;
