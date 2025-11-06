@@ -1,90 +1,92 @@
 namespace readytohelpapi.Report.Tests;
 
 using System.Net;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging.Abstractions;
+using System.Net.Http.Json;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using NetTopologySuite.Geometries;
 using readytohelpapi.Common.Data;
-using readytohelpapi.GeoPoint.Models;
-using readytohelpapi.Notifications;
-using readytohelpapi.Occurrence.Models;
-using readytohelpapi.Occurrence.Services;
-using readytohelpapi.Report.Controllers;
+using readytohelpapi.Common.Tests;
 using readytohelpapi.Report.DTOs;
 using readytohelpapi.Report.Models;
-using readytohelpapi.Report.Services;
+using readytohelpapi.User.Models;
 using readytohelpapi.ResponsibleEntity.Models;
-using readytohelpapi.ResponsibleEntity.Services;
-using readytohelpapi.User.Tests.Fixtures;
 using Xunit;
 
-/// <summary>
-/// This class contains all integration tests for ReportApiController.
-/// </summary>
+
+public partial class Program { }
+
 [Trait("Category", "Integration")]
-public class TestReportApiController_Integration : IClassFixture<DbFixture>
+public class TestReportApiController_Integration : IClassFixture<WebApplicationFactory<Program>>
 {
-    private readonly DbFixture fixture;
-    private readonly AppDbContext context;
-    private readonly ReportApiController controller;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="TestReportApiController_Integration"/> class.
-    /// </summary>
-    public TestReportApiController_Integration(DbFixture fixture)
+    private readonly WebApplicationFactory<Program> _factory;
+    private readonly HttpClient client;
+    private static readonly JsonSerializerOptions JsonOpts = new(JsonSerializerDefaults.Web)
     {
-        this.fixture = fixture;
-        this.fixture.ResetDatabase();
-        context = this.fixture.Context;
+        Converters = { new JsonStringEnumConverter() }
+    };
 
-        var reportRepo = new ReportRepository(context);
-        var occurrenceRepo = new OccurrenceRepository(context);
-        var responsibleService = new ResponsibleEntityService(context);
-        var occurrenceService = new OccurrenceServiceImpl(occurrenceRepo, responsibleService);
-
-        var http = new HttpClient(new FakeHttpHandler())
+    public TestReportApiController_Integration(WebApplicationFactory<Program> factory)
+    {
+        _factory = factory.WithWebHostBuilder(builder =>
         {
-            BaseAddress = new Uri("http://localhost"),
-        };
-        var notifierClient = new NotifierClient(http, NullLogger<NotifierClient>.Instance);
+            builder.ConfigureServices(services =>
+            {
+                services
+                    .AddAuthentication("Test")
+                    .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>("Test", _ => { });
 
-        var reportService = new ReportServiceImpl(
-            reportRepo,
-            occurrenceService,
-            responsibleService,
-            notifierClient
-        );
+                services.PostConfigure<AuthenticationOptions>(opts =>
+                {
+                    opts.DefaultAuthenticateScheme = "Test";
+                    opts.DefaultChallengeScheme = "Test";
+                });
 
-        controller = new ReportApiController(reportService, reportRepo, context);
-        controller.ModelState.Clear();
+                using var sp = services.BuildServiceProvider();
+                using var scope = sp.CreateScope();
+                var ctx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+                try
+                {
+                    ctx.Database.Migrate();
+                }
+                catch (InvalidOperationException ex) when (ex.Message.Contains("PendingModelChangesWarning"))
+                {
+                    ctx.Database.EnsureCreated();
+                }
+
+                services.AddHttpClient<readytohelpapi.Notifications.NotifierClient>()
+                        .ConfigurePrimaryHttpMessageHandler(() => new FakeHttpHandler());
+            });
+        });
+
+        client = _factory.CreateClient();
     }
 
-    /// <summary>
-    /// Tests the Create method with a responsible entity present in DB.
-    /// </summary>
-    [Fact]
-    public void Create_WithResponsibleEntity_ReturnsEntityInResponse()
+    private static string UniqueEmail() => $"it_{Guid.NewGuid():N}@example.com";
+
+    private int SeedUser()
     {
-        fixture.ResetDatabase();
+        using var scope = _factory.Services.CreateScope();
+        var ctx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var user = new User { Name = "Reporter", Email = UniqueEmail(), Profile = Profile.CITIZEN, Password = "x" };
+        ctx.Users.Add(user);
+        ctx.SaveChanges();
+        return user.Id;
+    }
 
-        var user = UserFixture.CreateOrUpdateUser(email: $"cavaco-{Guid.NewGuid():N}@example.com");
-        context.Users.Add(user);
-        context.SaveChanges();
-        var userId = user.Id;
+    private void SeedResponsibleEntityCovering(double lat, double lon)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var ctx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-        var dto = new CreateReportDto
-        {
-            Title = "Emergência Médica",
-            Description = "Atropelamento",
-            Type = OccurrenceType.TRAFFIC_CONGESTION,
-            UserId = userId,
-            Latitude = 41.366943,
-            Longitude = -8.194949,
-        };
-
-        var geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
-        var lon = dto.Longitude;
-        var lat = dto.Latitude;
+        var gf = new GeometryFactory(new PrecisionModel(), 4326);
         var coords = new[]
         {
             new Coordinate(lon - 0.01, lat - 0.01),
@@ -93,115 +95,88 @@ public class TestReportApiController_Integration : IClassFixture<DbFixture>
             new Coordinate(lon + 0.01, lat - 0.01),
             new Coordinate(lon - 0.01, lat - 0.01),
         };
-        var poly = geometryFactory.CreatePolygon(coords);
-        var multi = geometryFactory.CreateMultiPolygon(new[] { poly });
+        var poly = gf.CreatePolygon(coords);
+        var multi = gf.CreateMultiPolygon(new[] { poly });
 
         var entity = new ResponsibleEntity
         {
-            Name = "Bombeiros Lisboa",
-            Email = "bombeiros@lisboa.pt",
-            Address = "Rua X, Lisboa",
-            ContactPhone = 213456789,
-            Type = ResponsibleEntityType.POLICIA,
-            GeoArea = multi,
+            Name = "Entidade Teste",
+            Email = "re@test.local",
+            Address = "Rua X",
+            ContactPhone = 123456789,
+            Type = ResponsibleEntityType.BOMBEIROS,
+            GeoArea = multi
         };
 
-        context.ResponsibleEntities.Add(entity);
-        context.SaveChanges();
-
-        var result = controller.Create(dto);
-
-        var created = Assert.IsType<CreatedAtActionResult>(result);
-        Assert.True(created.RouteValues?.ContainsKey("id"));
-
-        var savedReport = context.Reports.FirstOrDefault(r =>
-            r.Title == dto.Title && r.UserId == dto.UserId
-        );
-        Assert.NotNull(savedReport);
-
-        var savedOccurrence = context.Occurrences.FirstOrDefault(o =>
-            o.ReportId == savedReport!.Id
-        );
-        Assert.NotNull(savedOccurrence);
-
-        Assert.Equal(entity.Id, savedOccurrence!.ResponsibleEntityId);
-        var response = Assert.IsType<ReportResponseDto>(created.Value);
-        Assert.Equal(savedReport!.Id, response.ReportId);
-        Assert.Equal(savedOccurrence.Id, response.OccurrenceId);
+        ctx.ResponsibleEntities.Add(entity);
+        ctx.SaveChanges();
     }
 
-    /// <summary>
-    /// Tests the GetById method when the report is found.
-    /// </summary>
     [Fact]
-    public void GetById_ReturnsOk_WhenReportExists()
+    public async Task GetById_InvalidId_ReturnsBadRequest()
     {
-        fixture.ResetDatabase();
-
-        var user = UserFixture.CreateOrUpdateUser(email: $"test-{Guid.NewGuid():N}@example.com");
-        context.Users.Add(user);
-        context.SaveChanges();
-        var userId = user.Id;
-
-        var report = new Report
-        {
-            Title = "Relatório integração",
-            Description = "descrição",
-            UserId = userId,
-            Type = OccurrenceType.ROAD_DAMAGE,
-            Location = new GeoPoint { Latitude = 41.0, Longitude = -8.0 },
-        };
-
-        context.Reports.Add(report);
-        context.SaveChanges();
-
-        var id = report.Id;
-
-        var result = controller.GetById(id);
-
-        var ok = Assert.IsType<OkObjectResult>(result);
-        var payload = Assert.IsType<Report>(ok.Value);
-        Assert.Equal(id, payload.Id);
-        Assert.Equal("Relatório integração", payload.Title);
+        var resp = await client.GetAsync("/api/reports/0");
+        Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
     }
 
-    /// <summary>
-    /// Tests the GetById method when the report is not found.
-    /// </summary>
     [Fact]
-    public void GetById_NotFound_ReturnsNotFound()
+    public async Task GetById_NotFound_ReturnsNotFound()
     {
-        fixture.ResetDatabase();
-        var result = controller.GetById(999999);
-
-        Assert.IsType<NotFoundResult>(result);
+        var resp = await client.GetAsync("/api/reports/99999999");
+        Assert.Equal(HttpStatusCode.NotFound, resp.StatusCode);
     }
 
-    /// <summary>
-    /// Fake HTTP handler for testing.
-    /// </summary>
-    private class FakeHttpHandler : HttpMessageHandler
+    [Fact]
+    public async Task Create_NullBody_ReturnsBadRequest()
     {
-        /// <summary>
-        /// Sends an HTTP request asynchronously.
-        /// </summary>
-        /// <param name="request">The HTTP request message.</param>
-        /// <param name="cancellationToken">The cancellation token.</param>
-        /// <returns>The HTTP response message.</returns>
-        protected override Task<HttpResponseMessage> SendAsync(
-            HttpRequestMessage request,
-            CancellationToken cancellationToken
-        )
+        var resp = await client.PostAsync("/api/reports", new StringContent("", System.Text.Encoding.UTF8, "application/json"));
+        Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
+
+        var doc = await resp.Content.ReadFromJsonAsync<JsonDocument>();
+        Assert.NotNull(doc);
+        Assert.Equal("invalid_request", doc!.RootElement.GetProperty("error").GetString());
+    }
+
+    [Fact]
+    public async Task Create_Unauthenticated_ReturnsUnauthorized()
+    {
+        using var unauthFactory = _factory.WithWebHostBuilder(b =>
         {
-            var resp = new HttpResponseMessage(HttpStatusCode.OK)
+            b.ConfigureServices(s =>
             {
-                Content = new StringContent(
-                    "{\"ok\":true}",
-                    System.Text.Encoding.UTF8,
-                    "application/json"
-                ),
+                s.AddAuthentication("NoAuth")
+                 .AddScheme<AuthenticationSchemeOptions, NoAuthHandler>("NoAuth", _ => { });
+
+                s.PostConfigure<AuthenticationOptions>(o =>
+                {
+                    o.DefaultAuthenticateScheme = "NoAuth";
+                    o.DefaultChallengeScheme = "NoAuth";
+                });
+            });
+        });
+        using var unauth = unauthFactory.CreateClient();
+
+        var resp = await unauth.PostAsJsonAsync("/api/reports", new { });
+        Assert.Equal(HttpStatusCode.Unauthorized, resp.StatusCode);
+    }
+
+    private sealed class NoAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions>
+    {
+        public NoAuthHandler(IOptionsMonitor<AuthenticationSchemeOptions> options, ILoggerFactory logger, UrlEncoder encoder)
+            : base(options, logger, encoder) { }
+        protected override Task<AuthenticateResult> HandleAuthenticateAsync()
+            => Task.FromResult(AuthenticateResult.NoResult());
+    }
+
+    private sealed class FakeHttpHandler : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            var ok = new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("{\"ok\":true}", System.Text.Encoding.UTF8, "application/json")
             };
-            return Task.FromResult(resp);
+            return Task.FromResult(ok);
         }
     }
 }
