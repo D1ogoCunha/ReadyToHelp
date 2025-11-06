@@ -29,7 +29,7 @@ public class TestUserServiceTest
     [Fact]
     public void Create_NullUser_ThrowsArgumentNullException()
     {
-        Assert.Throws<ArgumentNullException>(() => userService.Create(null));
+        Assert.Throws<ArgumentNullException>(() => userService.Create(null!));
     }
 
     /// <summary>
@@ -38,7 +38,14 @@ public class TestUserServiceTest
     [Fact]
     public void Create_EmptyName_ThrowsArgumentException()
     {
-        var user = new Models.User(0, "", "email@example.com", "password", Profile.CITIZEN);
+        var user = new User
+        {
+            Id = 0,
+            Name = "",
+            Email = "email@example.com",
+            Password = "password",
+            Profile = Profile.CITIZEN,
+        };
         var ex = Assert.Throws<ArgumentException>(() => userService.Create(user));
         Assert.Contains("name", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
@@ -49,7 +56,14 @@ public class TestUserServiceTest
     [Fact]
     public void Create_EmptyPassword_ThrowsArgumentException()
     {
-        var user = new Models.User(0, "Name", "email@example.com", "", Profile.CITIZEN);
+        var user = new User
+        {
+            Id = 0,
+            Name = "Name",
+            Email = "email@example.com",
+            Password = "",
+            Profile = Profile.CITIZEN,
+        };
         var ex = Assert.Throws<ArgumentException>(() => userService.Create(user));
         Assert.Contains("password", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
@@ -60,7 +74,14 @@ public class TestUserServiceTest
     [Fact]
     public void Create_InvalidProfile_ThrowsArgumentOutOfRangeException()
     {
-        var user = new Models.User(0, "Name", "email@example.com", "password", (Profile)999);
+        var user = new User
+        {
+            Id = 0,
+            Name = "Name",
+            Email = "email@example.com",
+            Password = "password",
+            Profile = (Profile)999,
+        };
         Assert.Throws<ArgumentOutOfRangeException>(() => userService.Create(user));
     }
 
@@ -70,7 +91,14 @@ public class TestUserServiceTest
     [Fact]
     public void Create_EmptyEmail_ThrowsArgumentException()
     {
-        var user = new Models.User(0, "Name", "", "password", Profile.CITIZEN);
+        var user = new User
+        {
+            Id = 0,
+            Name = "Name",
+            Email = "",
+            Password = "password",
+            Profile = Profile.CITIZEN,
+        };
         var ex = Assert.Throws<ArgumentException>(() => userService.Create(user));
         Assert.Contains("Email", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
@@ -81,16 +109,26 @@ public class TestUserServiceTest
     [Fact]
     public void Create_EmailAlreadyExists_ThrowsArgumentException()
     {
-        var user = new Models.User(
-            0,
-            "Name",
-            "exists@example.com",
-            "password",
-            Profile.CITIZEN
-        );
+        var user = new User
+        {
+            Id = 1,
+            Name = "Name",
+            Email = "exists@example.com",
+            Password = "password",
+            Profile = Profile.CITIZEN,
+        };
         mockRepo
             .Setup(r => r.GetUserByEmail(It.IsAny<string>()))
-            .Returns(new Models.User(1, "Other", "exists@example.com", "pwd", Profile.CITIZEN));
+            .Returns(
+                new User
+                {
+                    Id = 2,
+                    Name = "Other",
+                    Email = "exists@example.com",
+                    Password = "pwd",
+                    Profile = Profile.CITIZEN,
+                }
+            );
 
         var ex = Assert.Throws<ArgumentException>(() => userService.Create(user));
         Assert.Contains("already exists", ex.Message, StringComparison.OrdinalIgnoreCase);
@@ -102,11 +140,16 @@ public class TestUserServiceTest
     [Fact]
     public void Create_RepositoryThrows_Exception()
     {
-        var user = new Models.User(0, "Name", "new@example.com", "password", Profile.CITIZEN);
-        mockRepo.Setup(r => r.GetUserByEmail(It.IsAny<string>())).Returns((Models.User?)null);
-        mockRepo
-            .Setup(r => r.Create(It.IsAny<Models.User>()))
-            .Throws(new Exception("DB error"));
+        var user = new User
+        {
+            Id = 0,
+            Name = "Name",
+            Email = "new@example.com",
+            Password = "password",
+            Profile = Profile.CITIZEN,
+        };
+        mockRepo.Setup(r => r.GetUserByEmail(It.IsAny<string>())).Returns((User?)null);
+        mockRepo.Setup(r => r.Create(It.IsAny<User>())).Throws(new Exception("DB error"));
 
         Assert.Throws<InvalidOperationException>(() => userService.Create(user));
     }
@@ -117,23 +160,25 @@ public class TestUserServiceTest
     [Fact]
     public void Create_Valid_ReturnsCreatedUser()
     {
-        var user = new Models.User(
-            0,
-            "Alice",
-            "alice@example.com",
-            "password",
-            Profile.CITIZEN
-        );
-        var created = new Models.User(
-            10,
-            "Alice",
-            "alice@example.com",
-            "hashed",
-            Profile.CITIZEN
-        );
+        var user = new User
+        {
+            Id = 0,
+            Name = "Alice",
+            Email = "alice@example.com",
+            Password = "password",
+            Profile = Profile.CITIZEN,
+        };
+        var created = new User
+        {
+            Id = 10,
+            Name = "Alice",
+            Email = "alice@example.com",
+            Password = "hashed",
+            Profile = Profile.CITIZEN,
+        };
 
-        mockRepo.Setup(r => r.GetUserByEmail(It.IsAny<string>())).Returns((Models.User?)null);
-        mockRepo.Setup(r => r.Create(It.IsAny<Models.User>())).Returns(created);
+        mockRepo.Setup(r => r.GetUserByEmail(It.IsAny<string>())).Returns((User?)null);
+        mockRepo.Setup(r => r.Create(It.IsAny<User>())).Returns(created);
 
         var result = userService.Create(user);
 
@@ -147,7 +192,7 @@ public class TestUserServiceTest
     [Fact]
     public void Update_NullUser_ThrowsArgumentNullException()
     {
-        Assert.Throws<ArgumentNullException>(() => userService.Update(null));
+        Assert.Throws<ArgumentNullException>(() => userService.Update(null!));
     }
 
     /// <summary>
@@ -156,7 +201,14 @@ public class TestUserServiceTest
     [Fact]
     public void Update_InvalidId_ThrowsArgumentException()
     {
-        var user = new Models.User(0, "Name", "n@example.com", "password", Profile.CITIZEN);
+        var user = new User
+        {
+            Id = 0,
+            Name = "Name",
+            Email = "n@example.com",
+            Password = "password",
+            Profile = Profile.CITIZEN,
+        };
         var ex = Assert.Throws<ArgumentException>(() => userService.Update(user));
         Assert.Contains("Invalid user id", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
@@ -167,7 +219,14 @@ public class TestUserServiceTest
     [Fact]
     public void Update_EmptyName_ThrowsArgumentException()
     {
-        var user = new Models.User(5, "", "email@example.com", "password", Profile.CITIZEN);
+        var user = new User
+        {
+            Id = 5,
+            Name = "",
+            Email = "email@example.com",
+            Password = "password",
+            Profile = Profile.CITIZEN,
+        };
         var ex = Assert.Throws<ArgumentException>(() => userService.Update(user));
         Assert.Contains("name", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
@@ -178,27 +237,30 @@ public class TestUserServiceTest
     [Fact]
     public void Update_EmailBelongsToOtherUser_ThrowsArgumentException()
     {
-        var existing = new Models.User(
-            5,
-            "User5",
-            "user5@example.com",
-            "hashed",
-            Profile.CITIZEN
-        );
-        var other = new Models.User(
-            6,
-            "User6",
-            "conflict@example.com",
-            "hashed",
-            Profile.CITIZEN
-        );
-        var toUpdate = new Models.User(
-            5,
-            "User5",
-            "conflict@example.com",
-            "password",
-            Profile.CITIZEN
-        );
+        var existing = new User
+        {
+            Id = 5,
+            Name = "User5",
+            Email = "user5@example.com",
+            Password = "hashed",
+            Profile = Profile.CITIZEN,
+        };
+        var other = new User
+        {
+            Id = 6,
+            Name = "User6",
+            Email = "conflict@example.com",
+            Password = "hashed",
+            Profile = Profile.CITIZEN,
+        };
+        var toUpdate = new User
+        {
+            Id = 5,
+            Name = "User5",
+            Email = "conflict@example.com",
+            Password = "password",
+            Profile = Profile.CITIZEN,
+        };
 
         mockRepo.Setup(r => r.GetUserById(5)).Returns(existing);
         mockRepo.Setup(r => r.GetUserByEmail("conflict@example.com")).Returns(other);
@@ -213,19 +275,27 @@ public class TestUserServiceTest
     [Fact]
     public void Update_NullPassword_KeepsExistingPassword()
     {
-        var existing = new Models.User(
-            5,
-            "Old",
-            "old@example.com",
-            "existingHash",
-            Profile.CITIZEN
-        );
-        var toUpdate = new Models.User(5, "Updated", "old@example.com", null, Profile.CITIZEN);
+        var existing = new User
+        {
+            Id = 5,
+            Name = "Old",
+            Email = "old@example.com",
+            Password = "existingHash",
+            Profile = Profile.CITIZEN,
+        };
+        var toUpdate = new User
+        {
+            Id = 5,
+            Name = "Updated",
+            Email = "old@example.com",
+            Password = string.Empty,
+            Profile = Profile.CITIZEN,
+        };
 
         mockRepo.Setup(r => r.GetUserById(5)).Returns(existing);
         mockRepo.Setup(r => r.GetUserByEmail("old@example.com")).Returns(existing);
         mockRepo
-            .Setup(r => r.Update(It.Is<Models.User>(u => u.Password == "existingHash")))
+            .Setup(r => r.Update(It.Is<User>(u => u.Password == "existingHash")))
             .Returns(toUpdate);
 
         var result = userService.Update(toUpdate);
@@ -238,7 +308,14 @@ public class TestUserServiceTest
     [Fact]
     public void Update_EmptyEmail_ThrowsArgumentException()
     {
-        var user = new Models.User(5, "Name", "", "password", Profile.CITIZEN);
+        var user = new User
+        {
+            Id = 5,
+            Name = "Name",
+            Email = "",
+            Password = "password",
+            Profile = Profile.CITIZEN,
+        };
         var ex = Assert.Throws<ArgumentException>(() => userService.Update(user));
         Assert.Contains("email", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
@@ -249,8 +326,15 @@ public class TestUserServiceTest
     [Fact]
     public void Update_UserNotFound_ThrowsKeyNotFoundException()
     {
-        var user = new Models.User(5, "Name", "n@example.com", "password", Profile.CITIZEN);
-        mockRepo.Setup(r => r.GetUserById(user.Id)).Returns((Models.User?)null);
+        var user = new User
+        {
+            Id = 5,
+            Name = "Name",
+            Email = "n@example.com",
+            Password = "password",
+            Profile = Profile.CITIZEN,
+        };
+        mockRepo.Setup(r => r.GetUserById(user.Id)).Returns((User?)null);
 
         Assert.Throws<KeyNotFoundException>(() => userService.Update(user));
     }
@@ -261,20 +345,22 @@ public class TestUserServiceTest
     [Fact]
     public void Update_RepositoryThrows_ExceptionPropagated()
     {
-        var existing = new Models.User(5, "Old", "old@example.com", "hashed", Profile.CITIZEN);
-        var toUpdate = new Models.User(
-            5,
-            "New",
-            "new@example.com",
-            "password",
-            Profile.CITIZEN
-        );
+        var existing = new User(5, "Old", "old@example.com", "hashed", Profile.CITIZEN)
+        {
+            Name = "Old",
+            Email = "old@example.com",
+            Password = "hashed",
+        };
+        var toUpdate = new User(5, "New", "new@example.com", "password", Profile.CITIZEN)
+        {
+            Name = "New",
+            Email = "new@example.com",
+            Password = "password",
+        };
 
         mockRepo.Setup(r => r.GetUserById(existing.Id)).Returns(existing);
-        mockRepo.Setup(r => r.GetUserByEmail(It.IsAny<string>())).Returns((Models.User?)null);
-        mockRepo
-            .Setup(r => r.Update(It.IsAny<Models.User>()))
-            .Throws(new Exception("DB error"));
+        mockRepo.Setup(r => r.GetUserByEmail(It.IsAny<string>())).Returns((User?)null);
+        mockRepo.Setup(r => r.Update(It.IsAny<User>())).Throws(new Exception("DB error"));
 
         Assert.Throws<InvalidOperationException>(() => userService.Update(toUpdate));
     }
@@ -285,18 +371,22 @@ public class TestUserServiceTest
     [Fact]
     public void Update_Valid_ReturnsUpdatedUser()
     {
-        var existing = new Models.User(6, "Old", "old@example.com", "hashed", Profile.CITIZEN);
-        var toUpdate = new Models.User(
-            6,
-            "Updated",
-            "old@example.com",
-            "password",
-            Profile.CITIZEN
-        );
+        var existing = new User(6, "Old", "old@example.com", "hashed", Profile.CITIZEN)
+        {
+            Name = "Old",
+            Email = "old@example.com",
+            Password = "hashed",
+        };
+        var toUpdate = new User(6, "Updated", "old@example.com", "password", Profile.CITIZEN)
+        {
+            Name = "Updated",
+            Email = "old@example.com",
+            Password = "password",
+        };
 
         mockRepo.Setup(r => r.GetUserById(existing.Id)).Returns(existing);
         mockRepo.Setup(r => r.GetUserByEmail(It.IsAny<string>())).Returns(existing);
-        mockRepo.Setup(r => r.Update(It.IsAny<Models.User>())).Returns(toUpdate);
+        mockRepo.Setup(r => r.Update(It.IsAny<User>())).Returns(toUpdate);
 
         var result = userService.Update(toUpdate);
 
@@ -320,7 +410,12 @@ public class TestUserServiceTest
     [Fact]
     public void Delete_ShouldReturnDeletedUser_WhenUserIdIsValid()
     {
-        var user = new Models.User(7, "ToDelete", "del@example.com", "pwd", Profile.CITIZEN);
+        var user = new User(7, "ToDelete", "del@example.com", "pwd", Profile.CITIZEN)
+        {
+            Name = "ToDelete",
+            Email = "del@example.com",
+            Password = "pwd",
+        };
         mockRepo.Setup(r => r.Delete(user.Id)).Returns(user);
 
         var result = userService.Delete(user.Id);
@@ -355,7 +450,7 @@ public class TestUserServiceTest
     [Fact]
     public void GetUserById_UserNotFound_ThrowsKeyNotFoundException()
     {
-        mockRepo.Setup(r => r.GetUserById(999)).Returns((Models.User?)null);
+        mockRepo.Setup(r => r.GetUserById(999)).Returns((User?)null);
         Assert.Throws<KeyNotFoundException>(() => userService.GetUserById(999));
     }
 
@@ -365,7 +460,12 @@ public class TestUserServiceTest
     [Fact]
     public void GetUserById_Valid_ReturnsUser()
     {
-        var user = new Models.User(10, "Test", "test@example.com", "hash", Profile.CITIZEN);
+        var user = new User(10, "Test", "test@example.com", "hash", Profile.CITIZEN)
+        {
+            Name = "Test",
+            Email = "test@example.com",
+            Password = "hash",
+        };
         mockRepo.Setup(r => r.GetUserById(10)).Returns(user);
 
         var result = userService.GetUserById(10);
@@ -375,16 +475,26 @@ public class TestUserServiceTest
     }
 
     /// <summary>
-    ///  Tests the GetUserByName method with a partial search term, ensuring it returns the matching users. 
+    ///  Tests the GetUserByName method with a partial search term, ensuring it returns the matching users.
     /// </summary>
     [Fact]
     public void GetUserByName_ReturnsMatchingUsers()
     {
-        var users = new List<Models.User>
+        var users = new List<User>
+        {
+            new User(1, "Alice", "alice@example.com", "hash", Profile.CITIZEN)
             {
-                new Models.User(1, "Alice", "alice@example.com", "hash", Profile.CITIZEN),
-                new Models.User(2, "Alicia", "alicia@example.com", "hash", Profile.ADMIN)
-            };
+                Name = "Alice",
+                Email = "alice@example.com",
+                Password = "hash",
+            },
+            new User(2, "Alicia", "alicia@example.com", "hash", Profile.ADMIN)
+            {
+                Name = "Alicia",
+                Email = "alicia@example.com",
+                Password = "hash",
+            },
+        };
         mockRepo.Setup(r => r.GetUserByName("Ali")).Returns(users);
 
         var result = userService.GetUserByName("Ali");
@@ -409,7 +519,12 @@ public class TestUserServiceTest
     [Fact]
     public void GetUserByEmail_Valid_ReturnsUser()
     {
-        var user = new Models.User(1, "Test", "test@example.com", "hash", Profile.CITIZEN);
+        var user = new User(1, "Test", "test@example.com", "hash", Profile.CITIZEN)
+        {
+            Name = "Test",
+            Email = "test@example.com",
+            Password = "hash",
+        };
         mockRepo.Setup(r => r.GetUserByEmail("test@example.com")).Returns(user);
 
         var result = userService.GetUserByEmail("test@example.com");
@@ -424,7 +539,7 @@ public class TestUserServiceTest
     [Fact]
     public void GetUserByEmail_NotFound_ReturnsNull()
     {
-        mockRepo.Setup(r => r.GetUserByEmail("notfound@example.com")).Returns((Models.User?)null);
+        mockRepo.Setup(r => r.GetUserByEmail("notfound@example.com")).Returns((User?)null);
 
         var result = userService.GetUserByEmail("notfound@example.com");
 
@@ -438,7 +553,8 @@ public class TestUserServiceTest
     public void GetAllUsers_InvalidPageNumber_ThrowsArgumentException()
     {
         var ex = Assert.Throws<ArgumentException>(() =>
-            userService.GetAllUsers(0, 10, "Name", "asc", ""));
+            userService.GetAllUsers(0, 10, "Name", "asc", "")
+        );
         Assert.Contains("Page number", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -449,7 +565,8 @@ public class TestUserServiceTest
     public void GetAllUsers_InvalidPageSize_ThrowsArgumentException()
     {
         var ex = Assert.Throws<ArgumentException>(() =>
-            userService.GetAllUsers(1, 0, "Name", "asc", ""));
+            userService.GetAllUsers(1, 0, "Name", "asc", "")
+        );
         Assert.Contains("Page size", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -460,7 +577,8 @@ public class TestUserServiceTest
     public void GetAllUsers_PageSizeTooLarge_ThrowsArgumentException()
     {
         var ex = Assert.Throws<ArgumentException>(() =>
-            userService.GetAllUsers(1, 1001, "Name", "asc", ""));
+            userService.GetAllUsers(1, 1001, "Name", "asc", "")
+        );
         Assert.Contains("Page size", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -471,7 +589,8 @@ public class TestUserServiceTest
     public void GetAllUsers_EmptySortBy_ThrowsArgumentException()
     {
         var ex = Assert.Throws<ArgumentException>(() =>
-            userService.GetAllUsers(1, 10, "", "asc", ""));
+            userService.GetAllUsers(1, 10, "", "asc", "")
+        );
         Assert.Contains("Sort field", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -482,7 +601,8 @@ public class TestUserServiceTest
     public void GetAllUsers_InvalidSortOrder_ThrowsArgumentException()
     {
         var ex = Assert.Throws<ArgumentException>(() =>
-            userService.GetAllUsers(1, 10, "Name", "invalid", ""));
+            userService.GetAllUsers(1, 10, "Name", "invalid", "")
+        );
         Assert.Contains("Sort order", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -492,12 +612,16 @@ public class TestUserServiceTest
     [Fact]
     public void GetAllUsers_Valid_ReturnsUsers()
     {
-        var users = new List<Models.User>
+        var users = new List<User>
+        {
+            new User(1, "Alice", "alice@example.com", "hash", Profile.CITIZEN)
             {
-                new Models.User(1, "Alice", "alice@example.com", "hash", Profile.CITIZEN)
-            };
-        mockRepo.Setup(r => r.GetAllUsers(1, 10, "Name", "asc", ""))
-            .Returns(users);
+                Name = "Alice",
+                Email = "alice@example.com",
+                Password = "hash",
+            },
+        };
+        mockRepo.Setup(r => r.GetAllUsers(1, 10, "Name", "asc", "")).Returns(users);
 
         var result = userService.GetAllUsers(1, 10, "Name", "asc", "");
 
@@ -511,8 +635,7 @@ public class TestUserServiceTest
     [Fact]
     public void GetAllUsers_RepositoryReturnsNull_ReturnsEmptyList()
     {
-        mockRepo.Setup(r => r.GetAllUsers(1, 10, "Name", "asc", ""))
-            .Returns((List<Models.User>?)null);
+        mockRepo.Setup(r => r.GetAllUsers(1, 10, "Name", "asc", "")).Returns(new List<User>());
 
         var result = userService.GetAllUsers(1, 10, "Name", "asc", "");
 
@@ -526,12 +649,21 @@ public class TestUserServiceTest
     [Fact]
     public void GetAllUsers_RepositoryThrows_ExceptionPropagated()
     {
-        mockRepo.Setup(r => r.GetAllUsers(It.IsAny<int>(), It.IsAny<int>(),
-            It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+        mockRepo
+            .Setup(r =>
+                r.GetAllUsers(
+                    It.IsAny<int>(),
+                    It.IsAny<int>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>()
+                )
+            )
             .Throws(new Exception("DB error"));
 
         Assert.Throws<InvalidOperationException>(() =>
-            userService.GetAllUsers(1, 10, "Name", "asc", ""));
+            userService.GetAllUsers(1, 10, "Name", "asc", "")
+        );
     }
 
     /// <summary>
@@ -540,7 +672,7 @@ public class TestUserServiceTest
     [Fact]
     public void Register_NullUser_ThrowsArgumentNullException()
     {
-        Assert.Throws<ArgumentNullException>(() => userService.Register(null));
+        Assert.Throws<ArgumentNullException>(() => userService.Register(null!));
     }
 
     /// <summary>
@@ -549,11 +681,22 @@ public class TestUserServiceTest
     [Fact]
     public void Register_ForcesProfileToCitizen()
     {
-        var user = new Models.User(0, "NewUser", "new@example.com", "password", Profile.ADMIN);
-        var created = new Models.User(1, "NewUser", "new@example.com", "hash", Profile.CITIZEN);
+        var user = new User(0, "NewUser", "new@example.com", "password", Profile.ADMIN)
+        {
+            Name = "NewUser",
+            Email = "new@example.com",
+            Password = "password",
+        };
+        var created = new User(1, "NewUser", "new@example.com", "hash", Profile.CITIZEN)
+        {
+            Name = "NewUser",
+            Email = "new@example.com",
+            Password = "hash",
+        };
 
-        mockRepo.Setup(r => r.GetUserByEmail(It.IsAny<string>())).Returns((Models.User?)null);
-        mockRepo.Setup(r => r.Create(It.Is<Models.User>(u => u.Profile == Profile.CITIZEN)))
+        mockRepo.Setup(r => r.GetUserByEmail(It.IsAny<string>())).Returns((User?)null);
+        mockRepo
+            .Setup(r => r.Create(It.Is<User>(u => u.Profile == Profile.CITIZEN)))
             .Returns(created);
 
         var result = userService.Register(user);
@@ -561,6 +704,4 @@ public class TestUserServiceTest
         Assert.NotNull(result);
         Assert.Equal(Profile.CITIZEN, result.Profile);
     }
-
 }
-

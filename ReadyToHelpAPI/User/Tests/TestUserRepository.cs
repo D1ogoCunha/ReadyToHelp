@@ -80,7 +80,6 @@ public class TestUserRepositoryTest : IClassFixture<DbFixture>
         Assert.Equal("alice@example.com", result.Email);
     }
 
-
     /// <summary>
     /// Tests if null is returned when trying to retrieve a user by email that does not exist.
     /// </summary>
@@ -163,7 +162,6 @@ public class TestUserRepositoryTest : IClassFixture<DbFixture>
         Assert.Equal(user.Id, result.Id);
     }
 
-
     /// <summary>
     /// Tests if an empty list is returned when trying to retrieve users by name with invalid input (null).
     /// </summary>
@@ -220,10 +218,7 @@ public class TestUserRepositoryTest : IClassFixture<DbFixture>
         var result = _userRepository.GetUserByName("John");
 
         Assert.NotEmpty(result);
-        Assert.Contains(
-            result,
-            u => u.Name.Contains("John", StringComparison.OrdinalIgnoreCase)
-        );
+        Assert.Contains(result, u => u.Name.Contains("John", StringComparison.OrdinalIgnoreCase));
     }
 
     /// <summary>
@@ -417,7 +412,6 @@ public class TestUserRepositoryTest : IClassFixture<DbFixture>
         Assert.Equal(Profile.ADMIN, updated.Profile);
     }
 
-
     /// <summary>
     /// Tests if an existing user can be deleted successfully.
     /// </summary>
@@ -453,4 +447,3 @@ public class TestUserRepositoryTest : IClassFixture<DbFixture>
         Assert.Null(result);
     }
 }
-

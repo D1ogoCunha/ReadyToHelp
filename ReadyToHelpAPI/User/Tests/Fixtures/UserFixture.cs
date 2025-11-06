@@ -14,11 +14,18 @@ public static class UserFixture
         string name = "Default User",
         string email = "default@user.com",
         string password = "DefaultPassword",
-        Models.Profile profile = Models.Profile.CITIZEN)
+        Models.Profile profile = Models.Profile.CITIZEN
+    )
     {
-        testUser ??= new Models.User();
+        testUser ??= new Models.User
+        {
+            Name = name,
+            Email = email,
+            Password = password,
+        };
 
-        if (id.HasValue) testUser.Id = id.Value;
+        if (id.HasValue)
+            testUser.Id = id.Value;
         testUser.Name = name;
         testUser.Email = email;
         testUser.Password = password;

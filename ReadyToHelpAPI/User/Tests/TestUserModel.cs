@@ -15,12 +15,17 @@ public class TestUserModel
     [Fact]
     public void DefaultConstructor_InitializesDefaults()
     {
-        var u = new Models.User();
+        var u = new Models.User
+        {
+            Name = string.Empty,
+            Email = string.Empty,
+            Password = string.Empty,
+        };
 
         Assert.Equal(0, u.Id);
-        Assert.Null(u.Name);
-        Assert.Null(u.Email);
-        Assert.Null(u.Password);
+        Assert.Equal(string.Empty, u.Name);
+        Assert.Equal(string.Empty, u.Email);
+        Assert.Equal(string.Empty, u.Password);
 
         Assert.True(System.Enum.IsDefined(typeof(Profile), u.Profile));
     }
@@ -31,13 +36,14 @@ public class TestUserModel
     [Fact]
     public void ParameterizedConstructor_SetsAllProperties()
     {
-        var u = new Models.User(
-            id: 5,
-            name: "Alice",
-            email: "alice@example.com",
-            password: "secret",
-            profile: Profile.ADMIN
-        );
+        var u = new Models.User
+        {
+            Id = 5,
+            Name = "Alice",
+            Email = "alice@example.com",
+            Password = "secret",
+            Profile = Profile.ADMIN,
+        };
 
         Assert.Equal(5, u.Id);
         Assert.Equal("Alice", u.Name);
@@ -52,11 +58,13 @@ public class TestUserModel
     [Fact]
     public void PropertySetters_UpdateValues()
     {
-        var u = new Models.User();
+        var u = new Models.User
+        {
+            Name = "Bob",
+            Email = "bob@example.com",
+            Password = "pwd",
+        };
         u.Id = 10;
-        u.Name = "Bob";
-        u.Email = "bob@example.com";
-        u.Password = "pwd";
         u.Profile = Profile.CITIZEN;
 
         Assert.Equal(10, u.Id);

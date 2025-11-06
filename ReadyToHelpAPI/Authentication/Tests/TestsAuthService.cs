@@ -1,17 +1,17 @@
 using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using System.Security.Authentication;
+using System.Security.Claims;
+using System.Text;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
 using Moq;
-using AuthDto = readytohelpapi.Authentication.Models.Authentication;
-using AuthException = System.Security.Authentication.AuthenticationException;
 using readytohelpapi.Authentication.Service;
 using readytohelpapi.User.Models;
 using readytohelpapi.User.Services;
 using Xunit;
-using Microsoft.Extensions.Caching.Distributed;
+using AuthDto = readytohelpapi.Authentication.Models.Authentication;
+using AuthException = System.Security.Authentication.AuthenticationException;
 
 namespace ReadyToHelpAPI.Tests.Authentication;
 
@@ -40,7 +40,7 @@ public class TestAuthService
             ["Jwt:Secret"] = "0123456789ABCDEF0123456789ABCDEF",
             ["Jwt:Issuer"] = "ReadyToHelp",
             ["Jwt:Audience"] = "ReadyToHelpUsers",
-            ["Jwt:AccessTokenExpirationDays"] = "1"
+            ["Jwt:AccessTokenExpirationDays"] = "1",
         };
         configuration = new ConfigurationBuilder().AddInMemoryCollection(configData).Build();
 
@@ -78,7 +78,14 @@ public class TestAuthService
     [Fact]
     public void UserLoginWeb_ShouldReturnToken_WhenCredentialsValidAndRoleAllowed()
     {
-        var user = new User(1, "Admin", "admin@mail.com", BCrypt.Net.BCrypt.HashPassword("1234"), Profile.ADMIN);
+        var user = new User
+        {
+            Id = 1,
+            Name = "Admin",
+            Email = "admin@mail.com",
+            Password = BCrypt.Net.BCrypt.HashPassword("1234"),
+            Profile = Profile.ADMIN,
+        };
         mockUserService.Setup(u => u.GetUserByEmail("admin@mail.com")).Returns(user);
 
         var auth = new AuthDto("admin@mail.com", "1234");
@@ -95,7 +102,14 @@ public class TestAuthService
     [Fact]
     public void UserLoginWeb_ShouldThrowUnauthorized_WhenCitizenTriesToLogin()
     {
-        var user = new User(2, "Citizen", "citizen@mail.com", BCrypt.Net.BCrypt.HashPassword("1234"), Profile.CITIZEN);
+        var user = new User
+        {
+            Id = 2,
+            Name = "Citizen",
+            Email = "citizen@mail.com",
+            Password = BCrypt.Net.BCrypt.HashPassword("1234"),
+            Profile = Profile.CITIZEN,
+        };
         mockUserService.Setup(u => u.GetUserByEmail("citizen@mail.com")).Returns(user);
 
         var auth = new AuthDto("citizen@mail.com", "1234");
@@ -109,7 +123,14 @@ public class TestAuthService
     [Fact]
     public void UserLoginWeb_ShouldThrowAuthenticationException_WhenPasswordInvalid()
     {
-        var user = new User(3, "Admin", "admin@mail.com", BCrypt.Net.BCrypt.HashPassword("correctpass"), Profile.ADMIN);
+        var user = new User
+        {
+            Id = 3,
+            Name = "Admin",
+            Email = "admin@mail.com",
+            Password = BCrypt.Net.BCrypt.HashPassword("correctpass"),
+            Profile = Profile.ADMIN,
+        };
         mockUserService.Setup(u => u.GetUserByEmail("admin@mail.com")).Returns(user);
 
         var auth = new AuthDto("admin@mail.com", "wrongpass");
@@ -123,7 +144,14 @@ public class TestAuthService
     [Fact]
     public void UserLoginMobile_ShouldReturnToken_ForValidUser()
     {
-        var user = new User(4, "Citizen", "citizen@mail.com", BCrypt.Net.BCrypt.HashPassword("abcd"), Profile.CITIZEN);
+        var user = new User
+        {
+            Id = 4,
+            Name = "Citizen",
+            Email = "citizen@mail.com",
+            Password = BCrypt.Net.BCrypt.HashPassword("abcd"),
+            Profile = Profile.CITIZEN,
+        };
         mockUserService.Setup(u => u.GetUserByEmail("citizen@mail.com")).Returns(user);
 
         var auth = new AuthDto("citizen@mail.com", "abcd");
@@ -140,12 +168,14 @@ public class TestAuthService
     [Fact]
     public void RefreshToken_ShouldReturnNewToken_WhenTokenValid()
     {
-        var token = CreateCustomJwt(new Dictionary<string, string>
-        {
-            [JwtRegisteredClaimNames.Sub] = "1",
-            [JwtRegisteredClaimNames.Email] = "u@mail.com",
-            [ClaimTypes.Role] = "ADMIN"
-        });
+        var token = CreateCustomJwt(
+            new Dictionary<string, string>
+            {
+                [JwtRegisteredClaimNames.Sub] = "1",
+                [JwtRegisteredClaimNames.Email] = "u@mail.com",
+                [ClaimTypes.Role] = "ADMIN",
+            }
+        );
 
         Assert.False(string.IsNullOrWhiteSpace(token));
         Assert.True(token.Count(c => c == '.') >= 2);
@@ -174,7 +204,14 @@ public class TestAuthService
     [Fact]
     public void UserLoginWeb_Manager_ShouldReturnToken()
     {
-        var user = new User(10, "Manager", "manager@mail.com", BCrypt.Net.BCrypt.HashPassword("1234"), Profile.MANAGER);
+        var user = new User
+        {
+            Id = 10,
+            Name = "Manager",
+            Email = "manager@mail.com",
+            Password = BCrypt.Net.BCrypt.HashPassword("1234"),
+            Profile = Profile.MANAGER,
+        };
         mockUserService.Setup(u => u.GetUserByEmail("manager@mail.com")).Returns(user);
 
         var token = authService.UserLoginWeb(new AuthDto("manager@mail.com", "1234"));
@@ -194,11 +231,15 @@ public class TestAuthService
 
         if (mode == "mobile")
         {
-            Assert.Throws<AuthException>(() => authService.UserLoginMobile(new AuthDto("missing@mail.com", "123")));
+            Assert.Throws<AuthException>(() =>
+                authService.UserLoginMobile(new AuthDto("missing@mail.com", "123"))
+            );
         }
         else
         {
-            Assert.Throws<AuthException>(() => authService.UserLoginWeb(new AuthDto("missing@mail.com", "123")));
+            Assert.Throws<AuthException>(() =>
+                authService.UserLoginWeb(new AuthDto("missing@mail.com", "123"))
+            );
         }
     }
 
@@ -206,7 +247,9 @@ public class TestAuthService
     public void UserLoginWeb_ShouldThrowArgument_WhenEmailOrPasswordEmpty()
     {
         Assert.Throws<ArgumentException>(() => authService.UserLoginWeb(new AuthDto("", "123")));
-        Assert.Throws<ArgumentException>(() => authService.UserLoginWeb(new AuthDto("a@mail.com", "")));
+        Assert.Throws<ArgumentException>(() =>
+            authService.UserLoginWeb(new AuthDto("a@mail.com", ""))
+        );
     }
 
     /// <summary>
@@ -215,12 +258,15 @@ public class TestAuthService
     [Fact]
     public void RefreshToken_ShouldReturnEmpty_WhenExpiredToken()
     {
-        var token = CreateCustomJwt(new Dictionary<string, string>
-        {
-            [JwtRegisteredClaimNames.Sub] = "11",
-            [JwtRegisteredClaimNames.Email] = "admin2@mail.com",
-            [ClaimTypes.Role] = "ADMIN"
-        }, expiresDays: -1);
+        var token = CreateCustomJwt(
+            new Dictionary<string, string>
+            {
+                [JwtRegisteredClaimNames.Sub] = "11",
+                [JwtRegisteredClaimNames.Email] = "admin2@mail.com",
+                [ClaimTypes.Role] = "ADMIN",
+            },
+            expiresDays: -1
+        );
 
         var refreshed = authService.RefreshToken(token);
 
@@ -233,12 +279,14 @@ public class TestAuthService
     [Fact]
     public void RefreshToken_ShouldReturnEmpty_WhenSubIsNotInt()
     {
-        var token = CreateCustomJwt(new Dictionary<string, string>
-        {
-            [JwtRegisteredClaimNames.Sub] = "abc",
-            [JwtRegisteredClaimNames.Email] = "a@mail.com",
-            [ClaimTypes.Role] = "ADMIN"
-        });
+        var token = CreateCustomJwt(
+            new Dictionary<string, string>
+            {
+                [JwtRegisteredClaimNames.Sub] = "abc",
+                [JwtRegisteredClaimNames.Email] = "a@mail.com",
+                [ClaimTypes.Role] = "ADMIN",
+            }
+        );
 
         var result = authService.RefreshToken(token);
         Assert.Equal(string.Empty, result);
@@ -250,11 +298,13 @@ public class TestAuthService
     [Fact]
     public void RefreshToken_ShouldReturnEmpty_WhenEmailMissing()
     {
-        var token = CreateCustomJwt(new Dictionary<string, string>
-        {
-            [JwtRegisteredClaimNames.Sub] = "1",
-            [ClaimTypes.Role] = "ADMIN"
-        });
+        var token = CreateCustomJwt(
+            new Dictionary<string, string>
+            {
+                [JwtRegisteredClaimNames.Sub] = "1",
+                [ClaimTypes.Role] = "ADMIN",
+            }
+        );
 
         var result = authService.RefreshToken(token);
         Assert.Equal(string.Empty, result);
@@ -266,12 +316,14 @@ public class TestAuthService
     [Fact]
     public void RefreshToken_ShouldReturnEmpty_WhenRoleInvalid()
     {
-        var token = CreateCustomJwt(new Dictionary<string, string>
-        {
-            [JwtRegisteredClaimNames.Sub] = "1",
-            [JwtRegisteredClaimNames.Email] = "a@mail.com",
-            [ClaimTypes.Role] = "INVALID_ROLE"
-        });
+        var token = CreateCustomJwt(
+            new Dictionary<string, string>
+            {
+                [JwtRegisteredClaimNames.Sub] = "1",
+                [JwtRegisteredClaimNames.Email] = "a@mail.com",
+                [ClaimTypes.Role] = "INVALID_ROLE",
+            }
+        );
 
         var result = authService.RefreshToken(token);
         Assert.Equal(string.Empty, result);
@@ -293,7 +345,14 @@ public class TestAuthService
     [Fact]
     public void RevokeToken_ShouldStoreJtiInCache()
     {
-        var user = new User(20, "U", "u20@mail.com", BCrypt.Net.BCrypt.HashPassword("p"), Profile.ADMIN);
+        var user = new User
+        {
+            Id = 20,
+            Name = "U",
+            Email = "u20@mail.com",
+            Password = BCrypt.Net.BCrypt.HashPassword("p"),
+            Profile = Profile.ADMIN,
+        };
         mockUserService.Setup(u => u.GetUserByEmail("u20@mail.com")).Returns(user);
 
         var auth = new AuthDto("u20@mail.com", "p");
@@ -304,10 +363,15 @@ public class TestAuthService
 
         authService.RevokeToken(token);
 
-        mockCache.Verify(c => c.Set(
-            It.Is<string>(k => k == key),
-            It.IsAny<byte[]>(),
-            It.IsAny<DistributedCacheEntryOptions>()), Times.Once);
+        mockCache.Verify(
+            c =>
+                c.Set(
+                    It.Is<string>(k => k == key),
+                    It.IsAny<byte[]>(),
+                    It.IsAny<DistributedCacheEntryOptions>()
+                ),
+            Times.Once
+        );
     }
 
     /// <summary>
@@ -316,7 +380,14 @@ public class TestAuthService
     [Fact]
     public void RefreshToken_ShouldReturnEmpty_WhenTokenRevokedInCache()
     {
-        var user = new User(21, "U2", "u21@mail.com", BCrypt.Net.BCrypt.HashPassword("p"), Profile.ADMIN);
+        var user = new User
+        {
+            Id = 21,
+            Name = "U2",
+            Email = "u21@mail.com",
+            Password = BCrypt.Net.BCrypt.HashPassword("p"),
+            Profile = Profile.ADMIN,
+        };
         mockUserService.Setup(u => u.GetUserByEmail("u21@mail.com")).Returns(user);
 
         var auth = new AuthDto("u21@mail.com", "p");
@@ -325,7 +396,9 @@ public class TestAuthService
         var jwt = new JwtSecurityTokenHandler().ReadJwtToken(token);
         var key = $"revoked_tokens:{jwt.Id}";
 
-        mockCache.Setup(c => c.Get(It.Is<string>(k => k == key))).Returns(Encoding.UTF8.GetBytes("{}"));
+        mockCache
+            .Setup(c => c.Get(It.Is<string>(k => k == key)))
+            .Returns(Encoding.UTF8.GetBytes("{}"));
 
         var refreshed = authService.RefreshToken(token);
 
