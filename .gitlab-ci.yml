@@ -57,7 +57,7 @@ unit-tests:
   variables:
     ASPNETCORE_ENVIRONMENT: Testing
   script:
-    - dotnet test ReadyToHelpAPI.sln --filter "Category=Unit" --logger:"trx;LogFileName=UnitTestResults.trx"
+    - dotnet test --filter "Category=Unit" /p:CollectCoverage=true /p:CoverletOutputFormat=opencover /p:CoverletOutput=./TestResults/coverage.xml "/p:ExcludeByFile=**/ReadyToHelpAPI/Migrations/**"
   artifacts:
     paths:
       - UnitTestResults.trx
@@ -87,7 +87,7 @@ integration-tests:
     - dotnet tool install -g dotnet-ef
     - dotnet restore ReadyToHelpAPI.sln
     - dotnet ef database update --project ReadyToHelpAPI/ReadyToHelpAPI.csproj --startup-project ReadyToHelpAPI/ReadyToHelpAPI.csproj
-    - dotnet test ReadyToHelpAPI.sln --filter "Category=Integration" --collect:"XPlat Code Coverage"
+    - dotnet test --filter "Category=Integration" /p:CollectCoverage=true /p:CoverletOutputFormat=opencover /p:CoverletOutput=./TestResults/coverage.xml "/p:ExcludeByFile=**/ReadyToHelpAPI/Migrations/**"
   artifacts:
     paths:
       - IntegrationTestResults.trx
