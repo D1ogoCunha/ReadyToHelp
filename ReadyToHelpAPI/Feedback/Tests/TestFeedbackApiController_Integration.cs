@@ -1,54 +1,53 @@
 namespace readytohelpapi.Feedback.Tests;
 
 using System;
+using System.Data;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using readytohelpapi.Common.Data;
 using readytohelpapi.Common.Tests;
-using readytohelpapi.User.Models;
 using readytohelpapi.Feedback.Models;
 using readytohelpapi.Feedback.Tests.Fixtures;
 using readytohelpapi.GeoPoint.Models;
 using readytohelpapi.Occurrence.DTOs;
 using readytohelpapi.Occurrence.Models;
+using readytohelpapi.User.Models;
 using Xunit;
-
-public partial class Program { }
+using Xunit.Sdk;
 
 /// <summary>
 ///   This class contains all integration tests for the Feedback API controller.
 /// </summary>
 [Trait("Category", "Integration")]
 public class TestFeedbackApiController_Integration
-    : IClassFixture<WebApplicationFactory<Program>>, IClassFixture<DbFixture>
+    : IClassFixture<TestWebApplicationFactory>,
+        IClassFixture<DbFixture>
 {
-    private readonly HttpClient _client;
-    private readonly DbFixture _fixture;
-    private readonly JsonSerializerOptions _json;
+    private readonly HttpClient client;
+    private readonly DbFixture fixture;
+    private readonly JsonSerializerOptions json;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TestFeedbackApiController_Integration"/> class.
     /// </summary>
-    /// <param name="factory"></param>
-    /// <param name="dbFixture"></param>
+    /// <param name="factory">The web application factory.</param>
+    /// <param name="dbFixture">The database fixture.</param>
     public TestFeedbackApiController_Integration(
-        WebApplicationFactory<Program> factory,
+        TestWebApplicationFactory factory,
         DbFixture dbFixture
     )
     {
-        _fixture = dbFixture;
-        _fixture.ResetDatabase();
+        fixture = dbFixture;
+        fixture.ResetDatabase();
 
-        var conn = _fixture.Context.Database.GetDbConnection();
-        if (conn.State != System.Data.ConnectionState.Open)
+        var conn = fixture.Context.Database.GetDbConnection();
+        if (conn.State != ConnectionState.Open)
             conn.Open();
 
         var customized = factory.WithWebHostBuilder(builder =>
@@ -62,16 +61,6 @@ public class TestFeedbackApiController_Integration
                 {
                     opts.UseNpgsql(conn, npgsql => npgsql.UseNetTopologySuite());
                 });
-
-                services
-                    .AddAuthentication("Test")
-                    .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>("Test", _ => { });
-
-                services.PostConfigure<AuthenticationOptions>(opts =>
-                {
-                    opts.DefaultAuthenticateScheme = "Test";
-                    opts.DefaultChallengeScheme = "Test";
-                });
             });
         });
 
@@ -83,23 +72,25 @@ public class TestFeedbackApiController_Integration
                 var existing = ctx.Users.Find(uid);
                 if (existing == null)
                 {
-                    ctx.Users.Add(new User
-                    {
-                        Id = uid,
-                        Name = $"Test User {uid}",
-                        Email = $"test{uid}@local",
-                        Password = "pwd",
-                        Profile = Profile.CITIZEN
-                    });
+                    ctx.Users.Add(
+                        new User
+                        {
+                            Id = uid,
+                            Name = $"Test User {uid}",
+                            Email = $"test{uid}@local",
+                            Password = "pwd",
+                            Profile = Profile.CITIZEN,
+                        }
+                    );
                 }
             }
             ctx.SaveChanges();
         }
 
-        _client = customized.CreateClient();
+        client = customized.CreateClient();
 
-        _json = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-        _json.Converters.Add(new JsonStringEnumConverter());
+        json = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        json.Converters.Add(new JsonStringEnumConverter());
     }
 
     /// <summary>
@@ -111,7 +102,7 @@ public class TestFeedbackApiController_Integration
         if (resp.StatusCode != HttpStatusCode.Created)
         {
             var body = await resp.Content.ReadAsStringAsync();
-            throw new Xunit.Sdk.XunitException(
+            throw new XunitException(
                 $"Expected 201 Created but got {(int)resp.StatusCode} {resp.StatusCode}. Body:{Environment.NewLine}{body}"
             );
         }
@@ -144,12 +135,15 @@ public class TestFeedbackApiController_Integration
             Location = new GeoPoint { Latitude = 41.15, Longitude = -8.61 },
         };
 
-        var createResp = await _client.PostAsJsonAsync("/api/occurrence", createDto);
+        var createResp = await client.PostAsJsonAsync("/api/occurrence", createDto);
         await AssertCreatedOrThrow(createResp);
         Assert.NotNull(createResp.Headers.Location);
         var id = ParseIdFromLocation(createResp.Headers.Location!);
 
-        var details = await _client.GetFromJsonAsync<OccurrenceDetailsDto>(createResp.Headers.Location!, _json);
+        var details = await client.GetFromJsonAsync<OccurrenceDetailsDto>(
+            createResp.Headers.Location!,
+            json
+        );
         Assert.NotNull(details);
 
         if (activate)
@@ -160,14 +154,21 @@ public class TestFeedbackApiController_Integration
                 Title = details!.Title,
                 Description = details.Description,
                 Type = details.Type,
-                Location = new GeoPoint { Latitude = details.Latitude, Longitude = details.Longitude },
+                Location = new GeoPoint
+                {
+                    Latitude = details.Latitude,
+                    Longitude = details.Longitude,
+                },
                 Status = OccurrenceStatus.ACTIVE,
             };
 
-            var putResp = await _client.PutAsJsonAsync("/api/occurrence", activatePayload);
+            var putResp = await client.PutAsJsonAsync("/api/occurrence", activatePayload);
             Assert.Equal(HttpStatusCode.OK, putResp.StatusCode);
 
-            details = await _client.GetFromJsonAsync<OccurrenceDetailsDto>($"/api/occurrences/{id}", _json);
+            details = await client.GetFromJsonAsync<OccurrenceDetailsDto>(
+                $"/api/occurrences/{id}",
+                json
+            );
             Assert.NotNull(details);
             Assert.Equal(OccurrenceStatus.ACTIVE, details!.Status);
         }
@@ -181,15 +182,19 @@ public class TestFeedbackApiController_Integration
     /// <param name="occurrenceId"></param>
     /// <param name="userId"></param>
     /// <param name="isConfirmed"></param>
-    private Task<HttpResponseMessage> PostFeedbackAsync(int occurrenceId, int userId, bool isConfirmed)
+    private Task<HttpResponseMessage> PostFeedbackAsync(
+        int occurrenceId,
+        int userId,
+        bool isConfirmed
+    )
     {
         var payload = new Feedback
         {
             OccurrenceId = occurrenceId,
             UserId = userId,
-            IsConfirmed = isConfirmed
+            IsConfirmed = isConfirmed,
         };
-        return _client.PostAsJsonAsync("/api/feedback", payload);
+        return client.PostAsJsonAsync("/api/feedback", payload);
     }
 
     /// <summary>
@@ -203,7 +208,7 @@ public class TestFeedbackApiController_Integration
         var resp = await PostFeedbackAsync(occId, userId: 1, isConfirmed: true);
         await AssertCreatedOrThrow(resp);
 
-        var created = await resp.Content.ReadFromJsonAsync<Feedback>(_json);
+        var created = await resp.Content.ReadFromJsonAsync<Feedback>(json);
         Assert.NotNull(created);
         Assert.Equal(occId, created!.OccurrenceId);
         Assert.Equal(1, created.UserId);
@@ -270,7 +275,7 @@ public class TestFeedbackApiController_Integration
     public async Task Create_BadRequest_WhenBodyNull()
     {
         var content = new StringContent("null", Encoding.UTF8, "application/json");
-        var resp = await _client.PostAsync("/api/feedback", content);
+        var resp = await client.PostAsync("/api/feedback", content);
         Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
     }
 
@@ -288,7 +293,10 @@ public class TestFeedbackApiController_Integration
             await AssertCreatedOrThrow(resp);
         }
 
-        var after = await _client.GetFromJsonAsync<OccurrenceDetailsDto>($"/api/occurrences/{occId}", _json);
+        var after = await client.GetFromJsonAsync<OccurrenceDetailsDto>(
+            $"/api/occurrences/{occId}",
+            json
+        );
         Assert.NotNull(after);
         Assert.Equal(OccurrenceStatus.CLOSED, after!.Status);
         Assert.True(after.EndDateTime != default);

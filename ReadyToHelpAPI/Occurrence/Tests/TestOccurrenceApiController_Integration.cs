@@ -7,8 +7,6 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -19,14 +17,12 @@ using readytohelpapi.Occurrence.DTOs;
 using readytohelpapi.Occurrence.Models;
 using Xunit;
 
-public partial class Program { }
-
 /// <summary>
 /// This class contains all integration tests for the Occurrence API controller.
 /// </summary>
 [Trait("Category", "Integration")]
 public class TestOccurrenceApiController_Integration
-    : IClassFixture<WebApplicationFactory<Program>>,
+    : IClassFixture<TestWebApplicationFactory>,
         IClassFixture<DbFixture>
 {
     private readonly HttpClient _client;
@@ -38,7 +34,7 @@ public class TestOccurrenceApiController_Integration
     /// <param name="factory">The web application factory.</param>
     /// <param name="dbFixture">The database fixture.</param>
     public TestOccurrenceApiController_Integration(
-        WebApplicationFactory<Program> factory,
+        TestWebApplicationFactory factory,
         DbFixture dbFixture
     )
     {
@@ -60,16 +56,6 @@ public class TestOccurrenceApiController_Integration
                 services.AddDbContext<AppDbContext>(options =>
                 {
                     options.UseNpgsql(connection, npgsql => npgsql.UseNetTopologySuite());
-                });
-
-                services
-                    .AddAuthentication("Test")
-                    .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>("Test", opts => { });
-
-                services.PostConfigure<AuthenticationOptions>(opts =>
-                {
-                    opts.DefaultAuthenticateScheme = "Test";
-                    opts.DefaultChallengeScheme = "Test";
                 });
             });
         });
