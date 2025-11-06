@@ -17,7 +17,6 @@ using readytohelpapi.Report.Services;
 public class ReportApiController : ControllerBase
 {
     private readonly IReportService reportService;
-    private readonly IReportRepository reportRepository;
     private readonly AppDbContext context;
 
     /// <summary>
@@ -28,12 +27,10 @@ public class ReportApiController : ControllerBase
     /// <param name="context">The database context.</param>
     public ReportApiController(
         IReportService reportService,
-        IReportRepository reportRepository,
         AppDbContext context
     )
     {
         this.reportService = reportService;
-        this.reportRepository = reportRepository;
         this.context = context;
     }
 
@@ -94,7 +91,7 @@ public class ReportApiController : ControllerBase
                 ResponsibleEntity = responsibleDto,
             };
 
-            return CreatedAtAction(nameof(GetById), new { id = createdReport.Id }, response);
+            return StatusCode(StatusCodes.Status201Created, response);
         }
         catch (ArgumentException ex)
         {
@@ -104,21 +101,5 @@ public class ReportApiController : ControllerBase
         {
             return StatusCode(500, new { error = "internal_server_error", detail = ex.Message });
         }
-    }
-
-    /// <summary>
-    /// Retrieves a report by its ID.
-    /// </summary>
-    /// <param name="id">The ID of the report.</param>
-    /// <returns>The report if found; otherwise, a not found response.</returns>
-    [HttpGet("{id:int}")]
-    public IActionResult GetById([FromRoute] int id)
-    {
-        if (id <= 0)
-            return BadRequest("Invalid id.");
-        var report = reportRepository.GetById(id);
-        if (report is null)
-            return NotFound();
-        return Ok(report);
     }
 }
