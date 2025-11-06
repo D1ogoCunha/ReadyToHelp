@@ -480,7 +480,6 @@ public class TestFeedbackRepository : IClassFixture<DbFixture>
     [Fact]
     public void Create_InvalidForeignKey_ThrowsDbUpdateException()
     {
-        // Arrange: criar um user válido mas usar uma Occurrence inexistente
         var user = new User { Name = "u_fk", Email = "u_fk@example.com", Password = "p", Profile = Profile.CITIZEN };
         this.context.Users.Add(user);
         this.context.SaveChanges();
@@ -493,8 +492,6 @@ public class TestFeedbackRepository : IClassFixture<DbFixture>
             IsConfirmed = true
         };
 
-        // Act + Assert: SaveChanges deverá falhar (violação de FK) e o repositório
-        // deve envolver a exceção em DbUpdateException com a mensagem definida.
         var ex = Assert.Throws<DbUpdateException>(() => this.repository.Create(fb));
         Assert.Contains("Failed to create feedback", ex.Message, StringComparison.OrdinalIgnoreCase);
         Assert.NotNull(ex.InnerException);
