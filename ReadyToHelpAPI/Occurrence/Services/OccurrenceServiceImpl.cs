@@ -18,7 +18,10 @@ public class OccurrenceServiceImpl : IOccurrenceService
     /// </summary>
     /// <param name="occurrenceRepository">The occurrence repository instance.</param>
     /// <param name="responsibleEntityService">The responsible entity service instance.</param>
-    public OccurrenceServiceImpl(IOccurrenceRepository occurrenceRepository, IResponsibleEntityService responsibleEntityService)
+    public OccurrenceServiceImpl(
+        IOccurrenceRepository occurrenceRepository,
+        IResponsibleEntityService responsibleEntityService
+    )
     {
         this.occurrenceRepository = occurrenceRepository;
         this.responsibleEntityService = responsibleEntityService;
@@ -42,30 +45,18 @@ public class OccurrenceServiceImpl : IOccurrenceService
                 nameof(occurrence)
             );
         if (!Enum.IsDefined(typeof(OccurrenceType), occurrence.Type))
-            throw new ArgumentOutOfRangeException(
-                nameof(occurrence),
-                "Invalid occurrence type"
-            );
+            throw new ArgumentOutOfRangeException(nameof(occurrence), "Invalid occurrence type");
         if (occurrence.ReportCount < 0)
-            throw new ArgumentException(
-                "ReportCount cannot be negative.",
-                nameof(occurrence)
-            );
+            throw new ArgumentException("ReportCount cannot be negative.", nameof(occurrence));
         if (occurrence.ReportId.HasValue && occurrence.ReportId < 0)
-            throw new ArgumentException(
-                "ReportId cannot be negative.",
-                nameof(occurrence)
-            );
+            throw new ArgumentException("ReportId cannot be negative.", nameof(occurrence));
         if (occurrence.ResponsibleEntityId < 0)
             throw new ArgumentException(
                 "ResponsibleEntityId cannot be negative.",
                 nameof(occurrence)
             );
         if (occurrence.Location is null)
-            throw new ArgumentException(
-                "Occurrence location is required.",
-                nameof(occurrence)
-            );
+            throw new ArgumentException("Occurrence location is required.", nameof(occurrence));
         if (occurrence.Location.Latitude is < -90 or > 90)
             throw new ArgumentOutOfRangeException(
                 nameof(occurrence),
@@ -79,7 +70,10 @@ public class OccurrenceServiceImpl : IOccurrenceService
 
         occurrence.CreationDateTime = DateTime.UtcNow;
 
-        if (occurrence.EndDateTime != default && occurrence.EndDateTime <= occurrence.CreationDateTime)
+        if (
+            occurrence.EndDateTime != default
+            && occurrence.EndDateTime <= occurrence.CreationDateTime
+        )
             throw new ArgumentException(
                 "EndDateTime must be later than CreationDateTime.",
                 nameof(occurrence)
@@ -114,32 +108,20 @@ public class OccurrenceServiceImpl : IOccurrenceService
         if (occurrence == null)
             throw new ArgumentNullException(nameof(occurrence));
         if (string.IsNullOrWhiteSpace(occurrence.Title))
-            throw new ArgumentException(
-                "Occurrence title is required.",
-                nameof(occurrence)
-            );
+            throw new ArgumentException("Occurrence title is required.", nameof(occurrence));
         if (string.IsNullOrWhiteSpace(occurrence.Description))
-            throw new ArgumentException(
-                "Occurrence description is required.",
-                nameof(occurrence)
-            );
+            throw new ArgumentException("Occurrence description is required.", nameof(occurrence));
         if (occurrence.Location == null)
-            throw new ArgumentException(
-                "Occurrence location is required.",
-                nameof(occurrence)
-            );
+            throw new ArgumentException("Occurrence location is required.", nameof(occurrence));
         if (!Enum.IsDefined(typeof(OccurrenceType), occurrence.Type))
-            throw new ArgumentOutOfRangeException(
-                nameof(occurrence),
-                "Invalid occurrence type"
-            );
+            throw new ArgumentOutOfRangeException(nameof(occurrence), "Invalid occurrence type");
 
         var responsibleEntity = responsibleEntityService.FindResponsibleEntity(
             occurrence.Type,
             occurrence.Location.Latitude,
             occurrence.Location.Longitude
         );
-        occurrence.ResponsibleEntityId = responsibleEntity?.Id ?? 0;
+        occurrence.ResponsibleEntityId = responsibleEntity?.Id;
 
         occurrence.CreationDateTime = DateTime.UtcNow;
         occurrence.ReportId = null;
@@ -147,7 +129,10 @@ public class OccurrenceServiceImpl : IOccurrenceService
         occurrence.Priority = ComputePriority(occurrence.Type, occurrence.ReportCount);
 
         if (occurrence.ProximityRadius <= 0)
-            occurrence.ProximityRadius = ComputeProximityRadius(occurrence.Type, occurrence.Priority);
+            occurrence.ProximityRadius = ComputeProximityRadius(
+                occurrence.Type,
+                occurrence.Priority
+            );
 
         try
         {
@@ -168,10 +153,7 @@ public class OccurrenceServiceImpl : IOccurrenceService
         if (occurrence == null)
             throw new ArgumentNullException(nameof(occurrence));
         if (occurrence.Id <= 0)
-            throw new ArgumentException(
-                "Invalid occurrence ID.",
-                nameof(occurrence)
-            );
+            throw new ArgumentException("Invalid occurrence ID.", nameof(occurrence));
         if (string.IsNullOrWhiteSpace(occurrence.Title))
             throw new ArgumentException(
                 "Occurrence title cannot be null or empty.",
@@ -183,35 +165,26 @@ public class OccurrenceServiceImpl : IOccurrenceService
                 nameof(occurrence)
             );
         if (!Enum.IsDefined(typeof(OccurrenceType), occurrence.Type))
-            throw new ArgumentOutOfRangeException(
-                nameof(occurrence),
-                "Invalid occurrence type"
-            );
+            throw new ArgumentOutOfRangeException(nameof(occurrence), "Invalid occurrence type");
         if (occurrence.ReportCount < 0)
-            throw new ArgumentException(
-                "ReportCount cannot be negative.",
-                nameof(occurrence)
-            );
+            throw new ArgumentException("ReportCount cannot be negative.", nameof(occurrence));
         if (occurrence.ReportId.HasValue && occurrence.ReportId < 0)
-            throw new ArgumentException(
-                "ReportId cannot be negative.",
-                nameof(occurrence)
-            );
+            throw new ArgumentException("ReportId cannot be negative.", nameof(occurrence));
         if (occurrence.ResponsibleEntityId < 0)
             throw new ArgumentException(
                 "ResponsibleEntityId cannot be negative.",
                 nameof(occurrence)
             );
-        if (occurrence.EndDateTime != default && occurrence.EndDateTime <= occurrence.CreationDateTime)
+        if (
+            occurrence.EndDateTime != default
+            && occurrence.EndDateTime <= occurrence.CreationDateTime
+        )
             throw new ArgumentException(
                 "EndDateTime must be later than CreationDateTime.",
                 nameof(occurrence)
             );
         if (occurrence.Location is null)
-            throw new ArgumentException(
-                "Occurrence location is required.",
-                nameof(occurrence)
-            );
+            throw new ArgumentException("Occurrence location is required.", nameof(occurrence));
         if (occurrence.Location.Latitude is < -90 or > 90)
             throw new ArgumentOutOfRangeException(
                 nameof(occurrence),
@@ -300,7 +273,6 @@ public class OccurrenceServiceImpl : IOccurrenceService
     {
         return this.occurrenceRepository.GetOccurrencesByType(type);
     }
-
 
     /// <inheritdoc />
     public List<Occurrence> GetAllActiveOccurrences(

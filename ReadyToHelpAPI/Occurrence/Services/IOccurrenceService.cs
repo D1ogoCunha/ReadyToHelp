@@ -50,7 +50,6 @@ public interface IOccurrenceService
     /// <returns>A list of occurrences of the specified type.</returns>
     List<Occurrence> GetOccurrencesByType(OccurrenceType type);
 
-
     /// <summary>
     ///     Retrieves a paginated, filtered, and sorted list of occurrences.
     /// </summary>
@@ -60,7 +59,13 @@ public interface IOccurrenceService
     /// <param name="sortOrder">The sort order, either "asc" or "desc".</param>
     /// <param name="filter">The string to filter the occurrence data.</param>
     /// <returns>A paginated, sorted, and filtered list of occurrences.</returns>
-    List<Occurrence> GetAllOccurrences(int pageNumber, int pageSize, string sortBy, string sortOrder, string filter);
+    List<Occurrence> GetAllOccurrences(
+        int pageNumber,
+        int pageSize,
+        string sortBy,
+        string sortOrder,
+        string filter
+    );
 
     /// <summary>
     /// Retrieves ACTIVE or IN_PROGRESS occurrences with pagination and optional filters.
@@ -71,5 +76,11 @@ public interface IOccurrenceService
     /// <param name="priority">Optional priority level filter.</param>
     /// <param name="responsibleEntityId">Optional responsible entity ID filter.</param>
     /// <returns>A paginated list of active occurrences matching the specified criteria.</returns>
-    List<Occurrence> GetAllActiveOccurrences(int pageNumber, int pageSize, OccurrenceType? type, PriorityLevel? priority, int? responsibleEntityId);
+    List<Occurrence> GetAllActiveOccurrences(
+        int pageNumber,
+        int pageSize,
+        OccurrenceType? type,
+        PriorityLevel? priority,
+        int? responsibleEntityId
+    );
 }

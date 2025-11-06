@@ -1,8 +1,8 @@
 namespace readytohelpapi.Occurrence.Tests.Fixtures;
 
+using readytohelpapi.GeoPoint.Models;
 using readytohelpapi.Occurrence.DTOs;
 using readytohelpapi.Occurrence.Models;
-using GeoPointModel = readytohelpapi.GeoPoint.Models.GeoPoint;
 
 /// <summary>
 ///   Provides helper methods to create or update Occurrence instances for testing.
@@ -19,7 +19,8 @@ public static class OccurrenceFixture
     {
         options ??= new OccurrenceFixtureDto();
         o ??= new Occurrence();
-        if (options.Id.HasValue) o.Id = options.Id.Value;
+        if (options.Id.HasValue)
+            o.Id = options.Id.Value;
         o.Title = options.Title;
         o.Description = options.Description;
         o.Type = options.Type;
@@ -30,11 +31,7 @@ public static class OccurrenceFixture
         o.ReportCount = options.ReportCount;
         o.ReportId = options.ReportId;
         o.ResponsibleEntityId = options.ResponsibleEntityId;
-        o.Location = new GeoPointModel
-        {
-            Latitude = options.Latitude,
-            Longitude = options.Longitude
-        };
+        o.Location = new GeoPoint { Latitude = options.Latitude, Longitude = options.Longitude };
         return o;
     }
 }

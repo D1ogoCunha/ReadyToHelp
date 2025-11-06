@@ -1,12 +1,12 @@
 namespace readytohelpapi.Occurrence.Controllers;
 
+using System;
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using readytohelpapi.Occurrence.DTOs;
 using readytohelpapi.Occurrence.Models;
 using readytohelpapi.Occurrence.Services;
-using System;
-using System.Collections.Generic;
 
 /// <summary>
 ///   Provides API endpoints for managing occurrences.
@@ -35,7 +35,8 @@ public class OccurrenceApiController : ControllerBase
     [HttpPost]
     public IActionResult Create([FromBody] Occurrence occurrence)
     {
-        if (occurrence is null) return BadRequest(new { error = "Occurrence payload is required." });
+        if (occurrence is null)
+            return BadRequest(new { error = "Occurrence payload is required." });
 
         try
         {
@@ -69,9 +70,18 @@ public class OccurrenceApiController : ControllerBase
             var updatedOccurrence = occurrenceService.Update(occurrence);
             return Ok(updatedOccurrence);
         }
-        catch (ArgumentException ex) { return BadRequest(ex.Message); }
-        catch (KeyNotFoundException ex) { return NotFound(ex.Message); }
-        catch (Exception ex) { return StatusCode(500, $"Internal server error: {ex.Message}"); }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Internal server error: {ex.Message}");
+        }
     }
 
     /// <summary>
@@ -91,9 +101,18 @@ public class OccurrenceApiController : ControllerBase
             var deletedOccurrence = occurrenceService.Delete(id);
             return Ok(deletedOccurrence);
         }
-        catch (ArgumentException ex) { return BadRequest(ex.Message); }
-        catch (KeyNotFoundException ex) { return NotFound(ex.Message); }
-        catch (Exception ex) { return StatusCode(500, $"Internal server error: {ex.Message}"); }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Internal server error: {ex.Message}");
+        }
     }
 
     /// <summary>
@@ -109,7 +128,8 @@ public class OccurrenceApiController : ControllerBase
         try
         {
             var o = occurrenceService.GetOccurrenceById(id);
-            if (o == null) return NotFound();
+            if (o == null)
+                return NotFound();
 
             var dto = new OccurrenceDetailsDto
             {
@@ -124,7 +144,7 @@ public class OccurrenceApiController : ControllerBase
                 CreationDateTime = o.CreationDateTime,
                 EndDateTime = o.EndDateTime == default ? null : o.EndDateTime,
                 ResponsibleEntityId = o.ResponsibleEntityId > 0 ? o.ResponsibleEntityId : null,
-                ReportCount = o.ReportCount
+                ReportCount = o.ReportCount,
             };
 
             return Ok(dto);
@@ -154,11 +174,18 @@ public class OccurrenceApiController : ControllerBase
         [FromQuery] int pageSize = 10,
         [FromQuery] string sortBy = "Title",
         [FromQuery] string sortOrder = "asc",
-        [FromQuery] string filter = "")
+        [FromQuery] string filter = ""
+    )
     {
         try
         {
-            var occurrences = occurrenceService.GetAllOccurrences(pageNumber, pageSize, sortBy, sortOrder, filter);
+            var occurrences = occurrenceService.GetAllOccurrences(
+                pageNumber,
+                pageSize,
+                sortBy,
+                sortOrder,
+                filter
+            );
             return Ok(occurrences);
         }
         catch (ArgumentException ex)
@@ -182,11 +209,18 @@ public class OccurrenceApiController : ControllerBase
         [FromQuery] int pageSize = 50,
         [FromQuery] OccurrenceType? type = null,
         [FromQuery] PriorityLevel? priority = null,
-        [FromQuery] int? responsibleEntityId = null)
+        [FromQuery] int? responsibleEntityId = null
+    )
     {
         try
         {
-            var occurrences = occurrenceService.GetAllActiveOccurrences(pageNumber, pageSize, type, priority, responsibleEntityId);
+            var occurrences = occurrenceService.GetAllActiveOccurrences(
+                pageNumber,
+                pageSize,
+                type,
+                priority,
+                responsibleEntityId
+            );
 
             if (occurrences == null || occurrences.Count == 0)
                 return NotFound(new { error = "no_active_occurrences" });
@@ -201,7 +235,7 @@ public class OccurrenceApiController : ControllerBase
                     Latitude = o.Location!.Latitude,
                     Longitude = o.Location!.Longitude,
                     Status = o.Status,
-                    Priority = o.Priority
+                    Priority = o.Priority,
                 })
                 .ToList();
 

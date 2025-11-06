@@ -1,9 +1,9 @@
 namespace readytohelpapi.Occurrence.Tests;
 
-using readytohelpapi.Occurrence.Models;
-using GeoPointModel = readytohelpapi.GeoPoint.Models.GeoPoint;
-using Xunit;
+using readytohelpapi.GeoPoint.Models;
 using readytohelpapi.Occurrence.DTOs;
+using readytohelpapi.Occurrence.Models;
+using Xunit;
 
 /// <summary>
 ///    This class contains all unit tests related to the occurrence model.
@@ -19,7 +19,7 @@ public class TestOccurrenceModel
     {
         var before = DateTime.UtcNow.AddSeconds(-2);
         var end = DateTime.UtcNow.AddHours(1);
-        var loc = new GeoPointModel(9.25, -13.5);
+        var loc = new GeoPoint(9.25, -13.5);
 
         var dto = new OccurrenceCreateDto
         {
@@ -34,7 +34,7 @@ public class TestOccurrenceModel
             ReportCount = 3,
             ReportId = 10,
             ResponsibleEntityId = 77,
-            Location = loc
+            Location = loc,
         };
 
         var o = new Occurrence(dto);
