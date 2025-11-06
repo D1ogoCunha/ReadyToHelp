@@ -1,9 +1,9 @@
 ﻿namespace readytohelpapi.User.Services;
 
-using Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Models;
 
 /// <summary>
 ///     Implements the user service operations.
@@ -28,16 +28,16 @@ public class UserServiceImpl : IUserService
             throw new ArgumentNullException(nameof(user), "User object is null");
 
         if (string.IsNullOrWhiteSpace(user.Email) || string.IsNullOrEmpty(user.Email))
-            throw new ArgumentException("Email cannot be null or empty", nameof(user.Email));
+            throw new ArgumentException("Email cannot be null or empty");
 
         if (string.IsNullOrWhiteSpace(user.Name) || string.IsNullOrEmpty(user.Name))
-            throw new ArgumentException("User name cannot be null or empty", nameof(user.Name));
+            throw new ArgumentException("User name cannot be null or empty");
 
         if (string.IsNullOrWhiteSpace(user.Password) || string.IsNullOrEmpty(user.Password))
-            throw new ArgumentException("User password cannot be null or empty", nameof(user.Password));
+            throw new ArgumentException("User password cannot be null or empty");
 
         if (!Enum.IsDefined(typeof(Profile), user.Profile))
-            throw new ArgumentOutOfRangeException(nameof(user.Profile), "Invalid profile");
+            throw new ArgumentOutOfRangeException(nameof(user), "Invalid profile");
 
         var existingUsers = this.userRepository.GetUserByEmail(user.Email);
 
@@ -52,7 +52,10 @@ public class UserServiceImpl : IUserService
         }
         catch (Exception e)
         {
-            throw new InvalidOperationException("An error occurred while trying to create a user.", e);
+            throw new InvalidOperationException(
+                "An error occurred while trying to create a user.",
+                e
+            );
         }
     }
 
@@ -109,7 +112,10 @@ public class UserServiceImpl : IUserService
         }
         catch (Exception e)
         {
-            throw new InvalidOperationException("An error occurred while trying to update a user.", e);
+            throw new InvalidOperationException(
+                "An error occurred while trying to update a user.",
+                e
+            );
         }
     }
 
@@ -123,11 +129,17 @@ public class UserServiceImpl : IUserService
 
         try
         {
-            return this.userRepository.Delete(id);
+            var user = userRepository.Delete(id);
+            if (user == null)
+                throw new KeyNotFoundException($"User with id {id} not found.");
+            return user;
         }
         catch (Exception e)
         {
-            throw new InvalidOperationException("An error occurred while trying to delete a user.", e);
+            throw new InvalidOperationException(
+                "An error occurred while trying to delete a user.",
+                e
+            );
         }
     }
 
@@ -151,7 +163,13 @@ public class UserServiceImpl : IUserService
     }
 
     /// <inheritdoc />
-    public List<User> GetAllUsers(int pageNumber, int pageSize, string sortBy, string sortOrder, string filter)
+    public List<User> GetAllUsers(
+        int pageNumber,
+        int pageSize,
+        string sortBy,
+        string sortOrder,
+        string filter
+    )
     {
         if (string.IsNullOrEmpty(sortBy))
             throw new ArgumentException("Sort field cannot be null or empty.", nameof(sortBy));
@@ -160,14 +178,23 @@ public class UserServiceImpl : IUserService
             throw new ArgumentException("Sort order must be 'asc' or 'desc'.", nameof(sortOrder));
 
         if (pageNumber <= 0)
-            throw new ArgumentException("Page number must be greater than zero.", nameof(pageNumber));
+            throw new ArgumentException(
+                "Page number must be greater than zero.",
+                nameof(pageNumber)
+            );
 
         if (pageSize <= 0 || pageSize > 1000)
             throw new ArgumentException("Page size must be between 1 and 1000.", nameof(pageSize));
 
         try
         {
-            var users = this.userRepository.GetAllUsers(pageNumber, pageSize, sortBy, sortOrder, filter);
+            var users = this.userRepository.GetAllUsers(
+                pageNumber,
+                pageSize,
+                sortBy,
+                sortOrder,
+                filter
+            );
             return users ?? new List<User>();
         }
         catch (Exception e)
@@ -175,8 +202,6 @@ public class UserServiceImpl : IUserService
             throw new InvalidOperationException("An error occurred while retrieving users.", e);
         }
     }
-
-
 
     /// <inheritdoc />
     public Models.User? GetUserByEmail(string email)

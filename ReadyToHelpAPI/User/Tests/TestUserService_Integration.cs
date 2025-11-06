@@ -3,8 +3,8 @@ namespace readytohelpapi.User.Tests;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using readytohelpapi.User.Models;
 using Microsoft.EntityFrameworkCore;
+using readytohelpapi.User.Models;
 using readytohelpapi.User.Services;
 using readytohelpapi.User.Tests.Fixtures;
 using Xunit;
@@ -30,7 +30,8 @@ public class TestUserService_Integration : IClassFixture<DbFixture>
         svc = new UserServiceImpl(repo);
     }
 
-    private static string UniqueEmail(string prefix = "u") => $"{prefix}_{Guid.NewGuid():N}@example.com";
+    private static string UniqueEmail(string prefix = "u") =>
+        $"{prefix}_{Guid.NewGuid():N}@example.com";
 
     /// <summary>
     ///   Creates a user and verifies it is persisted.
@@ -43,7 +44,7 @@ public class TestUserService_Integration : IClassFixture<DbFixture>
             Name = "Create User",
             Email = UniqueEmail("create"),
             Password = "pass123",
-            Profile = Profile.CITIZEN
+            Profile = Profile.CITIZEN,
         };
 
         var created = svc.Create(input);
@@ -62,12 +63,14 @@ public class TestUserService_Integration : IClassFixture<DbFixture>
     [Fact]
     public void Register_Sets_Profile_To_Citizen()
     {
-        var created = svc.Register(new User
-        {
-            Name = "Reg User",
-            Email = UniqueEmail("reg"),
-            Password = "pwd"
-        });
+        var created = svc.Register(
+            new User
+            {
+                Name = "Reg User",
+                Email = UniqueEmail("reg"),
+                Password = "pwd",
+            }
+        );
 
         var inDb = fixture.Context.Users.First(u => u.Id == created.Id);
         Assert.Equal(Profile.CITIZEN, inDb.Profile);
@@ -80,7 +83,13 @@ public class TestUserService_Integration : IClassFixture<DbFixture>
     public void Update_With_Null_Password_Keeps_Existing_Password()
     {
         var email = UniqueEmail("upd");
-        var u = new User { Name = "Before", Email = email, Password = "oldpass", Profile = Profile.CITIZEN };
+        var u = new User
+        {
+            Name = "Before",
+            Email = email,
+            Password = "oldpass",
+            Profile = Profile.CITIZEN,
+        };
         u = svc.Create(u);
 
         var before = fixture.Context.Users.AsNoTracking().First(x => x.Id == u.Id);
@@ -88,14 +97,16 @@ public class TestUserService_Integration : IClassFixture<DbFixture>
 
         fixture.Context.ChangeTracker.Clear();
 
-        var updated = svc.Update(new User
-        {
-            Id = u.Id,
-            Name = "After",
-            Email = email,
-            Password = null!,
-            Profile = Profile.MANAGER
-        });
+        var updated = svc.Update(
+            new User
+            {
+                Id = u.Id,
+                Name = "After",
+                Email = email,
+                Password = null!,
+                Profile = Profile.MANAGER,
+            }
+        );
 
         var after = fixture.Context.Users.AsNoTracking().First(x => x.Id == u.Id);
 
@@ -111,14 +122,16 @@ public class TestUserService_Integration : IClassFixture<DbFixture>
     public void Update_NotFound_Throws_KeyNotFoundException()
     {
         var ex = Assert.Throws<KeyNotFoundException>(() =>
-            svc.Update(new User
-            {
-                Id = 999999,
-                Name = "Nope",
-                Email = UniqueEmail("nope"),
-                Password = "x",
-                Profile = Profile.CITIZEN
-            })
+            svc.Update(
+                new User
+                {
+                    Id = 999999,
+                    Name = "Nope",
+                    Email = UniqueEmail("nope"),
+                    Password = "x",
+                    Profile = Profile.CITIZEN,
+                }
+            )
         );
         Assert.Contains("not", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
@@ -129,13 +142,15 @@ public class TestUserService_Integration : IClassFixture<DbFixture>
     [Fact]
     public void Delete_Removes_User_From_Database()
     {
-        var u = svc.Create(new User
-        {
-            Name = "To Delete",
-            Email = UniqueEmail("del"),
-            Password = "pwd",
-            Profile = Profile.CITIZEN
-        });
+        var u = svc.Create(
+            new User
+            {
+                Name = "To Delete",
+                Email = UniqueEmail("del"),
+                Password = "pwd",
+                Profile = Profile.CITIZEN,
+            }
+        );
 
         var deleted = svc.Delete(u.Id);
         Assert.NotNull(deleted);
@@ -150,11 +165,41 @@ public class TestUserService_Integration : IClassFixture<DbFixture>
     [Fact]
     public void GetAll_Pagination_Sorting_Filtering_Works()
     {
-        var u1 = svc.Create(new User { Name = "Alice", Email = UniqueEmail("ga"), Password = "p", Profile = Profile.CITIZEN });
-        var u2 = svc.Create(new User { Name = "Bob", Email = UniqueEmail("ga"), Password = "p", Profile = Profile.CITIZEN });
-        var u3 = svc.Create(new User { Name = "Carol", Email = UniqueEmail("ga"), Password = "p", Profile = Profile.CITIZEN });
+        var u1 = svc.Create(
+            new User
+            {
+                Name = "Alice",
+                Email = UniqueEmail("ga"),
+                Password = "p",
+                Profile = Profile.CITIZEN,
+            }
+        );
+        var u2 = svc.Create(
+            new User
+            {
+                Name = "Bob",
+                Email = UniqueEmail("ga"),
+                Password = "p",
+                Profile = Profile.CITIZEN,
+            }
+        );
+        var u3 = svc.Create(
+            new User
+            {
+                Name = "Carol",
+                Email = UniqueEmail("ga"),
+                Password = "p",
+                Profile = Profile.CITIZEN,
+            }
+        );
 
-        var page1 = svc.GetAllUsers(pageNumber: 1, pageSize: 2, sortBy: "Name", sortOrder: "asc", filter: "");
+        var page1 = svc.GetAllUsers(
+            pageNumber: 1,
+            pageSize: 2,
+            sortBy: "Name",
+            sortOrder: "asc",
+            filter: ""
+        );
         Assert.Equal(2, page1.Count);
         Assert.True(string.Compare(page1[0].Name, page1[1].Name, StringComparison.Ordinal) <= 0);
         Assert.Contains(page1, x => x.Id == u1.Id);

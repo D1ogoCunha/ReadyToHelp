@@ -1,11 +1,11 @@
 namespace readytohelpapi.User.Services;
 
-using readytohelpapi.User.Models;
-using Microsoft.EntityFrameworkCore;
 using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
+using Microsoft.EntityFrameworkCore;
 using readytohelpapi.Common.Data;
+using readytohelpapi.User.Models;
 
 /// <summary>
 ///     Implements the user repository operations.
@@ -26,7 +26,8 @@ public class UserRepository : IUserRepository
     /// <inheritdoc />
     public User Create(User user)
     {
-        if (user == null) throw new ArgumentNullException(nameof(user));
+        if (user == null)
+            throw new ArgumentNullException(nameof(user));
         try
         {
             var created = userContext.Users.Add(user).Entity;
@@ -38,10 +39,12 @@ public class UserRepository : IUserRepository
             throw new DbUpdateException("Failed to create user", ex);
         }
     }
+
     /// <inheritdoc />
     public User Update(User user)
     {
-        if (user == null) throw new ArgumentNullException(nameof(user));
+        if (user == null)
+            throw new ArgumentNullException(nameof(user));
         try
         {
             userContext.Users.Update(user);
@@ -58,7 +61,8 @@ public class UserRepository : IUserRepository
     public User? Delete(int id)
     {
         var existing = userContext.Users.Find(id);
-        if (existing == null) return null;
+        if (existing == null)
+            return null;
         try
         {
             userContext.Users.Remove(existing);
@@ -74,10 +78,9 @@ public class UserRepository : IUserRepository
     /// <inheritdoc />
     public User? GetUserById(int id)
     {
-        if (id <= 0) return null;
-        return userContext.Users
-            .AsNoTracking()
-            .FirstOrDefault(u => u.Id == id);
+        if (id <= 0)
+            return null;
+        return userContext.Users.AsNoTracking().FirstOrDefault(u => u.Id == id);
     }
 
     /// <inheritdoc />
@@ -86,8 +89,8 @@ public class UserRepository : IUserRepository
         if (string.IsNullOrWhiteSpace(email))
             return null;
 
-        return userContext.Users
-            .AsNoTracking()
+        return userContext
+            .Users.AsNoTracking()
             .FirstOrDefault(u => EF.Functions.ILike(u.Email, email.Trim()));
     }
 
@@ -98,18 +101,27 @@ public class UserRepository : IUserRepository
             return new List<User>();
 
         var pattern = $"%{name.Trim()}%";
-        return userContext.Users
-            .AsNoTracking()
+        return userContext
+            .Users.AsNoTracking()
             .Where(u => EF.Functions.ILike(u.Name, pattern))
             .ToList();
     }
 
     /// <inheritdoc />
-    public List<User> GetAllUsers(int pageNumber = 1, int pageSize = 10, string sortBy = "Name", string sortOrder = "asc", string filter = "")
+    public List<User> GetAllUsers(
+        int pageNumber,
+        int pageSize,
+        string sortBy,
+        string sortOrder,
+        string filter
+    )
     {
-        if (pageNumber <= 0) pageNumber = 1;
-        if (pageSize <= 0) pageSize = 10;
-        if (pageSize > 1000) pageSize = 1000;
+        if (pageNumber <= 0)
+            pageNumber = 1;
+        if (pageSize <= 0)
+            pageSize = 10;
+        if (pageSize > 1000)
+            pageSize = 1000;
 
         var query = userContext.Users.AsNoTracking().AsQueryable();
 
@@ -119,8 +131,9 @@ public class UserRepository : IUserRepository
             var pattern = $"%{trimmed}%";
 
             query = query.Where(u =>
-                EF.Functions.ILike(u.Name ?? string.Empty, pattern) ||
-                EF.Functions.ILike(u.Email ?? string.Empty, pattern));
+                EF.Functions.ILike(u.Name ?? string.Empty, pattern)
+                || EF.Functions.ILike(u.Email ?? string.Empty, pattern)
+            );
         }
 
         var asc = string.Equals(sortOrder, "asc", StringComparison.OrdinalIgnoreCase);
@@ -140,5 +153,4 @@ public class UserRepository : IUserRepository
         var skip = (pageNumber - 1) * pageSize;
         return query.Skip(skip).Take(pageSize).ToList();
     }
-
 }

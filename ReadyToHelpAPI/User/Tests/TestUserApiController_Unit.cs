@@ -25,8 +25,17 @@ public class TestUserApiController_Unit
         int id = 1,
         string name = "John Doe",
         string email = "john@example.com",
-        Profile profile = Profile.CITIZEN)
-        => new User { Id = id, Name = name, Email = email, Profile = profile };
+        Profile profile = Profile.CITIZEN,
+        string password = "defaultPassword123"
+    ) =>
+        new User
+        {
+            Id = id,
+            Name = name,
+            Email = email,
+            Profile = profile,
+            Password = password,
+        };
 
     [Fact]
     public void Create_NullUser_ReturnsBadRequest()
@@ -38,10 +47,22 @@ public class TestUserApiController_Unit
     [Fact]
     public void Create_ValidUser_ReturnsCreatedAtAction()
     {
-        var created = NewUser(id: 42, name: "Alice", email: "alice@example.com", profile: Profile.MANAGER);
+        var created = NewUser(
+            id: 42,
+            name: "Alice",
+            email: "alice@example.com",
+            profile: Profile.MANAGER
+        );
         mockService.Setup(s => s.Create(It.IsAny<User>())).Returns(created);
 
-        var result = controller.Create(new User { Name = "Alice", Email = "alice@example.com" });
+        var result = controller.Create(
+            new User
+            {
+                Name = "Alice",
+                Email = "alice@example.com",
+                Password = "password123",
+            }
+        );
 
         var createdRes = Assert.IsType<CreatedAtActionResult>(result);
         Assert.Equal(nameof(controller.GetUserById), createdRes.ActionName);
@@ -64,9 +85,7 @@ public class TestUserApiController_Unit
     [Fact]
     public void Create_ServiceThrowsGenericException_ReturnsInternalServerError()
     {
-        mockService
-            .Setup(s => s.Create(It.IsAny<User>()))
-            .Throws(new Exception("Unexpected"));
+        mockService.Setup(s => s.Create(It.IsAny<User>())).Throws(new Exception("Unexpected"));
 
         var result = controller.Create(NewUser(id: 0));
 
@@ -84,7 +103,12 @@ public class TestUserApiController_Unit
     [Fact]
     public void Update_ValidUser_ReturnsOk_WithServiceResult()
     {
-        var updated = NewUser(id: 10, name: "Bob", email: "bob@example.com", profile: Profile.ADMIN);
+        var updated = NewUser(
+            id: 10,
+            name: "Bob",
+            email: "bob@example.com",
+            profile: Profile.ADMIN
+        );
         mockService.Setup(s => s.Update(It.Is<User>(u => u.Id == 10))).Returns(updated);
 
         var body = NewUser(id: 999, name: "Bob", email: "bob@example.com");
@@ -103,7 +127,7 @@ public class TestUserApiController_Unit
     {
         mockService
             .Setup(s => s.Update(It.IsAny<User>()))
-            .Throws(new ArgumentNullException("user", "The user parameter cannot be null."));
+            .Throws(new ArgumentNullException("The user parameter cannot be null."));
 
         var result = controller.Update(2, NewUser(id: 2));
 
@@ -149,9 +173,7 @@ public class TestUserApiController_Unit
     [Fact]
     public void Update_ServiceThrowsGenericException_ReturnsInternalServerError()
     {
-        mockService
-            .Setup(s => s.Update(It.IsAny<User>()))
-            .Throws(new Exception("DB error"));
+        mockService.Setup(s => s.Update(It.IsAny<User>())).Throws(new Exception("DB error"));
 
         var result = controller.Update(3, NewUser(id: 3));
 
@@ -200,9 +222,7 @@ public class TestUserApiController_Unit
     [Fact]
     public void Delete_ServiceThrowsKeyNotFoundException_ReturnsNotFound()
     {
-        mockService
-            .Setup(s => s.Delete(It.IsAny<int>()))
-            .Throws(new KeyNotFoundException());
+        mockService.Setup(s => s.Delete(It.IsAny<int>())).Throws(new KeyNotFoundException());
 
         var result = controller.Delete(123);
 
@@ -212,9 +232,7 @@ public class TestUserApiController_Unit
     [Fact]
     public void Delete_ServiceThrowsGenericException_ReturnsInternalServerError()
     {
-        mockService
-            .Setup(s => s.Delete(It.IsAny<int>()))
-            .Throws(new Exception("oops"));
+        mockService.Setup(s => s.Delete(It.IsAny<int>())).Throws(new Exception("oops"));
 
         var result = controller.Delete(5);
 
@@ -253,9 +271,7 @@ public class TestUserApiController_Unit
     [Fact]
     public void GetUserById_NotFound_ReturnsNotFound()
     {
-        mockService
-            .Setup(s => s.GetUserById(It.IsAny<int>()))
-            .Throws(new KeyNotFoundException());
+        mockService.Setup(s => s.GetUserById(It.IsAny<int>())).Throws(new KeyNotFoundException());
 
         var result = controller.GetUserById(777);
 
@@ -265,9 +281,7 @@ public class TestUserApiController_Unit
     [Fact]
     public void GetUserById_ServiceThrowsGenericException_ReturnsInternalServerError()
     {
-        mockService
-            .Setup(s => s.GetUserById(It.IsAny<int>()))
-            .Throws(new Exception("boom"));
+        mockService.Setup(s => s.GetUserById(It.IsAny<int>())).Throws(new Exception("boom"));
 
         var result = controller.GetUserById(9);
 
@@ -299,7 +313,12 @@ public class TestUserApiController_Unit
     [Fact]
     public void Register_ValidRequest_ReturnsCreatedAtAction()
     {
-        var created = NewUser(id: 12, name: "Eve", email: "eve@example.com", profile: Profile.CITIZEN);
+        var created = NewUser(
+            id: 12,
+            name: "Eve",
+            email: "eve@example.com",
+            profile: Profile.CITIZEN
+        );
         mockService.Setup(s => s.Register(It.IsAny<User>())).Returns(created);
 
         var req = new UserApiController.RegisterRequest("Eve", "eve@example.com", "secret");
@@ -326,9 +345,7 @@ public class TestUserApiController_Unit
     [Fact]
     public void Register_ServiceThrowsGenericException_ReturnsInternalServerError()
     {
-        mockService
-            .Setup(s => s.Register(It.IsAny<User>()))
-            .Throws(new Exception("db"));
+        mockService.Setup(s => s.Register(It.IsAny<User>())).Throws(new Exception("db"));
 
         var req = new UserApiController.RegisterRequest("Zoe", "zoe@example.com", "pwd");
         var result = controller.Register(req);
@@ -341,9 +358,7 @@ public class TestUserApiController_Unit
     public void GetAll_ReturnsOkWithList()
     {
         var list = new List<User> { NewUser(id: 1), NewUser(id: 2) };
-        mockService
-            .Setup(s => s.GetAllUsers(1, 10, "Name", "asc", ""))
-            .Returns(list);
+        mockService.Setup(s => s.GetAllUsers(1, 10, "Name", "asc", "")).Returns(list);
 
         var result = controller.GetAll();
 
@@ -358,7 +373,15 @@ public class TestUserApiController_Unit
     public void GetAll_ServiceThrowsArgumentException_ReturnsBadRequest()
     {
         mockService
-            .Setup(s => s.GetAllUsers(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+            .Setup(s =>
+                s.GetAllUsers(
+                    It.IsAny<int>(),
+                    It.IsAny<int>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>()
+                )
+            )
             .Throws(new ArgumentException("bad"));
 
         var result = controller.GetAll();
@@ -370,7 +393,15 @@ public class TestUserApiController_Unit
     public void GetAll_ServiceThrowsGenericException_ReturnsInternalServerError()
     {
         mockService
-            .Setup(s => s.GetAllUsers(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+            .Setup(s =>
+                s.GetAllUsers(
+                    It.IsAny<int>(),
+                    It.IsAny<int>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>()
+                )
+            )
             .Throws(new Exception("oops"));
 
         var result = controller.GetAll();
@@ -420,9 +451,7 @@ public class TestUserApiController_Unit
     [Fact]
     public void GetUserByEmail_ServiceThrowsGenericException_ReturnsInternalServerError()
     {
-        mockService
-            .Setup(s => s.GetUserByEmail(It.IsAny<string>()))
-            .Throws(new Exception("boom"));
+        mockService.Setup(s => s.GetUserByEmail(It.IsAny<string>())).Throws(new Exception("boom"));
 
         var result = controller.GetUserByEmail("err@example.com");
 
