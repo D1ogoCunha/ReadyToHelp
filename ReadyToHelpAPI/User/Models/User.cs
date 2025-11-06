@@ -1,8 +1,4 @@
-﻿// <copyright file="User.cs" company="PlaceholderCompany">
-// Copyright (c) PlaceholderCompany. All rights reserved.
-// </copyright>
-
-namespace readytohelpapi.User.Models;
+﻿namespace readytohelpapi.User.Models;
 
 /// <summary>
 ///     Represents a user.
