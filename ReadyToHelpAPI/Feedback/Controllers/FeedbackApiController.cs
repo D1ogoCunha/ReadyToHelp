@@ -10,6 +10,7 @@ using readytohelpapi.Feedback.Services;
 /// <summary>
 ///   Provides API endpoints for managing feedbacks.
 /// </summary>
+[Authorize]
 [ApiController]
 [Route("api/feedback")]
 public class FeedbackApiController : ControllerBase
@@ -40,7 +41,6 @@ public class FeedbackApiController : ControllerBase
         try
         {
             var created = service.Create(feedback);
-            // Em vez de CreatedAtAction(GetById,...)
             return StatusCode(StatusCodes.Status201Created, created);
         }
         catch (ArgumentException ex)

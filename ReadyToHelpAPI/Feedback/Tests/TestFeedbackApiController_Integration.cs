@@ -1,126 +1,295 @@
 namespace readytohelpapi.Feedback.Tests;
 
 using System;
-using System.Linq;
-using Microsoft.AspNetCore.Mvc;
-using Moq;
+using System.Net;
+using System.Net.Http.Json;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using readytohelpapi.Common.Data;
-using readytohelpapi.Feedback.Controllers;
+using readytohelpapi.Common.Tests;
+using readytohelpapi.User.Models;
 using readytohelpapi.Feedback.Models;
-using readytohelpapi.Feedback.Services;
 using readytohelpapi.Feedback.Tests.Fixtures;
 using readytohelpapi.GeoPoint.Models;
+using readytohelpapi.Occurrence.DTOs;
 using readytohelpapi.Occurrence.Models;
-using readytohelpapi.Occurrence.Services;
-using readytohelpapi.ResponsibleEntity.Services;
-using readytohelpapi.User.Models;
 using Xunit;
 
+public partial class Program { }
+
 /// <summary>
-///   This class contains all integration tests related to the FeedbackApiController.
+///   This class contains all integration tests for the Feedback API controller.
 /// </summary>
 [Trait("Category", "Integration")]
-public class TestFeedbackApiController_Integration : IClassFixture<DbFixture>
+public class TestFeedbackApiController_Integration
+    : IClassFixture<WebApplicationFactory<Program>>, IClassFixture<DbFixture>
 {
-    private readonly DbFixture fixture;
-    private readonly AppDbContext context;
-    private readonly FeedbackApiController controller;
+    private readonly HttpClient _client;
+    private readonly DbFixture _fixture;
+    private readonly JsonSerializerOptions _json;
 
     /// <summary>
-    ///  Initializes a new instance of the <see cref="TestFeedbackApiController_Integration"/> class.
+    /// Initializes a new instance of the <see cref="TestFeedbackApiController_Integration"/> class.
     /// </summary>
-    /// <param name="fixture">The database fixture.</param>
-    public TestFeedbackApiController_Integration(DbFixture fixture)
+    /// <param name="factory"></param>
+    /// <param name="dbFixture"></param>
+    public TestFeedbackApiController_Integration(
+        WebApplicationFactory<Program> factory,
+        DbFixture dbFixture
+    )
     {
-        this.fixture = fixture;
-        this.fixture.ResetDatabase();
-        context = this.fixture.Context;
+        _fixture = dbFixture;
+        _fixture.ResetDatabase();
 
-        var feedbackRepo = new FeedbackRepository(context);
-        var occurrenceRepo = new OccurrenceRepository(context);
+        var conn = _fixture.Context.Database.GetDbConnection();
+        if (conn.State != System.Data.ConnectionState.Open)
+            conn.Open();
 
-        var respSvc = new Mock<IResponsibleEntityService>();
-        respSvc.Setup(s => s.FindResponsibleEntity(It.IsAny<OccurrenceType>(), It.IsAny<double>(), It.IsAny<double>()))
-               .Returns((ResponsibleEntity.Models.ResponsibleEntity?)null);
-
-        var occurrenceService = new OccurrenceServiceImpl(occurrenceRepo, respSvc.Object);
-        var feedbackService = new FeedbackServiceImpl(feedbackRepo, occurrenceService);
-
-        controller = new FeedbackApiController(feedbackService);
-    }
-
-    private User CreateUser()
-    {
-        var u = new User { Name = "U", Email = $"{Guid.NewGuid():N}@test.com", Password = "p", Profile = Profile.CITIZEN };
-        context.Users.Add(u);
-        context.SaveChanges();
-        return u;
-    }
-
-    private Occurrence CreateOccurrence()
-    {
-        var occ = new Occurrence
+        var customized = factory.WithWebHostBuilder(builder =>
         {
-            Title = "Integration Occ",
-            Description = "desc",
+            builder.ConfigureServices(services =>
+            {
+                services.RemoveAll(typeof(DbContextOptions<AppDbContext>));
+                services.RemoveAll(typeof(AppDbContext));
+
+                services.AddDbContext<AppDbContext>(opts =>
+                {
+                    opts.UseNpgsql(conn, npgsql => npgsql.UseNetTopologySuite());
+                });
+
+                services
+                    .AddAuthentication("Test")
+                    .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>("Test", _ => { });
+
+                services.PostConfigure<AuthenticationOptions>(opts =>
+                {
+                    opts.DefaultAuthenticateScheme = "Test";
+                    opts.DefaultChallengeScheme = "Test";
+                });
+            });
+        });
+
+        using (var scope = customized.Services.CreateScope())
+        {
+            var ctx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            for (int uid = 1; uid <= 5; uid++)
+            {
+                var existing = ctx.Users.Find(uid);
+                if (existing == null)
+                {
+                    ctx.Users.Add(new User(
+                        id: uid,
+                        name: $"Test User {uid}",
+                        email: $"test{uid}@local",
+                        password: "pwd",
+                        profile: Profile.CITIZEN
+                    ));
+                }
+            }
+            ctx.SaveChanges();
+        }
+
+        _client = customized.CreateClient();
+
+        _json = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        _json.Converters.Add(new JsonStringEnumConverter());
+    }
+
+    /// <summary>
+    /// Asserts that the response has status code 201 Created, otherwise throws an exception.
+    /// </summary>
+    /// <param name="resp"></param>
+    private static async Task AssertCreatedOrThrow(HttpResponseMessage resp)
+    {
+        if (resp.StatusCode != HttpStatusCode.Created)
+        {
+            var body = await resp.Content.ReadAsStringAsync();
+            throw new Xunit.Sdk.XunitException(
+                $"Expected 201 Created but got {(int)resp.StatusCode} {resp.StatusCode}. Body:{Environment.NewLine}{body}"
+            );
+        }
+    }
+
+    /// <summary>
+    /// Parses the identifier from a Location URI.
+    /// </summary>
+    /// <param name="location"></param>
+    /// <returns> The parsed identifier.</returns>
+    private static int ParseIdFromLocation(Uri location)
+    {
+        var segments = location.AbsolutePath.TrimEnd('/').Split('/');
+        var idStr = segments[^1];
+        Assert.True(int.TryParse(idStr, out var id));
+        return id;
+    }
+
+    /// <summary>
+    /// Creates an occurrence, optionally activating it.
+    /// </summary>
+    /// <param name="activate"> Whether to activate the occurrence after creation. </param>
+    private async Task<(int id, OccurrenceDetailsDto details)> CreateOccurrenceAsync(bool activate)
+    {
+        var createDto = new Occurrence
+        {
+            Title = "fb occ",
+            Description = "for feedback",
             Type = OccurrenceType.ROAD_DAMAGE,
-            Status = OccurrenceStatus.ACTIVE,
-            Priority = PriorityLevel.MEDIUM,
-            ProximityRadius = 25,
-            CreationDateTime = DateTime.UtcNow,
-            ReportCount = 0,
-            Location = new GeoPoint { Latitude = 41.0, Longitude = -8.0 }
+            Location = new GeoPoint { Latitude = 41.15, Longitude = -8.61 },
         };
-        context.Occurrences.Add(occ);
-        context.SaveChanges();
-        return occ;
+
+        var createResp = await _client.PostAsJsonAsync("/api/occurrence", createDto);
+        await AssertCreatedOrThrow(createResp);
+        Assert.NotNull(createResp.Headers.Location);
+        var id = ParseIdFromLocation(createResp.Headers.Location!);
+
+        var details = await _client.GetFromJsonAsync<OccurrenceDetailsDto>(createResp.Headers.Location!, _json);
+        Assert.NotNull(details);
+
+        if (activate)
+        {
+            var activatePayload = new Occurrence
+            {
+                Id = id,
+                Title = details!.Title,
+                Description = details.Description,
+                Type = details.Type,
+                Location = new GeoPoint { Latitude = details.Latitude, Longitude = details.Longitude },
+                Status = OccurrenceStatus.ACTIVE,
+            };
+
+            var putResp = await _client.PutAsJsonAsync("/api/occurrence", activatePayload);
+            Assert.Equal(HttpStatusCode.OK, putResp.StatusCode);
+
+            details = await _client.GetFromJsonAsync<OccurrenceDetailsDto>($"/api/occurrences/{id}", _json);
+            Assert.NotNull(details);
+            Assert.Equal(OccurrenceStatus.ACTIVE, details!.Status);
+        }
+
+        return (id, details!);
     }
 
     /// <summary>
-    ///   Tests the Create method persists the feedback in the database.
+    /// Posts feedback for the given occurrence and user.
     /// </summary>
-    [Fact]
-    public void Create_PersistsFeedback_InDatabase()
+    /// <param name="occurrenceId"></param>
+    /// <param name="userId"></param>
+    /// <param name="isConfirmed"></param>
+    private Task<HttpResponseMessage> PostFeedbackAsync(int occurrenceId, int userId, bool isConfirmed)
     {
-        var user = CreateUser();
-        var occ = CreateOccurrence();
-
-        var result = controller.Create(new Feedback { UserId = user.Id, OccurrenceId = occ.Id, IsConfirmed = true });
-
-        var obj = Assert.IsType<ObjectResult>(result);
-        Assert.Equal(201, obj.StatusCode);
-        var fb = Assert.IsType<Feedback>(obj.Value);
-        Assert.True(fb.Id > 0);
-
-        var inDb = context.Feedbacks.FirstOrDefault(f => f.Id == fb.Id);
-        Assert.NotNull(inDb);
-        Assert.Equal(user.Id, inDb!.UserId);
-        Assert.Equal(occ.Id, inDb.OccurrenceId);
+        var payload = new Feedback
+        {
+            OccurrenceId = occurrenceId,
+            UserId = userId,
+            IsConfirmed = isConfirmed
+        };
+        return _client.PostAsJsonAsync("/api/feedback", payload);
     }
 
     /// <summary>
-    ///   Tests the Create method returns NotFound when the user does not exist.
+    /// Tests the create feedback method successfully.
     /// </summary>
     [Fact]
-    public void Create_ReturnsNotFound_WhenUserDoesNotExist()
+    public async Task Create_ReturnsCreated()
     {
-        var occ = CreateOccurrence();
+        var (occId, _) = await CreateOccurrenceAsync(activate: true);
 
-        var res = controller.Create(new Feedback { UserId = 999999, OccurrenceId = occ.Id });
+        var resp = await PostFeedbackAsync(occId, userId: 1, isConfirmed: true);
+        await AssertCreatedOrThrow(resp);
 
-        Assert.IsType<NotFoundObjectResult>(res);
+        var created = await resp.Content.ReadFromJsonAsync<Feedback>(_json);
+        Assert.NotNull(created);
+        Assert.Equal(occId, created!.OccurrenceId);
+        Assert.Equal(1, created.UserId);
+        Assert.True(created.IsConfirmed);
     }
 
     /// <summary>
-    ///  Tests the Create method returns NotFound when the occurrence does not exist.
+    /// Tests the create feedback method when a duplicate is submitted within an hour.
     /// </summary>
     [Fact]
-    public void Create_ReturnsNotFound_WhenOccurrenceDoesNotExist()
+    public async Task Create_ReturnsBadRequest_WhenDuplicateWithinHour()
     {
-        var user = CreateUser();
+        var (occId, _) = await CreateOccurrenceAsync(activate: true);
 
-        var res = controller.Create(new Feedback { UserId = user.Id, OccurrenceId = 999999 });
+        var first = await PostFeedbackAsync(occId, userId: 1, isConfirmed: false);
+        await AssertCreatedOrThrow(first);
 
-        Assert.IsType<NotFoundObjectResult>(res);
+        var second = await PostFeedbackAsync(occId, userId: 1, isConfirmed: true);
+        Assert.Equal(HttpStatusCode.BadRequest, second.StatusCode);
+
+        var body = await second.Content.ReadAsStringAsync();
+        Assert.Contains("within the last hour", body, StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// Tests the create feedback method when the user is missing.
+    /// </summary>
+    [Fact]
+    public async Task Create_ReturnsNotFound_WhenUserMissing()
+    {
+        var (occId, _) = await CreateOccurrenceAsync(activate: true);
+
+        var resp = await PostFeedbackAsync(occId, userId: 999999, isConfirmed: true);
+        Assert.Equal(HttpStatusCode.NotFound, resp.StatusCode);
+    }
+
+    /// <summary>
+    /// Tests the create feedback method when the occurrence is missing.
+    /// </summary>
+    [Fact]
+    public async Task Create_ReturnsNotFound_WhenOccurrenceMissing()
+    {
+        var resp = await PostFeedbackAsync(occurrenceId: 999999, userId: 1, isConfirmed: false);
+        Assert.Equal(HttpStatusCode.NotFound, resp.StatusCode);
+    }
+
+    /// <summary>
+    /// Tests the create feedback method when the occurrence is in waiting status.
+    /// </summary>
+    [Fact]
+    public async Task Create_ReturnsInternalServerError_WhenOccurrenceWaiting()
+    {
+        var (occId, details) = await CreateOccurrenceAsync(activate: false);
+        Assert.Equal(OccurrenceStatus.WAITING, details.Status);
+
+        var resp = await PostFeedbackAsync(occId, userId: 1, isConfirmed: true);
+        Assert.Equal(HttpStatusCode.InternalServerError, resp.StatusCode);
+    }
+
+    /// <summary>
+    /// Tests the create feedback method when the request body is null.
+    /// </summary>
+    [Fact]
+    public async Task Create_BadRequest_WhenBodyNull()
+    {
+        var content = new StringContent("null", Encoding.UTF8, "application/json");
+        var resp = await _client.PostAsync("/api/feedback", content);
+        Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
+    }
+
+    /// <summary>
+    /// Tests that submitting five negative feedbacks closes the occurrence.
+    /// </summary>
+    [Fact]
+    public async Task Create_FiveNegativeFeedbacks_ClosesOccurrence()
+    {
+        var (occId, _) = await CreateOccurrenceAsync(activate: true);
+
+        for (int userId = 1; userId <= 5; userId++)
+        {
+            var resp = await PostFeedbackAsync(occId, userId: userId, isConfirmed: false);
+            await AssertCreatedOrThrow(resp);
+        }
+
+        var after = await _client.GetFromJsonAsync<OccurrenceDetailsDto>($"/api/occurrences/{occId}", _json);
+        Assert.NotNull(after);
+        Assert.Equal(OccurrenceStatus.CLOSED, after!.Status);
+        Assert.True(after.EndDateTime != default);
     }
 }

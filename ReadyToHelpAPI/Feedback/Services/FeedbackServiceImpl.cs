@@ -43,15 +43,24 @@ public class FeedbackServiceImpl : IFeedbackService
                 nameof(feedback)
             );
 
+        var now = DateTime.UtcNow;
+        var cutoff = now.AddHours(-1);
+        if (repo.HasRecentFeedback(feedback.UserId, feedback.OccurrenceId, cutoff))
+            throw new ArgumentException(
+                "User already submitted feedback for this occurrence within the last hour.",
+                nameof(feedback)
+            );
+
         var occCheck = occurrenceService.GetOccurrenceById(feedback.OccurrenceId);
         if (occCheck != null && occCheck.Status == OccurrenceStatus.WAITING)
             throw new InvalidOperationException("Cannot submit feedback for an occurrence with WAITING status.");
-        feedback.FeedbackDateTime = DateTime.UtcNow;
 
-        var created = repo.Create(feedback);
+        feedback.FeedbackDateTime = now;
+
+        var created = repo.Create(feedback) ?? throw new InvalidOperationException("Failed to create feedback.");
         try
         {
-            if (created != null && !created.IsConfirmed)
+            if (!created.IsConfirmed)
             {
                 var allForOccurrence = repo.GetFeedbacksByOccurrenceId(created.OccurrenceId) ?? new List<Feedback>();
                 var negativeCount = allForOccurrence.Count(f => f != null && !f.IsConfirmed);

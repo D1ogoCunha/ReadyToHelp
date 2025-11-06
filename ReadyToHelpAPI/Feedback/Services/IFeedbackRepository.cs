@@ -55,4 +55,13 @@ public interface IFeedbackRepository
     /// <param name="occurrenceId">The ID of the occurrence.</param>
     /// <returns>True if the occurrence exists, otherwise false.</returns>
     bool OccurrenceExists(int occurrenceId);
+
+    /// <summary>
+    ///   Checks if a user has submitted feedback for a specific occurrence since a given date and time.
+    /// </summary>
+    /// <param name="userId">The ID of the user.</param>
+    /// <param name="occurrenceId">The ID of the occurrence.</param>
+    /// <param name="since">The date and time since when to check for feedback.</param>
+    /// <returns>True if the user has submitted feedback since the specified date and time, otherwise false.</returns>
+    bool HasRecentFeedback(int userId, int occurrenceId, DateTime since);
 }
