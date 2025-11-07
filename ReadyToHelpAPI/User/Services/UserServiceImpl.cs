@@ -2,8 +2,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using Models;
+using BCrypt.Net;
+using readytohelpapi.User.Models;
 
 /// <summary>
 ///     Implements the user service operations.
@@ -44,7 +44,7 @@ public class UserServiceImpl : IUserService
         if (existingUsers != null)
             throw new ArgumentException($"Email {user.Email} already exists.");
 
-        user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
+        user.Password = BCrypt.HashPassword(user.Password);
 
         try
         {
@@ -89,9 +89,9 @@ public class UserServiceImpl : IUserService
             {
                 try
                 {
-                    sameAsExisting = BCrypt.Net.BCrypt.Verify(user.Password, existingUser.Password);
+                    sameAsExisting = BCrypt.Verify(user.Password, existingUser.Password);
                 }
-                catch (BCrypt.Net.SaltParseException)
+                catch (SaltParseException)
                 {
                     sameAsExisting = false;
                 }
@@ -99,7 +99,7 @@ public class UserServiceImpl : IUserService
 
             user.Password = sameAsExisting
                 ? existingUser.Password
-                : BCrypt.Net.BCrypt.HashPassword(user.Password);
+                : BCrypt.HashPassword(user.Password);
         }
 
         var emailExists = this.userRepository.GetUserByEmail(user.Email);
@@ -204,7 +204,7 @@ public class UserServiceImpl : IUserService
     }
 
     /// <inheritdoc />
-    public Models.User? GetUserByEmail(string email)
+    public User? GetUserByEmail(string email)
     {
         if (string.IsNullOrWhiteSpace(email) || string.IsNullOrEmpty(email))
             throw new ArgumentException("Email cannot be null or empty", nameof(email));
@@ -213,7 +213,7 @@ public class UserServiceImpl : IUserService
     }
 
     /// <inheritdoc />
-    public Models.User Register(Models.User user)
+    public User Register(User user)
     {
         if (user == null)
             throw new ArgumentNullException(nameof(user), "User object is null");

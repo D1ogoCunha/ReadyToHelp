@@ -1,8 +1,7 @@
 namespace readytohelpapi.User.Services;
 
-using Models;
 using System.Collections.Generic;
-using System;
+using readytohelpapi.User.Models;
 
 //// <summary>
 ///     Defines the contract for a user repository to manage data.
@@ -14,42 +13,42 @@ public interface IUserRepository
     /// </summary>
     /// <param name="user">The user object to be created.</param>
     /// <returns>The created user entity.</returns>s
-    Models.User Create(User user);
+    User Create(User user);
 
     /// <summary>
     ///    Retrieves a user by ID.
     /// </summary>
     /// <param name="id">The user ID.</param>
     /// <returns>The user entity if found; otherwise, null.</returns>
-    Models.User? GetUserById(int id);
+    User? GetUserById(int id);
 
     /// <summary>
     ///    Updates a user in the repository.
     /// </summary>
     /// <param name="user">The user to update.</param>
     /// <returns>The updated user entity.</returns>
-    Models.User Update(User user);
+    User Update(User user);
 
     /// <summary>
     ///    Deletes a user by ID.
     /// </summary>
     /// <param name="id">The user ID.</param>
     /// <returns>The deleted user entity if found; otherwise, null.</returns>
-    Models.User? Delete(int id);
+    User? Delete(int id);
 
     /// <summary>
     ///   Retrieves users by partial or full name.
     /// </summary>
     /// <param name="name">The name to search for.</param>
     /// <returns>A list of users that match the name.</returns>
-    List<Models.User> GetUserByName(string name);
+    List<User> GetUserByName(string name);
 
     /// <summary>
     ///   Retrieves the user by email.
     /// </summary>
     /// <param name="email">The email of the user.</param>
     /// <returns>The user with the specified email.</returns>
-    Models.User? GetUserByEmail(string email);
+    User? GetUserByEmail(string email);
 
     /// <summary>
     ///     Retrieves a paginated, filtered, and sorted list of users.
@@ -60,5 +59,11 @@ public interface IUserRepository
     /// <param name="sortOrder">The sort order, either "asc" or "desc".</param>
     /// <param name="filter">The string to filter the user data.</param>
     /// <returns>A paginated, sorted, and filtered list of users.</returns>
-    List<Models.User> GetAllUsers(int pageNumber, int pageSize, string sortBy, string sortOrder, string filter);
+    List<User> GetAllUsers(
+        int pageNumber,
+        int pageSize,
+        string sortBy,
+        string sortOrder,
+        string filter
+    );
 }

@@ -36,8 +36,8 @@ public class DbFixture : IDisposable
             )
             .BuildServiceProvider();
 
-        this.Context = serviceProvider.GetRequiredService<AppDbContext>();
-        this.Context.Database.EnsureCreated();
+        Context = serviceProvider.GetRequiredService<AppDbContext>();
+        Context.Database.EnsureCreated();
     }
 
     /// <summary>
@@ -77,17 +77,15 @@ public class DbFixture : IDisposable
         {
             try
             {
-                this.Context?.Database?.EnsureDeleted();
+                Context?.Database?.EnsureDeleted();
             }
-            catch
+            catch (Exception ex)
             {
-                // Swallow exceptions during cleanup to avoid throwing from Dispose.
+                _ = ex;
             }
 
-            this.Context?.Dispose();
+            _disposed = true;
         }
-
-        _disposed = true;
     }
 
     /// <summary>
@@ -100,13 +98,13 @@ public class DbFixture : IDisposable
             throw new ObjectDisposedException(nameof(DbFixture));
         }
 
-        this.Context.ChangeTracker.Clear();
-        var users = this.Context.Users.AsNoTracking().ToList();
+        Context.ChangeTracker.Clear();
+        var users = Context.Users.AsNoTracking().ToList();
         if (users.Any())
         {
-            this.Context.Users.RemoveRange(users);
-            this.Context.SaveChanges();
+            Context.Users.RemoveRange(users);
+            Context.SaveChanges();
         }
-        this.Context.ChangeTracker.Clear();
+        Context.ChangeTracker.Clear();
     }
 }

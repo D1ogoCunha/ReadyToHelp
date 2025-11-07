@@ -9,6 +9,7 @@ using readytohelpapi.User.DTOs;
 using readytohelpapi.User.Models;
 using readytohelpapi.User.Services;
 using Xunit;
+using static readytohelpapi.User.Controllers.UserApiController;
 
 [Trait("Category", "Unit")]
 public class TestUserApiController_Unit
@@ -127,7 +128,7 @@ public class TestUserApiController_Unit
     {
         mockService
             .Setup(s => s.Update(It.IsAny<User>()))
-            .Throws(new ArgumentNullException("The user parameter cannot be null."));
+            .Throws(new ArgumentNullException("user", "The user parameter cannot be null."));
 
         var result = controller.Update(2, NewUser(id: 2));
 
@@ -305,7 +306,7 @@ public class TestUserApiController_Unit
     [InlineData("John", "e@e.com", "   ")]
     public void Register_InvalidFields_ReturnsBadRequest(string name, string email, string password)
     {
-        var req = new UserApiController.RegisterRequest(name, email, password);
+        var req = new RegisterRequest(name, email, password);
         var result = controller.Register(req);
         Assert.IsType<BadRequestObjectResult>(result);
     }
@@ -321,7 +322,7 @@ public class TestUserApiController_Unit
         );
         mockService.Setup(s => s.Register(It.IsAny<User>())).Returns(created);
 
-        var req = new UserApiController.RegisterRequest("Eve", "eve@example.com", "secret");
+        var req = new RegisterRequest("Eve", "eve@example.com", "secret");
         var result = controller.Register(req);
 
         var createdRes = Assert.IsType<CreatedAtActionResult>(result);
@@ -336,7 +337,7 @@ public class TestUserApiController_Unit
             .Setup(s => s.Register(It.IsAny<User>()))
             .Throws(new ArgumentException("Email already exists"));
 
-        var req = new UserApiController.RegisterRequest("Carl", "carl@example.com", "pwd");
+        var req = new RegisterRequest("Carl", "carl@example.com", "pwd");
         var result = controller.Register(req);
 
         Assert.IsType<ConflictObjectResult>(result);
@@ -347,7 +348,7 @@ public class TestUserApiController_Unit
     {
         mockService.Setup(s => s.Register(It.IsAny<User>())).Throws(new Exception("db"));
 
-        var req = new UserApiController.RegisterRequest("Zoe", "zoe@example.com", "pwd");
+        var req = new RegisterRequest("Zoe", "zoe@example.com", "pwd");
         var result = controller.Register(req);
 
         var obj = Assert.IsType<ObjectResult>(result);
