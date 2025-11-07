@@ -384,7 +384,7 @@ public class TestOccurrenceApiController_Unit
 
         Assert.IsType<NotFoundResult>(result.Result);
     }
-    
+
     /// <summary>
     ///   Tests GetAll returning a list of occurrences.
     /// </summary>
