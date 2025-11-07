@@ -14,7 +14,8 @@ public static class JwtUtility
     /// <returns>The JwtSecurityToken object.</returns>
     public static JwtSecurityToken? ConvertJwtStringToJwtSecurityToken(string? jwt)
     {
-        if (string.IsNullOrWhiteSpace(jwt)) return null;
+        if (string.IsNullOrWhiteSpace(jwt))
+            return null;
         try
         {
             var handler = new JwtSecurityTokenHandler();
@@ -33,7 +34,8 @@ public static class JwtUtility
     /// <returns>Decoded JWT information.</returns>
     public static object? DecodeJwt(JwtSecurityToken? jwt)
     {
-        if (jwt == null) return null;
+        if (jwt == null)
+            return null;
 
         var keyId = jwt.Header?.Kid;
         var audience = jwt.Audiences?.ToList() ?? new List<string>();
@@ -47,7 +49,7 @@ public static class JwtUtility
             claims,
             subject = jwt.Subject,
             validFrom = jwt.ValidFrom,
-            validTo = jwt.ValidTo
+            validTo = jwt.ValidTo,
         };
     }
 

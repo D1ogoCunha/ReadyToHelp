@@ -32,7 +32,8 @@ public class AuthApiController : ControllerBase
     [HttpPost("login/mobile")]
     public ActionResult<string> LoginMobile([FromBody] Models.Authentication? authentication)
     {
-        if (authentication is null) return BadRequest("Invalid authentication details.");
+        if (authentication is null)
+            return BadRequest("Invalid authentication details.");
 
         try
         {
@@ -62,7 +63,8 @@ public class AuthApiController : ControllerBase
     [HttpPost("login/web")]
     public ActionResult<string> LoginWeb([FromBody] Models.Authentication? authentication)
     {
-        if (authentication is null) return BadRequest("Invalid authentication details.");
+        if (authentication is null)
+            return BadRequest("Invalid authentication details.");
 
         try
         {
@@ -96,14 +98,17 @@ public class AuthApiController : ControllerBase
     public ActionResult<string> RefreshToken()
     {
         var authHeader = Request.Headers.Authorization.ToString();
-        var token = authHeader?.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase) == true
-            ? authHeader.Substring("Bearer ".Length).Trim()
-            : string.Empty;
+        var token =
+            authHeader?.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase) == true
+                ? authHeader.Substring("Bearer ".Length).Trim()
+                : string.Empty;
 
-        if (string.IsNullOrWhiteSpace(token)) return BadRequest("Token is required.");
+        if (string.IsNullOrWhiteSpace(token))
+            return BadRequest("Token is required.");
 
         var newToken = authService.RefreshToken(token);
-        if (string.IsNullOrEmpty(newToken)) return Unauthorized("Invalid or expired token.");
+        if (string.IsNullOrEmpty(newToken))
+            return Unauthorized("Invalid or expired token.");
 
         return Ok(newToken);
     }
@@ -116,13 +121,19 @@ public class AuthApiController : ControllerBase
     public IActionResult Logout()
     {
         var authHeader = Request.Headers["Authorization"].ToString();
-        if (string.IsNullOrWhiteSpace(authHeader) || !authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+        if (
+            string.IsNullOrWhiteSpace(authHeader)
+            || !authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)
+        )
         {
-            return BadRequest("Authorization Bearer token is required in the Authorization header.");
+            return BadRequest(
+                "Authorization Bearer token is required in the Authorization header."
+            );
         }
 
         var token = authHeader.Substring("Bearer ".Length).Trim();
-        if (string.IsNullOrWhiteSpace(token)) return BadRequest("Invalid Bearer token.");
+        if (string.IsNullOrWhiteSpace(token))
+            return BadRequest("Invalid Bearer token.");
 
         try
         {
@@ -138,5 +149,4 @@ public class AuthApiController : ControllerBase
             return StatusCode(500, "An unexpected error occurred while revoking token.");
         }
     }
-
 }

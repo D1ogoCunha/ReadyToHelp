@@ -1,6 +1,7 @@
 namespace readytohelpapi.Authentication.Tests;
 
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using readytohelpapi.Authentication.Miscellaneous;
 using Xunit;
 
@@ -16,21 +17,18 @@ public class TesteJwtUtil
     [Fact]
     public void ConvertJwtStringToJwtSecurityToken_ShouldReturnToken_WhenValidJwtString()
     {
-        // Arrange
         var handler = new JwtSecurityTokenHandler();
         var token = new JwtSecurityToken(
             issuer: "ReadyToHelp",
             audience: "ReadyToHelpUsers",
             claims: [],
             expires: DateTime.UtcNow.AddHours(1),
-            signingCredentials: null // assinatura não é validada aqui
+            signingCredentials: null
         );
         var tokenString = handler.WriteToken(token);
 
-        // Act
         var result = JwtUtility.ConvertJwtStringToJwtSecurityToken(tokenString);
 
-        // Assert
         Assert.NotNull(result);
         Assert.Equal("ReadyToHelp", result!.Issuer);
     }
@@ -41,13 +39,10 @@ public class TesteJwtUtil
     [Fact]
     public void ConvertJwtStringToJwtSecurityToken_ShouldReturnNull_WhenInvalidJwtString()
     {
-        // Arrange
         var invalidToken = "this.is.not.a.jwt";
 
-        // Act
         var result = JwtUtility.ConvertJwtStringToJwtSecurityToken(invalidToken);
 
-        // Assert
         Assert.Null(result);
     }
 
@@ -57,11 +52,7 @@ public class TesteJwtUtil
     [Fact]
     public void DecodeJwt_ShouldReturnDecodedObject_WhenValidToken()
     {
-        var claims = new[]
-        {
-            new System.Security.Claims.Claim("role", "ADMIN"),
-            new System.Security.Claims.Claim("email", "admin@mail.com")
-        };
+        var claims = new[] { new Claim("role", "ADMIN"), new Claim("email", "admin@mail.com") };
 
         var token = new JwtSecurityToken(
             issuer: "ReadyToHelp",
@@ -98,10 +89,7 @@ public class TesteJwtUtil
         var token = new JwtSecurityToken(
             issuer: "ReadyToHelp",
             audience: "ReadyToHelpUsers",
-            claims: new[]
-            {
-                new System.Security.Claims.Claim("role", "MANAGER")
-            },
+            claims: new[] { new Claim("role", "MANAGER") },
             expires: DateTime.UtcNow.AddHours(1)
         );
         var tokenString = handler.WriteToken(token);
