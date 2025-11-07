@@ -600,7 +600,7 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
             list,
             o =>
                 Assert.True(
-                    o.Status == OccurrenceStatus.ACTIVE || o.Status == OccurrenceStatus.IN_PROGRESS
+                    o.Status == OccurrenceStatus.ACTIVE
                 )
         );
     }

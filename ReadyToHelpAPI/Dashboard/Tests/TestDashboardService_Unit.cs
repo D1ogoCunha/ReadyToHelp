@@ -305,8 +305,8 @@ public class TestDashboardService_Unit
 
         var re = AddResponsibleEntity(ctx, "RE", ResponsibleEntityType.BOMBEIROS);
 
-        AddOccurrence(ctx, "Older", OccurrenceStatus.RESOLVED, PriorityLevel.LOW, OccurrenceType.ROAD_DAMAGE, re.Id, created: UtcDaysAgo(10), ended: UtcDaysAgo(9), reportCount: 5);
-        AddOccurrence(ctx, "Newer", OccurrenceStatus.RESOLVED, PriorityLevel.LOW, OccurrenceType.ROAD_DAMAGE, re.Id, created: UtcDaysAgo(1), ended: UtcDaysAgo(0), reportCount: 5);
+        AddOccurrence(ctx, "Older", OccurrenceStatus.CLOSED, PriorityLevel.LOW, OccurrenceType.ROAD_DAMAGE, re.Id, created: UtcDaysAgo(10), ended: UtcDaysAgo(9), reportCount: 5);
+        AddOccurrence(ctx, "Newer", OccurrenceStatus.CLOSED, PriorityLevel.LOW, OccurrenceType.ROAD_DAMAGE, re.Id, created: UtcDaysAgo(1), ended: UtcDaysAgo(0), reportCount: 5);
         AddOccurrence(ctx, "A", OccurrenceStatus.ACTIVE, PriorityLevel.MEDIUM, OccurrenceType.FLOOD, re.Id, created: UtcDaysAgo(2), ended: default);
         AddOccurrence(ctx, "W", OccurrenceStatus.WAITING, PriorityLevel.HIGH, OccurrenceType.ROAD_DAMAGE, re.Id, created: UtcDaysAgo(3), ended: default);
 
@@ -337,7 +337,7 @@ public class TestDashboardService_Unit
     }
 
     [Fact]
-    public async Task GetResponsibleEntityStatsAsync_TopEntity_TieBreaks_ByEntityIdAscending()
+    public async Task GetResponsibleEntityStatsAsync_TopEntity_WhenTie_ReturnsEitherEntity()
     {
         var (svc, ctx) = CreateService();
 
@@ -355,15 +355,15 @@ public class TestDashboardService_Unit
     }
 
     [Fact]
-    public async Task GetOccurrenceStatsAsync_AverageResolutionHours_RoundingToTwoDecimals()
+    public async Task GetOccurrenceStatsAsync_AverageResolutionHours_ComputesCorrectAverage()
     {
         var (svc, ctx) = CreateService();
 
         var re = AddResponsibleEntity(ctx, "RE", ResponsibleEntityType.BOMBEIROS);
 
-        AddOccurrence(ctx, "r1", OccurrenceStatus.RESOLVED, PriorityLevel.LOW, OccurrenceType.FLOOD, re.Id,
+        AddOccurrence(ctx, "r1", OccurrenceStatus.CLOSED, PriorityLevel.LOW, OccurrenceType.FLOOD, re.Id,
             created: DateTime.UtcNow.AddHours(-2), ended: DateTime.UtcNow.AddHours(-1));
-        AddOccurrence(ctx, "r2", OccurrenceStatus.RESOLVED, PriorityLevel.LOW, OccurrenceType.FLOOD, re.Id,
+        AddOccurrence(ctx, "r2", OccurrenceStatus.CLOSED, PriorityLevel.LOW, OccurrenceType.FLOOD, re.Id,
             created: DateTime.UtcNow.AddHours(-3), ended: DateTime.UtcNow.AddHours(-1));
 
         var dto = await svc.GetOccurrenceStatsAsync();

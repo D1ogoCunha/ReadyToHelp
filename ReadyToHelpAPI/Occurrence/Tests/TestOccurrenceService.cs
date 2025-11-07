@@ -860,7 +860,7 @@ public class TestOccurrenceService
             result,
             o =>
                 Assert.True(
-                    o.Status == OccurrenceStatus.ACTIVE || o.Status == OccurrenceStatus.IN_PROGRESS
+                    o.Status == OccurrenceStatus.ACTIVE
                 )
         );
     }
