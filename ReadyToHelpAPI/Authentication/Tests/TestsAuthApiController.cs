@@ -1,4 +1,5 @@
-using Microsoft.AspNetCore.Http;
+namespace readytohelpapi.Authentication.Tests;
+
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using readytohelpapi.Authentication.Controllers;
@@ -6,8 +7,6 @@ using readytohelpapi.Authentication.Service;
 using AuthDto = readytohelpapi.Authentication.Models.Authentication;
 using AuthException = System.Security.Authentication.AuthenticationException;
 using Xunit;
-
-namespace ReadyToHelpAPI.Tests.Controllers;
 
 /// <summary>
 /// Unit tests for the AuthApiController.

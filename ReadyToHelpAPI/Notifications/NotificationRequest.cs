@@ -1,6 +1,5 @@
 namespace readytohelpapi.Notifications;
 
-using System.Text.Json.Serialization;
 using readytohelpapi.ResponsibleEntity.Models;
 
 /// <summary>

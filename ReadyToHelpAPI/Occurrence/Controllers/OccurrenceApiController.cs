@@ -167,7 +167,6 @@ public class OccurrenceApiController : ControllerBase
     /// Method to get all occurrences with pagination, sorting, and filtering.
     /// </summary>
     /// <returns>A list of occurrences.</returns>
-    [Authorize]
     [HttpGet]
     public ActionResult<List<Occurrence>> GetAll(
         [FromQuery] int pageNumber = 1,
@@ -202,7 +201,6 @@ public class OccurrenceApiController : ControllerBase
     /// Method to get all active occurrences for map display.
     /// </summary>
     /// <returns>A list of active occurrences for map display.</returns>
-    [Authorize]
     [HttpGet("active")]
     public ActionResult<List<OccurrenceMapDto>> GetAllActive(
         [FromQuery] int pageNumber = 1,

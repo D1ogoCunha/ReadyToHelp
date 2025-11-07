@@ -1,10 +1,9 @@
+namespace readytohelpapi.Authentication.Controllers;
+
 using System.Security.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using readytohelpapi.Authentication.Service;
-
-namespace readytohelpapi.Authentication.Controllers;
-
 
 /// <summary>
 /// Controller for handling authentication-related API endpoints.

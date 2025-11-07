@@ -1,6 +1,6 @@
-using System.IdentityModel.Tokens.Jwt;
+namespace readytohelpapi.Authentication.Miscellaneous;
 
-namespace readytohelpapi.Authentication.Service;
+using System.IdentityModel.Tokens.Jwt;
 
 /// <summary>
 ///     Utility class for handling JWT operations.

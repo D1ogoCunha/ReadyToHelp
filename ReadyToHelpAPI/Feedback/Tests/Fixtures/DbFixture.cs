@@ -15,7 +15,7 @@ using readytohelpapi.User.Models;
 /// </summary>
 public class DbFixture : IDisposable
 {
-    private readonly string _databaseName;
+    private readonly string databaseName;
     private bool disposed;
 
     /// <summary>
@@ -28,12 +28,12 @@ public class DbFixture : IDisposable
         var postgresUser = Environment.GetEnvironmentVariable("POSTGRES_USERNAME") ?? "readytohelp";
         var postgresPwd = Environment.GetEnvironmentVariable("POSTGRES_PASSWORD") ?? "readytohelppwd";
 
-        _databaseName = $"test_db_feedback_{Guid.NewGuid():N}";
+        databaseName = $"test_db_feedback_{Guid.NewGuid():N}";
 
         var serviceProvider = new ServiceCollection()
             .AddDbContext<AppDbContext>(options =>
                 options.UseNpgsql(
-                    $"Host={postgresHost};Port={postgresPort};Database={_databaseName};Username={postgresUser};Password={postgresPwd}",
+                    $"Host={postgresHost};Port={postgresPort};Database={databaseName};Username={postgresUser};Password={postgresPwd}",
                     npgsqlOptions => npgsqlOptions.UseNetTopologySuite()
                 )
             )
