@@ -26,11 +26,6 @@ public class UserStatsDto
     public int Citizens { get; set; }
 
     /// <summary>
-    /// Gets or sets the number of new users in the last 30 days.
-    /// </summary>
-    public int NewUsersLast30Days { get; set; }
-
-    /// <summary>
     /// Gets or sets the number of users with reports.
     /// </summary>
     public int UsersWithReports { get; set; }
