@@ -1,3 +1,5 @@
+namespace readytohelpapi.Authentication.Service;
+
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Authentication;
 using System.Security.Claims;
@@ -5,11 +7,9 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.IdentityModel.Tokens;
-using readytohelpapi.Authentication.Models;
+using readytohelpapi.Authentication.Miscellaneous;
 using readytohelpapi.User.Models;
 using readytohelpapi.User.Services;
-
-namespace readytohelpapi.Authentication.Service;
 
 /// <summary>
 /// Implementation of the authentication service.

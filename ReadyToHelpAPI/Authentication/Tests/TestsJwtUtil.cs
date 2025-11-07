@@ -1,12 +1,8 @@
-// <copyright file="TesteJwtUtil.cs" company="ReadyToHelp">
-// Copyright (c) ReadyToHelp. All rights reserved.
-// </copyright>
+namespace readytohelpapi.Authentication.Tests;
 
 using System.IdentityModel.Tokens.Jwt;
-using readytohelpapi.Authentication.Service;
+using readytohelpapi.Authentication.Miscellaneous;
 using Xunit;
-
-namespace ReadyToHelpAPI.Tests.Authentication;
 
 /// <summary>
 ///     Unit tests for <see cref="JwtUtility" />.

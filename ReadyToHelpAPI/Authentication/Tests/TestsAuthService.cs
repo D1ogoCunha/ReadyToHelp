@@ -1,3 +1,5 @@
+namespace readytohelpapi.Authentication.Controllers;
+
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Authentication;
 using System.Security.Claims;
@@ -12,8 +14,6 @@ using readytohelpapi.User.Services;
 using Xunit;
 using AuthDto = readytohelpapi.Authentication.Models.Authentication;
 using AuthException = System.Security.Authentication.AuthenticationException;
-
-namespace ReadyToHelpAPI.Tests.Authentication;
 
 /// <summary>
 ///     Unit tests for <see cref="AuthServiceImpl" />.

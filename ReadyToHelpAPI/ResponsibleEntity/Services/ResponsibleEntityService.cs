@@ -2,10 +2,10 @@ namespace readytohelpapi.ResponsibleEntity.Services;
 
 using Microsoft.EntityFrameworkCore;
 using NetTopologySuite.Geometries;
-using Npgsql.EntityFrameworkCore.PostgreSQL.NetTopologySuite;
 using readytohelpapi.Common.Data;
 using readytohelpapi.Occurrence.Models;
 using readytohelpapi.ResponsibleEntity.Models;
+using static NetTopologySuite.NtsGeometryServices;
 
 /// <summary>
 /// Implements the responsible entity service.
@@ -13,8 +13,7 @@ using readytohelpapi.ResponsibleEntity.Models;
 public class ResponsibleEntityService : IResponsibleEntityService
 {
     private readonly AppDbContext _context;
-    private static readonly GeometryFactory geoFactory =
-        NetTopologySuite.NtsGeometryServices.Instance.CreateGeometryFactory(4326);
+    private static readonly GeometryFactory geoFactory = Instance.CreateGeometryFactory(4326);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ResponsibleEntityService"/> class.

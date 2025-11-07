@@ -1,5 +1,3 @@
-using readytohelpapi.Authentication.Models;
-
 namespace readytohelpapi.Authentication.Service;
 
 /// <summary>

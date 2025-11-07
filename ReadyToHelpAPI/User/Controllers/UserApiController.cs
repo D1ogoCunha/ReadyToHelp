@@ -37,31 +37,43 @@ public class UserApiController : ControllerBase
     {
         try
         {
-            if (req is null) return BadRequest("Request body is required.");
-            if (string.IsNullOrWhiteSpace(req.Name)) return BadRequest("Name is required.");
-            if (string.IsNullOrWhiteSpace(req.Email)) return BadRequest("Email is required.");
-            if (string.IsNullOrWhiteSpace(req.Password)) return BadRequest("Password is required.");
+            if (req is null)
+                return BadRequest("Request body is required.");
+            if (string.IsNullOrWhiteSpace(req.Name))
+                return BadRequest("Name is required.");
+            if (string.IsNullOrWhiteSpace(req.Email))
+                return BadRequest("Email is required.");
+            if (string.IsNullOrWhiteSpace(req.Password))
+                return BadRequest("Password is required.");
 
-            var created = userService.Register(new User
-            {
-                Name = req.Name,
-                Email = req.Email,
-                Password = req.Password,
-                Profile = Profile.CITIZEN
-            });
+            var created = userService.Register(
+                new User
+                {
+                    Name = req.Name,
+                    Email = req.Email,
+                    Password = req.Password,
+                    Profile = Profile.CITIZEN,
+                }
+            );
 
             var dto = new UserResponseDto
             {
                 Id = created.Id,
                 Name = created.Name,
                 Email = created.Email,
-                Profile = created.Profile
+                Profile = created.Profile,
             };
 
             return CreatedAtAction(nameof(GetUserById), new { id = created.Id }, dto);
         }
-        catch (ArgumentException ex) { return Conflict(ex.Message); }
-        catch (Exception ex) { return StatusCode(500, ex.Message); }
+        catch (ArgumentException ex)
+        {
+            return Conflict(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
     }
 
     /// <summary>
@@ -75,7 +87,8 @@ public class UserApiController : ControllerBase
     {
         try
         {
-            if (user is null) return BadRequest("User body is required.");
+            if (user is null)
+                return BadRequest("User body is required.");
 
             var created = userService.Create(user);
 
@@ -84,13 +97,19 @@ public class UserApiController : ControllerBase
                 Id = created.Id,
                 Name = created.Name,
                 Email = created.Email,
-                Profile = created.Profile
+                Profile = created.Profile,
             };
 
             return CreatedAtAction(nameof(GetUserById), new { id = created.Id }, dto);
         }
-        catch (ArgumentException ex) { return Conflict(ex.Message); }
-        catch (Exception ex) { return StatusCode(500, ex.Message); }
+        catch (ArgumentException ex)
+        {
+            return Conflict(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
     }
 
     /// <summary>
@@ -105,7 +124,8 @@ public class UserApiController : ControllerBase
     {
         try
         {
-            if (user is null) return BadRequest("User body is required.");
+            if (user is null)
+                return BadRequest("User body is required.");
             user.Id = id;
 
             var updated = userService.Update(user);
@@ -115,15 +135,27 @@ public class UserApiController : ControllerBase
                 Id = updated.Id,
                 Name = updated.Name,
                 Email = updated.Email,
-                Profile = updated.Profile
+                Profile = updated.Profile,
             };
 
             return Ok(dto);
         }
-        catch (ArgumentNullException ex) { return BadRequest(ex.Message); }
-        catch (ArgumentException ex) { return Conflict(ex.Message); }
-        catch (KeyNotFoundException) { return NotFound(); }
-        catch (Exception ex) { return StatusCode(500, ex.Message); }
+        catch (ArgumentNullException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (ArgumentException ex)
+        {
+            return Conflict(ex.Message);
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
     }
 
     /// <summary>
@@ -138,21 +170,31 @@ public class UserApiController : ControllerBase
         try
         {
             var deleted = userService.Delete(id);
-            if (deleted is null) return NotFound();
+            if (deleted is null)
+                return NotFound();
 
             var dto = new UserResponseDto
             {
                 Id = deleted.Id,
                 Name = deleted.Name,
                 Email = deleted.Email,
-                Profile = deleted.Profile
+                Profile = deleted.Profile,
             };
 
             return Ok(dto);
         }
-        catch (ArgumentException ex) { return BadRequest(ex.Message); }
-        catch (KeyNotFoundException) { return NotFound(); }
-        catch (Exception ex) { return StatusCode(500, ex.Message); }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
     }
 
     /// <summary>
@@ -173,14 +215,23 @@ public class UserApiController : ControllerBase
                 Id = u.Id,
                 Name = u.Name,
                 Email = u.Email,
-                Profile = u.Profile
+                Profile = u.Profile,
             };
 
             return Ok(dto);
         }
-        catch (ArgumentException ex) { return BadRequest(ex.Message); }
-        catch (KeyNotFoundException) { return NotFound(); }
-        catch (Exception ex) { return StatusCode(500, ex.Message); }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
     }
 
     /// <summary>
@@ -211,13 +262,20 @@ public class UserApiController : ControllerBase
                 Id = u.Id,
                 Name = u.Name,
                 Email = u.Email,
-                Profile = u.Profile
-            }).ToList();
+                Profile = u.Profile,
+            })
+                .ToList();
 
             return Ok(dtoList);
         }
-        catch (ArgumentException ex) { return BadRequest(ex.Message); }
-        catch (Exception ex) { return StatusCode(500, ex.Message); }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
     }
 
     /// <summary>
@@ -232,20 +290,27 @@ public class UserApiController : ControllerBase
         try
         {
             var u = userService.GetUserByEmail(email);
-            if (u is null) return NotFound();
+            if (u is null)
+                return NotFound();
 
             var dto = new UserResponseDto
             {
                 Id = u.Id,
                 Name = u.Name,
                 Email = u.Email,
-                Profile = u.Profile
+                Profile = u.Profile,
             };
 
             return Ok(dto);
         }
-        catch (ArgumentException ex) { return BadRequest(ex.Message); }
-        catch (Exception ex) { return StatusCode(500, ex.Message); }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
     }
 
     public record RegisterRequest(string Name, string Email, string Password);

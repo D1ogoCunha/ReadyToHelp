@@ -95,7 +95,7 @@ public class FeedbackServiceImpl : IFeedbackService
     }
 
     /// <inheritdoc />
-    public List<Feedback> GetAllFeedbacks() => repo.GetAllFeedbacks();
+    public List<Feedback> GetAllFeedbacks() { return repo.GetAllFeedbacks(); }
 
     /// <inheritdoc />
     public List<Feedback> GetFeedbacksByOccurrenceId(int occurrenceId)

@@ -44,29 +44,47 @@ public class FeedbackRepository : IFeedbackRepository
     }
 
     /// <inheritdoc />
-    public Feedback? GetFeedbackById(int id) => context.Feedbacks.FirstOrDefault(f => f.Id == id);
+    public Feedback? GetFeedbackById(int id)
+    {
+        return context.Feedbacks.FirstOrDefault(f => f.Id == id);
+    }
 
     /// <inheritdoc />
-    public List<Feedback> GetAllFeedbacks() => context.Feedbacks.ToList();
+    public List<Feedback> GetAllFeedbacks()
+    {
+        return context.Feedbacks.ToList();
+    }
 
     /// <inheritdoc />
-    public List<Feedback> GetFeedbacksByOccurrenceId(int occurrenceId) =>
-        context.Feedbacks.Where(f => f.OccurrenceId == occurrenceId).ToList();
+    public List<Feedback> GetFeedbacksByOccurrenceId(int occurrenceId)
+    {
+        return context.Feedbacks.Where(f => f.OccurrenceId == occurrenceId).ToList();
+    }
 
     /// <inheritdoc />
-    public List<Feedback> GetFeedbacksByUserId(int userId) =>
-        context.Feedbacks.Where(f => f.UserId == userId).ToList();
+    public List<Feedback> GetFeedbacksByUserId(int userId)
+    {
+        return context.Feedbacks.Where(f => f.UserId == userId).ToList();
+    }
 
     /// <inheritdoc />
-    public bool UserExists(int userId) => context.Users.Any(u => u.Id == userId);
+    public bool UserExists(int userId)
+    {
+        return context.Users.Any(u => u.Id == userId);
+    }
 
     /// <inheritdoc />
-    public bool OccurrenceExists(int occurrenceId) => context.Occurrences.Any(o => o.Id == occurrenceId);
+    public bool OccurrenceExists(int occurrenceId)
+    {
+        return context.Occurrences.Any(o => o.Id == occurrenceId);
+    }
 
     /// <inheritdoc />
-    public bool HasRecentFeedback(int userId, int occurrenceId, DateTime since) =>
-        context.Feedbacks.Any(f =>
+    public bool HasRecentFeedback(int userId, int occurrenceId, DateTime since)
+    {
+        return context.Feedbacks.Any(f =>
             f.UserId == userId
             && f.OccurrenceId == occurrenceId
             && f.FeedbackDateTime >= since);
+    }
 }

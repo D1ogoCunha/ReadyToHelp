@@ -8,6 +8,7 @@ using readytohelpapi.ResponsibleEntity.Models;
 using readytohelpapi.ResponsibleEntity.Services;
 using readytohelpapi.ResponsibleEntity.Tests.Fixtures;
 using Xunit;
+using static NetTopologySuite.NtsGeometryServices;
 
 /// <summary>
 /// This class contains all integration tests related to the ResponsibleEntityService.
@@ -15,8 +16,7 @@ using Xunit;
 [Trait("Category", "Integration")]
 public class TestResponsibleEntityService : IClassFixture<DbFixture>
 {
-    private static readonly GeometryFactory Gf4326 =
-        NtsGeometryServices.Instance.CreateGeometryFactory(4326);
+    private static readonly GeometryFactory Gf4326 = Instance.CreateGeometryFactory(4326);
 
     private readonly AppDbContext ctx;
     private readonly IResponsibleEntityService svc;

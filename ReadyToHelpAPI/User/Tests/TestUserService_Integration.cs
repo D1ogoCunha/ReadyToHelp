@@ -6,7 +6,6 @@ using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using readytohelpapi.User.Models;
 using readytohelpapi.User.Services;
-using readytohelpapi.User.Tests.Fixtures;
 using Xunit;
 
 /// <summary>

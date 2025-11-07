@@ -19,10 +19,10 @@ public class DashboardServiceImpl : IDashboardService
     /// <summary>
     /// Initializes a new instance of the <see cref="DashboardServiceImpl"/> class.
     /// </summary>
-    /// <param name="ctx">The database context.</param>
-    public DashboardServiceImpl(AppDbContext ctx)
+    /// <param name="context">The database context.</param>
+    public DashboardServiceImpl(AppDbContext context)
     {
-        appContext = ctx ?? throw new ArgumentNullException(nameof(ctx));
+        appContext = context ?? throw new ArgumentNullException(nameof(context));
     }
 
     /// <inheritdoc />
@@ -346,9 +346,11 @@ public class DashboardServiceImpl : IDashboardService
     }
 
     /// <summary>
-    /// Calcula o tempo médio de resolução (em horas) para ocorrências com EndDateTime válido.
-    /// Materializa antes de filtrar para evitar problemas de tradução do provider.
+    /// Calculates the average resolution time (in hours) for occurrences with a valid EndDateTime.
+    /// Materializes before filtering to avoid translation issues with the provider.
     /// </summary>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>Average resolution time in hours.</returns>
     private async Task<double> ComputeAverageResolutionHoursAsync(CancellationToken ct)
     {
         var times = await appContext

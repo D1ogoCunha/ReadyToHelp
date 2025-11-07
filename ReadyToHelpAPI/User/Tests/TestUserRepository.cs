@@ -1,9 +1,9 @@
+namespace readytohelpapi.User.Tests;
+
 using readytohelpapi.Common.Data;
 using readytohelpapi.User.Models;
 using readytohelpapi.User.Services;
 using Xunit;
-
-namespace readytohelpapi.User.Tests;
 
 /// <summary>
 ///  This class contains all integration tests related to the user repository.
@@ -32,7 +32,7 @@ public class TestUserRepositoryTest : IClassFixture<DbFixture>
     [Fact]
     public void GetUserById_ShouldReturnUser_WhenUserExists()
     {
-        var user = new Models.User
+        var user = new User
         {
             Name = "John Doe",
             Email = "john@example.com",
@@ -64,7 +64,7 @@ public class TestUserRepositoryTest : IClassFixture<DbFixture>
     [Fact]
     public void GetUserByEmail_ShouldReturnUser_WhenFullEmailMatches()
     {
-        var user = new Models.User
+        var user = new User
         {
             Name = "Alice",
             Email = "alice@example.com",
@@ -146,7 +146,7 @@ public class TestUserRepositoryTest : IClassFixture<DbFixture>
     [Fact]
     public void GetUserByEmail_CaseInsensitive_ReturnsUser()
     {
-        var user = new Models.User
+        var user = new User
         {
             Name = "Case Test",
             Email = "CaseSensitive@Example.COM",
@@ -198,14 +198,14 @@ public class TestUserRepositoryTest : IClassFixture<DbFixture>
     [Fact]
     public void GetUserByName_ShouldReturnList_WhenNamePartialMatches()
     {
-        var u1 = new Models.User
+        var u1 = new User
         {
             Name = "Johnny Appleseed",
             Email = "j1@example.com",
             Password = "p",
             Profile = Profile.CITIZEN,
         };
-        var u2 = new Models.User
+        var u2 = new User
         {
             Name = "John Smith",
             Email = "j2@example.com",
@@ -227,7 +227,7 @@ public class TestUserRepositoryTest : IClassFixture<DbFixture>
     [Fact]
     public void GetAllUsers_ShouldReturnFilteredUsers_WhenFilteredByName()
     {
-        var user = new Models.User
+        var user = new User
         {
             Name = "Jane Smith",
             Email = "jane.smith@example.com",
@@ -249,14 +249,14 @@ public class TestUserRepositoryTest : IClassFixture<DbFixture>
     [Fact]
     public void GetAllUsers_ShouldReturnSortedUsers_ByNameDesc()
     {
-        var a = new Models.User
+        var a = new User
         {
             Name = "Alpha",
             Email = "a@example.com",
             Password = "p",
             Profile = Profile.CITIZEN,
         };
-        var z = new Models.User
+        var z = new User
         {
             Name = "Zulu",
             Email = "z@example.com",
@@ -278,14 +278,14 @@ public class TestUserRepositoryTest : IClassFixture<DbFixture>
     [Fact]
     public void GetAllUsers_FilterByEmail_ReturnsMatchingUsers()
     {
-        var user1 = new Models.User
+        var user1 = new User
         {
             Name = "User One",
             Email = "specific@domain.com",
             Password = "pwd",
             Profile = Profile.CITIZEN,
         };
-        var user2 = new Models.User
+        var user2 = new User
         {
             Name = "User Two",
             Email = "other@example.com",
@@ -307,7 +307,7 @@ public class TestUserRepositoryTest : IClassFixture<DbFixture>
     [Fact]
     public void Create_ValidUser_ReturnsCreatedUser()
     {
-        var newUser = new Models.User
+        var newUser = new User
         {
             Name = "Bob",
             Email = "bob@example.com",
@@ -337,7 +337,7 @@ public class TestUserRepositoryTest : IClassFixture<DbFixture>
     [Fact]
     public void Update_ExistingUser_ReturnsUpdatedUser()
     {
-        var user = new Models.User
+        var user = new User
         {
             Name = "UpdateMe",
             Email = "up@example.com",
@@ -360,7 +360,7 @@ public class TestUserRepositoryTest : IClassFixture<DbFixture>
     [Fact]
     public void Update_NonExistingUser_ThrowsDbUpdateException()
     {
-        var user = new Models.User
+        var user = new User
         {
             Id = 99999,
             Name = "Ghost User",
@@ -389,7 +389,7 @@ public class TestUserRepositoryTest : IClassFixture<DbFixture>
     [Fact]
     public void Update_ChangesMultipleFields_SavesCorrectly()
     {
-        var user = new Models.User
+        var user = new User
         {
             Name = "Original Name",
             Email = "original@example.com",
@@ -418,7 +418,7 @@ public class TestUserRepositoryTest : IClassFixture<DbFixture>
     [Fact]
     public void Delete_ExistingUser_ReturnsDeletedUser()
     {
-        var user = new Models.User
+        var user = new User
         {
             Name = "ToDelete",
             Email = "del@example.com",

@@ -3,13 +3,13 @@ namespace readytohelpapi.ResponsibleEntity.Tests;
 using System;
 using Microsoft.EntityFrameworkCore;
 using Moq;
+using NetTopologySuite.Geometries;
 using readytohelpapi.Common.Data;
 using readytohelpapi.Occurrence.Models;
+using readytohelpapi.ResponsibleEntity.Models;
 using readytohelpapi.ResponsibleEntity.Services;
 using Xunit;
-using System.Linq;
-using NetTopologySuite.Geometries;
-using readytohelpapi.ResponsibleEntity.Models;
+using static NetTopologySuite.NtsGeometryServices;
 
 /// <summary>
 /// This class contains all unit test related to the ResponsibleEntityService.
@@ -17,8 +17,7 @@ using readytohelpapi.ResponsibleEntity.Models;
 [Trait("Category", "Unit")]
 public class TestResponsibleEntityService_Unit
 {
-
-    private static GeometryFactory Gf4326 => NetTopologySuite.NtsGeometryServices.Instance.CreateGeometryFactory(4326);
+    private static GeometryFactory Gf4326 => Instance.CreateGeometryFactory(4326);
 
     private static Polygon MakeSquare(double lonCenter, double latCenter, double halfSizeDeg)
     {
@@ -55,16 +54,21 @@ public class TestResponsibleEntityService_Unit
         using var ctx = NewInMemoryContext();
         var svc = new ResponsibleEntityService(ctx);
 
-        var lat = 41.15; var lon = -8.61;
+        var lat = 41.15;
+        var lon = -8.61;
 
         foreach (ResponsibleEntityType t in Enum.GetValues(typeof(ResponsibleEntityType)))
         {
-            ctx.ResponsibleEntities.Add(new ResponsibleEntity
-            {
-                Name = $"E_{t}",
-                Type = t,
-                GeoArea = Gf4326.CreateMultiPolygon(new[] { MakeSquare(lon + 10, lat + 10, 0.02) })
-            });
+            ctx.ResponsibleEntities.Add(
+                new ResponsibleEntity
+                {
+                    Name = $"E_{t}",
+                    Type = t,
+                    GeoArea = Gf4326.CreateMultiPolygon(
+                        new[] { MakeSquare(lon + 10, lat + 10, 0.02) }
+                    ),
+                }
+            );
         }
         ctx.SaveChanges();
 
@@ -79,16 +83,19 @@ public class TestResponsibleEntityService_Unit
         using var ctx = NewInMemoryContext();
         var svc = new ResponsibleEntityService(ctx);
 
-        var lat = 41.15; var lon = -8.61;
+        var lat = 41.15;
+        var lon = -8.61;
 
         foreach (ResponsibleEntityType t in Enum.GetValues(typeof(ResponsibleEntityType)))
         {
-            ctx.ResponsibleEntities.Add(new ResponsibleEntity
-            {
-                Name = $"Hit_{t}",
-                Type = t,
-                GeoArea = Gf4326.CreateMultiPolygon(new[] { MakeSquare(lon, lat, 0.05) })
-            });
+            ctx.ResponsibleEntities.Add(
+                new ResponsibleEntity
+                {
+                    Name = $"Hit_{t}",
+                    Type = t,
+                    GeoArea = Gf4326.CreateMultiPolygon(new[] { MakeSquare(lon, lat, 0.05) }),
+                }
+            );
         }
         ctx.SaveChanges();
 
@@ -105,16 +112,20 @@ public class TestResponsibleEntityService_Unit
         using var ctx = NewInMemoryContext();
         var svc = new ResponsibleEntityService(ctx);
 
-        var lat = 41.15; var lon = -8.61; var half = 0.02;
+        var lat = 41.15;
+        var lon = -8.61;
+        var half = 0.02;
 
         foreach (ResponsibleEntityType t in Enum.GetValues(typeof(ResponsibleEntityType)))
         {
-            ctx.ResponsibleEntities.Add(new ResponsibleEntity
-            {
-                Name = $"B_{t}",
-                Type = t,
-                GeoArea = Gf4326.CreateMultiPolygon(new[] { MakeSquare(lon, lat, half) })
-            });
+            ctx.ResponsibleEntities.Add(
+                new ResponsibleEntity
+                {
+                    Name = $"B_{t}",
+                    Type = t,
+                    GeoArea = Gf4326.CreateMultiPolygon(new[] { MakeSquare(lon, lat, half) }),
+                }
+            );
         }
         ctx.SaveChanges();
 
