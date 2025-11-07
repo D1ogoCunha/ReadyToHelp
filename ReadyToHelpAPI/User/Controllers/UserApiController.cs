@@ -258,12 +258,12 @@ public class UserApiController : ControllerBase
             var list = userService.GetAllUsers(pageNumber, pageSize, sortBy, sortOrder, filter);
 
             var dtoList = list.Select(u => new UserResponseDto
-                {
-                    Id = u.Id,
-                    Name = u.Name,
-                    Email = u.Email,
-                    Profile = u.Profile,
-                })
+            {
+                Id = u.Id,
+                Name = u.Name,
+                Email = u.Email,
+                Profile = u.Profile,
+            })
                 .ToList();
 
             return Ok(dtoList);

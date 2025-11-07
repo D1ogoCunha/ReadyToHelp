@@ -68,12 +68,14 @@ public class FeedbackRepository : IFeedbackRepository
     }
 
     /// <inheritdoc />
-    public bool UserExists(int userId) {
+    public bool UserExists(int userId)
+    {
         return context.Users.Any(u => u.Id == userId);
     }
 
     /// <inheritdoc />
-    public bool OccurrenceExists(int occurrenceId) {
+    public bool OccurrenceExists(int occurrenceId)
+    {
         return context.Occurrences.Any(o => o.Id == occurrenceId);
     }
 
