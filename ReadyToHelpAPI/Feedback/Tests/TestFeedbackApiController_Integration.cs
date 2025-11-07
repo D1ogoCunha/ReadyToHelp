@@ -166,7 +166,7 @@ public class TestFeedbackApiController_Integration
             Assert.Equal(HttpStatusCode.OK, putResp.StatusCode);
 
             details = await client.GetFromJsonAsync<OccurrenceDetailsDto>(
-                $"/api/occurrences/{id}",
+                $"/api/occurrence/{id}",
                 json
             );
             Assert.NotNull(details);
@@ -294,7 +294,7 @@ public class TestFeedbackApiController_Integration
         }
 
         var after = await client.GetFromJsonAsync<OccurrenceDetailsDto>(
-            $"/api/occurrences/{occId}",
+            $"/api/occurrence/{occId}",
             json
         );
         Assert.NotNull(after);

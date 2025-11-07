@@ -85,7 +85,7 @@ public class TestOccurrenceApiController_Integration
     [Fact]
     public async Task GetById_ReturnsNotFound_ForMissing()
     {
-        var response = await _client.GetAsync("/api/occurrences/999999");
+        var response = await _client.GetAsync("/api/occurrence/999999");
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
@@ -95,7 +95,7 @@ public class TestOccurrenceApiController_Integration
     [Fact]
     public async Task GetById_InvalidId_ReturnsBadRequest()
     {
-        var resp = await _client.GetAsync("/api/occurrences/0");
+        var resp = await _client.GetAsync("/api/occurrence/0");
         Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
     }
 
@@ -270,7 +270,7 @@ public class TestOccurrenceApiController_Integration
         var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
         options.Converters.Add(new JsonStringEnumConverter());
         var dto = await _client.GetFromJsonAsync<OccurrenceDetailsDto>(
-            $"/api/occurrences/{id}",
+            $"/api/occurrence/{id}",
             options
         );
         Assert.NotNull(dto);
