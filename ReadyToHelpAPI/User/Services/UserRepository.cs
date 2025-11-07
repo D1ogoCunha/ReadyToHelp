@@ -1,11 +1,11 @@
 namespace readytohelpapi.User.Services;
 
-using readytohelpapi.User.Models;
-using Microsoft.EntityFrameworkCore;
 using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
+using Microsoft.EntityFrameworkCore;
 using readytohelpapi.Common.Data;
+using readytohelpapi.User.Models;
 
 /// <summary>
 ///     Implements the user repository operations.
@@ -23,16 +23,11 @@ public class UserRepository : IUserRepository
         userContext = context;
     }
 
-    /// <summary>
-    ///   Method to create a user in the repository
-    /// </summary>
-    /// <param name="user">The user to create.</param>
-    /// <returns>The created user.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when the user is null.</exception>
-    /// <exception cref="DbUpdateException">Thrown when the user cannot be created.</exception>
+    /// <inheritdoc />
     public User Create(User user)
     {
-        if (user == null) throw new ArgumentNullException(nameof(user));
+        if (user == null)
+            throw new ArgumentNullException(nameof(user));
         try
         {
             var created = userContext.Users.Add(user).Entity;
@@ -45,16 +40,11 @@ public class UserRepository : IUserRepository
         }
     }
 
-    /// <summary>
-    ///   Updates a user in the repository.
-    /// </summary>
-    /// <param name="user">The user to update.</param>
-    /// <returns>The updated user.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when the user is null.</exception>
-    /// <exception cref="DbUpdateException">Thrown when the user cannot be updated.</exception>
+    /// <inheritdoc />
     public User Update(User user)
     {
-        if (user == null) throw new ArgumentNullException(nameof(user));
+        if (user == null)
+            throw new ArgumentNullException(nameof(user));
         try
         {
             userContext.Users.Update(user);
@@ -67,16 +57,12 @@ public class UserRepository : IUserRepository
         }
     }
 
-    /// <summary>
-    ///   Deletes a user by ID.
-    /// </summary>
-    /// <param name="id">The ID of the user to delete.</param>
-    /// <returns>The deleted user, or null if not found.</returns>
-    /// <exception cref="DbUpdateException">Thrown when the user cannot be deleted.</exception>
+    /// <inheritdoc />
     public User? Delete(int id)
     {
         var existing = userContext.Users.Find(id);
-        if (existing == null) return null;
+        if (existing == null)
+            return null;
         try
         {
             userContext.Users.Remove(existing);
@@ -89,65 +75,53 @@ public class UserRepository : IUserRepository
         }
     }
 
-    /// <summary>
-    /// Gets a user by ID.
-    /// </summary>
-    /// <param name="id">The ID of the user.</param>
-    /// <returns>The user, or null if not found.</returns>
+    /// <inheritdoc />
     public User? GetUserById(int id)
     {
-        if (id <= 0) return null;
-        return userContext.Users
-            .AsNoTracking()
-            .FirstOrDefault(u => u.Id == id);
+        if (id <= 0)
+            return null;
+        return userContext.Users.AsNoTracking().FirstOrDefault(u => u.Id == id);
     }
 
-    /// <summary>
-    ///   Gets a user by email.
-    /// </summary>
-    /// <param name="email">The email of the user.</param>
-    /// <returns>The user, or null if not found.</returns>
+    /// <inheritdoc />
     public User? GetUserByEmail(string email)
     {
         if (string.IsNullOrWhiteSpace(email))
             return null;
 
-        return userContext.Users
-            .AsNoTracking()
+        return userContext
+            .Users.AsNoTracking()
             .FirstOrDefault(u => EF.Functions.ILike(u.Email, email.Trim()));
     }
 
-    /// <summary>
-    ///   Gets users by name.
-    /// </summary>
-    /// <param name="name">The name to search for.</param>
-    /// <returns>A list of users matching the name.</returns>
+    /// <inheritdoc />
     public List<User> GetUserByName(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
             return new List<User>();
 
         var pattern = $"%{name.Trim()}%";
-        return userContext.Users
-            .AsNoTracking()
+        return userContext
+            .Users.AsNoTracking()
             .Where(u => EF.Functions.ILike(u.Name, pattern))
             .ToList();
     }
 
-    /// <summary>
-    ///   Gets all users with pagination, sorting, and filtering.
-    /// </summary>
-    /// <param name="pageNumber">The page number (1-based).</param>
-    /// <param name="pageSize">The number of users per page.</param>
-    /// <param name="sortBy">The field to sort by.</param>
-    /// <param name="sortOrder">The sort order ("asc" or "desc").</param>
-    /// <param name="filter">The filter string to search by name or email.</param>
-    /// <returns>A list of users.</returns>
-    public List<User> GetAllUsers(int pageNumber = 1, int pageSize = 10, string sortBy = "Name", string sortOrder = "asc", string filter = "")
+    /// <inheritdoc />
+    public List<User> GetAllUsers(
+        int pageNumber,
+        int pageSize,
+        string sortBy,
+        string sortOrder,
+        string filter
+    )
     {
-        if (pageNumber <= 0) pageNumber = 1;
-        if (pageSize <= 0) pageSize = 10;
-        if (pageSize > 1000) pageSize = 1000;
+        if (pageNumber <= 0)
+            pageNumber = 1;
+        if (pageSize <= 0)
+            pageSize = 10;
+        if (pageSize > 1000)
+            pageSize = 1000;
 
         var query = userContext.Users.AsNoTracking().AsQueryable();
 
@@ -157,8 +131,9 @@ public class UserRepository : IUserRepository
             var pattern = $"%{trimmed}%";
 
             query = query.Where(u =>
-                EF.Functions.ILike(u.Name ?? string.Empty, pattern) ||
-                EF.Functions.ILike(u.Email ?? string.Empty, pattern));
+                EF.Functions.ILike(u.Name ?? string.Empty, pattern)
+                || EF.Functions.ILike(u.Email ?? string.Empty, pattern)
+            );
         }
 
         var asc = string.Equals(sortOrder, "asc", StringComparison.OrdinalIgnoreCase);
@@ -178,5 +153,4 @@ public class UserRepository : IUserRepository
         var skip = (pageNumber - 1) * pageSize;
         return query.Skip(skip).Take(pageSize).ToList();
     }
-
 }

@@ -1,17 +1,18 @@
+namespace readytohelpapi.User.Tests;
+
 using readytohelpapi.Common.Data;
 using readytohelpapi.User.Models;
 using readytohelpapi.User.Services;
 using Xunit;
 
-namespace readytohelpapi.User.Tests;
-
 /// <summary>
 ///  This class contains all integration tests related to the user repository.
 /// </summary>
+[Trait("Category", "Integration")]
 public class TestUserRepositoryTest : IClassFixture<DbFixture>
 {
     private readonly DbFixture fixture;
-    private readonly AppDbContext _userContext;
+    private readonly AppDbContext userContext;
     private readonly IUserRepository _userRepository;
 
     /// <summary>
@@ -21,8 +22,8 @@ public class TestUserRepositoryTest : IClassFixture<DbFixture>
     {
         this.fixture = fixture;
         this.fixture.ResetDatabase();
-        _userContext = this.fixture.Context;
-        _userRepository = new UserRepository(_userContext);
+        userContext = this.fixture.Context;
+        _userRepository = new UserRepository(userContext);
     }
 
     /// <summary>
@@ -31,15 +32,15 @@ public class TestUserRepositoryTest : IClassFixture<DbFixture>
     [Fact]
     public void GetUserById_ShouldReturnUser_WhenUserExists()
     {
-        var user = new Models.User
+        var user = new User
         {
             Name = "John Doe",
             Email = "john@example.com",
             Password = "pwd",
             Profile = Profile.CITIZEN,
         };
-        _userContext.Users.Add(user);
-        _userContext.SaveChanges();
+        userContext.Users.Add(user);
+        userContext.SaveChanges();
 
         var result = _userRepository.GetUserById(user.Id);
 
@@ -63,22 +64,21 @@ public class TestUserRepositoryTest : IClassFixture<DbFixture>
     [Fact]
     public void GetUserByEmail_ShouldReturnUser_WhenFullEmailMatches()
     {
-        var user = new Models.User
+        var user = new User
         {
             Name = "Alice",
             Email = "alice@example.com",
             Password = "pwd",
             Profile = Profile.CITIZEN,
         };
-        _userContext.Users.Add(user);
-        _userContext.SaveChanges();
+        userContext.Users.Add(user);
+        userContext.SaveChanges();
 
         var result = _userRepository.GetUserByEmail("alice@example.com");
 
         Assert.NotNull(result);
         Assert.Equal("alice@example.com", result.Email);
     }
-
 
     /// <summary>
     /// Tests if null is returned when trying to retrieve a user by email that does not exist.
@@ -146,22 +146,21 @@ public class TestUserRepositoryTest : IClassFixture<DbFixture>
     [Fact]
     public void GetUserByEmail_CaseInsensitive_ReturnsUser()
     {
-        var user = new Models.User
+        var user = new User
         {
             Name = "Case Test",
             Email = "CaseSensitive@Example.COM",
             Password = "pwd",
             Profile = Profile.CITIZEN,
         };
-        _userContext.Users.Add(user);
-        _userContext.SaveChanges();
+        userContext.Users.Add(user);
+        userContext.SaveChanges();
 
         var result = _userRepository.GetUserByEmail("casesensitive@example.com");
 
         Assert.NotNull(result);
         Assert.Equal(user.Id, result.Id);
     }
-
 
     /// <summary>
     /// Tests if an empty list is returned when trying to retrieve users by name with invalid input (null).
@@ -199,30 +198,27 @@ public class TestUserRepositoryTest : IClassFixture<DbFixture>
     [Fact]
     public void GetUserByName_ShouldReturnList_WhenNamePartialMatches()
     {
-        var u1 = new Models.User
+        var u1 = new User
         {
             Name = "Johnny Appleseed",
             Email = "j1@example.com",
             Password = "p",
             Profile = Profile.CITIZEN,
         };
-        var u2 = new Models.User
+        var u2 = new User
         {
             Name = "John Smith",
             Email = "j2@example.com",
             Password = "p",
             Profile = Profile.CITIZEN,
         };
-        _userContext.Users.AddRange(u1, u2);
-        _userContext.SaveChanges();
+        userContext.Users.AddRange(u1, u2);
+        userContext.SaveChanges();
 
         var result = _userRepository.GetUserByName("John");
 
         Assert.NotEmpty(result);
-        Assert.Contains(
-            result,
-            u => u.Name.Contains("John", StringComparison.OrdinalIgnoreCase)
-        );
+        Assert.Contains(result, u => u.Name.Contains("John", StringComparison.OrdinalIgnoreCase));
     }
 
     /// <summary>
@@ -231,15 +227,15 @@ public class TestUserRepositoryTest : IClassFixture<DbFixture>
     [Fact]
     public void GetAllUsers_ShouldReturnFilteredUsers_WhenFilteredByName()
     {
-        var user = new Models.User
+        var user = new User
         {
             Name = "Jane Smith",
             Email = "jane.smith@example.com",
             Password = "pwd",
             Profile = Profile.CITIZEN,
         };
-        _userContext.Users.Add(user);
-        _userContext.SaveChanges();
+        userContext.Users.Add(user);
+        userContext.SaveChanges();
 
         var result = _userRepository.GetAllUsers(1, 10, "Name", "asc", "jane");
 
@@ -253,27 +249,27 @@ public class TestUserRepositoryTest : IClassFixture<DbFixture>
     [Fact]
     public void GetAllUsers_ShouldReturnSortedUsers_ByNameDesc()
     {
-        var a = new Models.User
+        var a = new User
         {
             Name = "Alpha",
             Email = "a@example.com",
             Password = "p",
             Profile = Profile.CITIZEN,
         };
-        var z = new Models.User
+        var z = new User
         {
             Name = "Zulu",
             Email = "z@example.com",
             Password = "p",
             Profile = Profile.CITIZEN,
         };
-        _userContext.Users.AddRange(a, z);
-        _userContext.SaveChanges();
+        userContext.Users.AddRange(a, z);
+        userContext.SaveChanges();
 
         var result = _userRepository.GetAllUsers(1, 10, "Name", "desc", string.Empty);
 
         Assert.True(result.Count >= 2);
-        Assert.Equal("Zulu", result.First().Name);
+        Assert.Equal("Zulu", result[0].Name);
     }
 
     /// <summary>
@@ -282,22 +278,22 @@ public class TestUserRepositoryTest : IClassFixture<DbFixture>
     [Fact]
     public void GetAllUsers_FilterByEmail_ReturnsMatchingUsers()
     {
-        var user1 = new Models.User
+        var user1 = new User
         {
             Name = "User One",
             Email = "specific@domain.com",
             Password = "pwd",
             Profile = Profile.CITIZEN,
         };
-        var user2 = new Models.User
+        var user2 = new User
         {
             Name = "User Two",
             Email = "other@example.com",
             Password = "pwd",
             Profile = Profile.CITIZEN,
         };
-        _userContext.Users.AddRange(user1, user2);
-        _userContext.SaveChanges();
+        userContext.Users.AddRange(user1, user2);
+        userContext.SaveChanges();
 
         var result = _userRepository.GetAllUsers(1, 10, "Name", "asc", "specific@domain");
 
@@ -311,7 +307,7 @@ public class TestUserRepositoryTest : IClassFixture<DbFixture>
     [Fact]
     public void Create_ValidUser_ReturnsCreatedUser()
     {
-        var newUser = new Models.User
+        var newUser = new User
         {
             Name = "Bob",
             Email = "bob@example.com",
@@ -341,15 +337,15 @@ public class TestUserRepositoryTest : IClassFixture<DbFixture>
     [Fact]
     public void Update_ExistingUser_ReturnsUpdatedUser()
     {
-        var user = new Models.User
+        var user = new User
         {
             Name = "UpdateMe",
             Email = "up@example.com",
             Password = "pwd",
             Profile = Profile.CITIZEN,
         };
-        _userContext.Users.Add(user);
-        _userContext.SaveChanges();
+        userContext.Users.Add(user);
+        userContext.SaveChanges();
 
         user.Email = "updated@example.com";
         var updated = _userRepository.Update(user);
@@ -364,7 +360,7 @@ public class TestUserRepositoryTest : IClassFixture<DbFixture>
     [Fact]
     public void Update_NonExistingUser_ThrowsDbUpdateException()
     {
-        var user = new Models.User
+        var user = new User
         {
             Id = 99999,
             Name = "Ghost User",
@@ -393,15 +389,15 @@ public class TestUserRepositoryTest : IClassFixture<DbFixture>
     [Fact]
     public void Update_ChangesMultipleFields_SavesCorrectly()
     {
-        var user = new Models.User
+        var user = new User
         {
             Name = "Original Name",
             Email = "original@example.com",
             Password = "oldpwd",
             Profile = Profile.CITIZEN,
         };
-        _userContext.Users.Add(user);
-        _userContext.SaveChanges();
+        userContext.Users.Add(user);
+        userContext.SaveChanges();
 
         user.Name = "Updated Name";
         user.Email = "updated@example.com";
@@ -416,22 +412,21 @@ public class TestUserRepositoryTest : IClassFixture<DbFixture>
         Assert.Equal(Profile.ADMIN, updated.Profile);
     }
 
-
     /// <summary>
     /// Tests if an existing user can be deleted successfully.
     /// </summary>
     [Fact]
     public void Delete_ExistingUser_ReturnsDeletedUser()
     {
-        var user = new Models.User
+        var user = new User
         {
             Name = "ToDelete",
             Email = "del@example.com",
             Password = "pwd",
             Profile = Profile.CITIZEN,
         };
-        _userContext.Users.Add(user);
-        _userContext.SaveChanges();
+        userContext.Users.Add(user);
+        userContext.SaveChanges();
 
         var deleted = _userRepository.Delete(user.Id);
 
@@ -452,4 +447,3 @@ public class TestUserRepositoryTest : IClassFixture<DbFixture>
         Assert.Null(result);
     }
 }
-

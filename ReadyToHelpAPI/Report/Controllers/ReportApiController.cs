@@ -1,21 +1,22 @@
 namespace readytohelpapi.Report.Controllers;
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using readytohelpapi.Common.Data;
-using readytohelpapi.Report.Services;
-using readytohelpapi.Report.Models;
 using readytohelpapi.Report.DTOs;
+using readytohelpapi.Report.Models;
+using readytohelpapi.Report.Services;
 
 /// <summary>
 /// Provides API endpoints for managing reports.
 /// </summary>
+[Authorize]
 [ApiController]
 [Route("api/reports")]
 public class ReportApiController : ControllerBase
 {
     private readonly IReportService reportService;
-    private readonly IReportRepository reportRepository;
     private readonly AppDbContext context;
 
     /// <summary>
@@ -26,11 +27,10 @@ public class ReportApiController : ControllerBase
     /// <param name="context">The database context.</param>
     public ReportApiController(
         IReportService reportService,
-        IReportRepository reportRepository,
-        AppDbContext context)
+        AppDbContext context
+    )
     {
         this.reportService = reportService;
-        this.reportRepository = reportRepository;
         this.context = context;
     }
 
@@ -43,7 +43,9 @@ public class ReportApiController : ControllerBase
     public IActionResult Create([FromBody] CreateReportDto? dto)
     {
         if (dto == null)
-            return BadRequest(new { error = "invalid_request", detail = "Request body is required." });
+            return BadRequest(
+                new { error = "invalid_request", detail = "Request body is required." }
+            );
 
         try
         {
@@ -52,13 +54,12 @@ public class ReportApiController : ControllerBase
                 Title = dto.Title,
                 Description = dto.Description,
                 Type = dto.Type,
-                Priority = dto.Priority,
                 UserId = dto.UserId,
                 Location = new GeoPoint.Models.GeoPoint
                 {
                     Latitude = dto.Latitude,
-                    Longitude = dto.Longitude
-                }
+                    Longitude = dto.Longitude,
+                },
             };
 
             var (createdReport, occurrence) = reportService.Create(report);
@@ -66,18 +67,18 @@ public class ReportApiController : ControllerBase
             ResponsibleEntityContactDto? responsibleDto = null;
             if (occurrence.ResponsibleEntityId > 0)
             {
-                var entity = context.ResponsibleEntities
-                    .AsNoTracking()
+                var entity = context
+                    .ResponsibleEntities.AsNoTracking()
                     .FirstOrDefault(re => re.Id == occurrence.ResponsibleEntityId);
 
                 if (entity != null)
                 {
                     responsibleDto = new ResponsibleEntityContactDto
                     {
-                        Name = entity.Name,
-                        Email = entity.Email,
-                        Address = entity.Address,
-                        ContactPhone = entity.ContactPhone
+                        Name = entity.Name ?? string.Empty,
+                        Email = entity.Email ?? string.Empty,
+                        Address = entity.Address ?? string.Empty,
+                        ContactPhone = entity.ContactPhone,
                     };
                 }
             }
@@ -87,10 +88,10 @@ public class ReportApiController : ControllerBase
                 ReportId = createdReport.Id,
                 OccurrenceId = occurrence.Id,
                 OccurrenceStatus = occurrence.Status,
-                ResponsibleEntity = responsibleDto
+                ResponsibleEntity = responsibleDto,
             };
 
-            return CreatedAtAction(nameof(GetById), new { id = createdReport.Id }, response);
+            return StatusCode(StatusCodes.Status201Created, response);
         }
         catch (ArgumentException ex)
         {
@@ -100,17 +101,5 @@ public class ReportApiController : ControllerBase
         {
             return StatusCode(500, new { error = "internal_server_error", detail = ex.Message });
         }
-    }
-
-    /// <summary>
-    /// Retrieves a report by its ID.
-    /// </summary>
-    [HttpGet("{id:int}")]
-    public IActionResult GetById([FromRoute] int id)
-    {
-        if (id <= 0) return BadRequest("Invalid id.");
-        var report = reportRepository.GetById(id);
-        if (report is null) return NotFound();
-        return Ok(report);
     }
 }

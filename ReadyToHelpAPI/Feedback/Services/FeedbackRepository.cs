@@ -1,5 +1,6 @@
 namespace readytohelpapi.Feedback.Services;
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
@@ -22,11 +23,7 @@ public class FeedbackRepository : IFeedbackRepository
         this.context = context;
     }
 
-    /// <summary>
-    ///   Creates a new feedback in the database.
-    /// </summary>
-    /// <param name="feedback">The feedback to create.</param>
-    /// <returns>The created feedback.</returns>
+    /// <inheritdoc />
     public Feedback Create(Feedback feedback)
     {
         if (feedback == null)
@@ -46,46 +43,48 @@ public class FeedbackRepository : IFeedbackRepository
         }
     }
 
-    /// <summary>
-    ///   Gets a feedback by its ID.
-    /// </summary>
-    /// <param name="id">The ID of the feedback.</param>
-    /// <returns>The feedback with the specified ID, or null if not found.</returns>
-    public Feedback? GetFeedbackById(int id) => context.Feedbacks.FirstOrDefault(f => f.Id == id);
+    /// <inheritdoc />
+    public Feedback? GetFeedbackById(int id)
+    {
+        return context.Feedbacks.FirstOrDefault(f => f.Id == id);
+    }
 
-    /// <summary>
-    ///   Gets all feedbacks from the database.
-    /// </summary>
-    /// <returns>A collection of all feedbacks.</returns>
-    public List<Feedback> GetAllFeedbacks() => context.Feedbacks.ToList();
+    /// <inheritdoc />
+    public List<Feedback> GetAllFeedbacks()
+    {
+        return context.Feedbacks.ToList();
+    }
 
-    /// <summary>
-    ///   Gets feedbacks by occurrence ID.
-    /// </summary>
-    /// <param name="occurrenceId">The ID of the occurrence.</param>
-    /// <returns>A collection of feedbacks for the specified occurrence.</returns>
-    public List<Feedback> GetFeedbacksByOccurrenceId(int occurrenceId) =>
-        context.Feedbacks.Where(f => f.OccurrenceId == occurrenceId).ToList();
+    /// <inheritdoc />
+    public List<Feedback> GetFeedbacksByOccurrenceId(int occurrenceId)
+    {
+        return context.Feedbacks.Where(f => f.OccurrenceId == occurrenceId).ToList();
+    }
 
-    /// <summary>
-    ///   Gets feedbacks by user ID.
-    /// </summary>
-    /// <param name="userId">The ID of the user.</param>
-    /// <returns>A collection of feedbacks for the specified user.</returns>
-    public List<Feedback> GetFeedbacksByUserId(int userId) =>
-        context.Feedbacks.Where(f => f.UserId == userId).ToList();
+    /// <inheritdoc />
+    public List<Feedback> GetFeedbacksByUserId(int userId)
+    {
+        return context.Feedbacks.Where(f => f.UserId == userId).ToList();
+    }
 
-    /// <summary>
-    ///   Checks if a user exists by user ID.
-    /// </summary>
-    /// <param name="userId">The ID of the user.</param>
-    /// <returns>True if the user exists, otherwise false.</returns>
-    public bool UserExists(int userId) => context.Users.Any(u => u.Id == userId);
+    /// <inheritdoc />
+    public bool UserExists(int userId)
+    {
+        return context.Users.Any(u => u.Id == userId);
+    }
 
-    /// <summary>
-    ///   Checks if an occurrence exists by occurrence ID.
-    /// </summary>
-    /// <param name="occurrenceId">The ID of the occurrence.</param>
-    /// <returns>True if the occurrence exists, otherwise false.</returns>
-    public bool OccurrenceExists(int occurrenceId) => context.Occurrences.Any(o => o.Id == occurrenceId);
+    /// <inheritdoc />
+    public bool OccurrenceExists(int occurrenceId)
+    {
+        return context.Occurrences.Any(o => o.Id == occurrenceId);
+    }
+
+    /// <inheritdoc />
+    public bool HasRecentFeedback(int userId, int occurrenceId, DateTime since)
+    {
+        return context.Feedbacks.Any(f =>
+            f.UserId == userId
+            && f.OccurrenceId == occurrenceId
+            && f.FeedbackDateTime >= since);
+    }
 }

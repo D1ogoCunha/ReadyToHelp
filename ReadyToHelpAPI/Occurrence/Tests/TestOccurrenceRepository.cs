@@ -1,47 +1,75 @@
 namespace readytohelpapi.Occurrence.Tests;
 
-using GeoPointModel = readytohelpapi.GeoPoint.Models.GeoPoint;
+using readytohelpapi.Common.Data;
+using readytohelpapi.GeoPoint.Models;
+using readytohelpapi.Occurrence.DTOs;
 using readytohelpapi.Occurrence.Models;
 using readytohelpapi.Occurrence.Services;
-using Xunit;
-using readytohelpapi.Common.Data;
 using readytohelpapi.Report.Tests.Fixtures;
+using readytohelpapi.ResponsibleEntity.Models;
 using readytohelpapi.User.Tests.Fixtures;
+using Xunit;
 
 /// <summary>
 ///  This class contains unit tests for the OccurrenceRepository.
 /// </summary>
+[Trait("Category", "Integration")]
 public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
 {
     private readonly DbFixture fixture;
     private readonly AppDbContext _occurrenceContext;
     private readonly IOccurrenceRepository _occurrenceRepository;
     private readonly int defaultReportId;
+    private readonly int defaultResponsibleEntityId;
 
     /// <summary>
     ///  Initializes a new instance of the <see cref="TestOccurrenceRepositoryTest"/> class.
     /// </summary>
+    /// <param name="fixture">The database fixture for setting up the test database context.</param>
     public TestOccurrenceRepositoryTest(DbFixture fixture)
     {
         this.fixture = fixture;
         this.fixture.ResetDatabase();
         _occurrenceContext = this.fixture.Context;
         _occurrenceRepository = new OccurrenceRepository(_occurrenceContext);
-        defaultReportId = CreateHelper();
+        defaultReportId = CreateReportHelper();
+        defaultResponsibleEntityId = CreateResponsibleEntityHelper();
     }
 
-    private int CreateHelper()
+    /// <summary>
+    /// Helper method to create a report and return its ID.
+    /// </summary>
+    /// <returns>The ID of the created report.</returns>
+    private int CreateReportHelper()
     {
-        var user = UserFixture.CreateOrUpdateUser(
-            email: $"test-{Guid.NewGuid():N}@example.com"
-        );
+        var user = UserFixture.CreateOrUpdateUser(email: $"test-{Guid.NewGuid():N}@example.com");
         _occurrenceContext.Users.Add(user);
         _occurrenceContext.SaveChanges();
 
         var r = ReportFixture.CreateOrUpdate();
         _occurrenceContext.Reports.Add(r);
         _occurrenceContext.SaveChanges();
+
         return r.Id;
+    }
+
+    /// <summary>
+    /// Helper method to create a responsible entity and return its ID.
+    /// </summary>
+    /// <returns>The ID of the created responsible entity.</returns>
+    private int CreateResponsibleEntityHelper()
+    {
+        var re = new ResponsibleEntity
+        {
+            Name = $"Test RE {Guid.NewGuid():N}",
+            Email = "re@example.com",
+            Address = "addr",
+            ContactPhone = 123456789,
+            Type = ResponsibleEntityType.INEM,
+        };
+        _occurrenceContext.Set<ResponsibleEntity>().Add(re);
+        _occurrenceContext.SaveChanges();
+        return re.Id;
     }
 
     /// <summary>
@@ -50,17 +78,20 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
     [Fact]
     public void Create_ValidOccurrence_ReturnsCreatedOccurrence()
     {
-        var o = new Occurrence
-        {
-            Title = "Forest Fire",
-            Description = "Near hills",
-            Type = OccurrenceType.FOREST_FIRE,
-            Priority = PriorityLevel.HIGH,
-            ProximityRadius = 500,
-            Status = OccurrenceStatus.ACTIVE,
-            ReportId = defaultReportId,
-            Location = new GeoPointModel { Latitude = 40.123, Longitude = -8.456 }
-        };
+        var o = new Occurrence(
+            new OccurrenceCreateDto
+            {
+                Title = "Forest Fire",
+                Description = "Near hills",
+                Type = OccurrenceType.FOREST_FIRE,
+                Priority = PriorityLevel.HIGH,
+                ProximityRadius = 500,
+                Status = OccurrenceStatus.ACTIVE,
+                ReportId = defaultReportId,
+                ResponsibleEntityId = defaultResponsibleEntityId,
+                Location = new GeoPoint { Latitude = 40.123, Longitude = -8.456 },
+            }
+        );
 
         var created = _occurrenceRepository.Create(o);
 
@@ -84,19 +115,21 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
     [Fact]
     public void Create_ValidOccurrence_WithNullReportId_ReturnsCreatedOccurrence()
     {
-        var o = new Occurrence
-        {
-            Title = "No Report",
-            Description = "desc",
-            Type = OccurrenceType.FLOOD,
-            Status = OccurrenceStatus.ACTIVE,
-            Priority = PriorityLevel.LOW,
-            ProximityRadius = 100,
-            ReportCount = 0,
-            ReportId = null,
-            ResponsibleEntityId = 0,
-            Location = new GeoPointModel { Latitude = 40.0, Longitude = -8.0 }
-        };
+        var o = new Occurrence(
+            new OccurrenceCreateDto
+            {
+                Title = "No Report",
+                Description = "desc",
+                Type = OccurrenceType.FLOOD,
+                Status = OccurrenceStatus.ACTIVE,
+                Priority = PriorityLevel.LOW,
+                ProximityRadius = 100,
+                ReportCount = 0,
+                ReportId = null,
+                ResponsibleEntityId = defaultResponsibleEntityId,
+                Location = new GeoPoint { Latitude = 40.0, Longitude = -8.0 },
+            }
+        );
 
         var created = _occurrenceRepository.Create(o);
 
@@ -111,17 +144,21 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
     [Fact]
     public void GetOccurrenceById_ShouldReturnOccurrence_WhenExists()
     {
-        var o = new Models.Occurrence
-        {
-            Title = "Flooded Street",
-            Description = "Water rising",
-            Type = OccurrenceType.FLOOD,
-            Priority = PriorityLevel.MEDIUM,
-            ProximityRadius = 100,
-            Status = OccurrenceStatus.ACTIVE,
-            ReportId = defaultReportId,
-            Location = new GeoPointModel { Latitude = 40.1, Longitude = -8.4 }
-        };
+        var o = new Occurrence(
+            new OccurrenceCreateDto
+            {
+                Title = "Flooded Street",
+                Description = "Water rising",
+                Type = OccurrenceType.FLOOD,
+                Priority = PriorityLevel.MEDIUM,
+                ProximityRadius = 100,
+                Status = OccurrenceStatus.ACTIVE,
+                ReportId = defaultReportId,
+                ResponsibleEntityId = defaultResponsibleEntityId,
+                Location = new GeoPoint { Latitude = 40.1, Longitude = -8.4 },
+            }
+        );
+
         _occurrenceContext.Occurrences.Add(o);
         _occurrenceContext.SaveChanges();
 
@@ -167,28 +204,36 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
     [Fact]
     public void GetOccurrenceByTitle_ShouldReturnList_WhenPartialMatch()
     {
-        var o1 = new Models.Occurrence
-        {
-            Title = "Road Obstruction",
-            Description = "desc",
-            Type = OccurrenceType.ROAD_OBSTRUCTION,
-            Priority = PriorityLevel.LOW,
-            ProximityRadius = 5,
-            Status = OccurrenceStatus.ACTIVE,
-            ReportId = defaultReportId,
-            Location = new GeoPointModel { Latitude = 40.2, Longitude = -8.5 }
-        };
-        var o2 = new Models.Occurrence
-        {
-            Title = "Broadway Event",
-            Description = "desc",
-            Type = OccurrenceType.FLOOD,
-            Priority = PriorityLevel.LOW,
-            ProximityRadius = 5,
-            Status = OccurrenceStatus.ACTIVE,
-            ReportId = defaultReportId,
-            Location = new GeoPointModel { Latitude = 40.3, Longitude = -8.6 }
-        };
+        var o1 = new Occurrence(
+            new OccurrenceCreateDto
+            {
+                Title = "Road Obstruction",
+                Description = "desc",
+                Type = OccurrenceType.ROAD_OBSTRUCTION,
+                Priority = PriorityLevel.LOW,
+                ProximityRadius = 5,
+                Status = OccurrenceStatus.ACTIVE,
+                ReportId = defaultReportId,
+                ResponsibleEntityId = defaultResponsibleEntityId,
+                Location = new GeoPoint { Latitude = 40.2, Longitude = -8.5 },
+            }
+        );
+
+        var o2 = new Occurrence(
+            new OccurrenceCreateDto
+            {
+                Title = "Broadway Event",
+                Description = "desc",
+                Type = OccurrenceType.FLOOD,
+                Priority = PriorityLevel.LOW,
+                ProximityRadius = 5,
+                Status = OccurrenceStatus.ACTIVE,
+                ReportId = defaultReportId,
+                ResponsibleEntityId = defaultResponsibleEntityId,
+                Location = new GeoPoint { Latitude = 40.3, Longitude = -8.6 },
+            }
+        );
+
         _occurrenceContext.Occurrences.AddRange(o1, o2);
         _occurrenceContext.SaveChanges();
 
@@ -234,24 +279,30 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
     [Fact]
     public void GetOccurrenceByTitle_CaseInsensitive_ReturnsMatches()
     {
-        var o = new Models.Occurrence
-        {
-            Title = "CaseSensitiveTitle",
-            Description = "desc",
-            Type = OccurrenceType.FLOOD,
-            Priority = PriorityLevel.LOW,
-            ProximityRadius = 5,
-            Status = OccurrenceStatus.ACTIVE,
-            ReportId = defaultReportId,
-            Location = new GeoPointModel { Latitude = 41, Longitude = -8 }
-        };
+        var o = new Occurrence(
+            new OccurrenceCreateDto
+            {
+                Title = "CaseSensitiveTitle",
+                Description = "desc",
+                Type = OccurrenceType.FLOOD,
+                Priority = PriorityLevel.LOW,
+                ProximityRadius = 5,
+                Status = OccurrenceStatus.ACTIVE,
+                ReportId = defaultReportId,
+                ResponsibleEntityId = defaultResponsibleEntityId,
+                Location = new GeoPoint { Latitude = 41, Longitude = -8 },
+            }
+        );
         _occurrenceContext.Occurrences.Add(o);
         _occurrenceContext.SaveChanges();
 
         var list = _occurrenceRepository.GetOccurrenceByTitle("casesensitivetitle");
 
         Assert.NotEmpty(list);
-        Assert.Contains(list, occ => occ.Title.Equals("CaseSensitiveTitle", StringComparison.Ordinal));
+        Assert.Contains(
+            list,
+            occ => occ.Title.Equals("CaseSensitiveTitle", StringComparison.Ordinal)
+        );
     }
 
     /// <summary>
@@ -261,49 +312,62 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
     public void GetAllOccurrences_ShouldFilterByTitleOrDescription()
     {
         _occurrenceContext.Occurrences.AddRange(
-            new Models.Occurrence
-            {
-                Title = "Alpha",
-                Description = "foo",
-                Type = OccurrenceType.FLOOD,
-                Priority = PriorityLevel.LOW,
-                ProximityRadius = 10,
-                Status = OccurrenceStatus.ACTIVE,
-                ReportId = defaultReportId,
-                Location = new GeoPointModel { Latitude = 40.0, Longitude = -8.0 }
-            },
-            new Models.Occurrence
-            {
-                Title = "Beta",
-                Description = "bar needle",
-                Type = OccurrenceType.FLOOD,
-                Priority = PriorityLevel.HIGH,
-                ProximityRadius = 10,
-                Status = OccurrenceStatus.ACTIVE,
-                ReportId = defaultReportId,
-                Location = new GeoPointModel { Latitude = 40.0, Longitude = -8.1 }
-            },
-            new Models.Occurrence
-            {
-                Title = "Gamma needle",
-                Description = "baz",
-                Type = OccurrenceType.FOREST_FIRE,
-                Priority = PriorityLevel.MEDIUM,
-                ProximityRadius = 10,
-                Status = OccurrenceStatus.ACTIVE,
-                ReportId = defaultReportId,
-                Location = new GeoPointModel { Latitude = 40.0, Longitude = -8.2 }
-            }
+            new Occurrence(
+                new OccurrenceCreateDto
+                {
+                    Title = "Alpha",
+                    Description = "foo",
+                    Type = OccurrenceType.FLOOD,
+                    Priority = PriorityLevel.LOW,
+                    ProximityRadius = 10,
+                    Status = OccurrenceStatus.ACTIVE,
+                    ReportId = defaultReportId,
+                    ResponsibleEntityId = defaultResponsibleEntityId,
+                    Location = new GeoPoint { Latitude = 40.0, Longitude = -8.0 },
+                }
+            ),
+            new Occurrence(
+                new OccurrenceCreateDto
+                {
+                    Title = "Beta",
+                    Description = "bar needle",
+                    Type = OccurrenceType.FLOOD,
+                    Priority = PriorityLevel.HIGH,
+                    ProximityRadius = 10,
+                    Status = OccurrenceStatus.ACTIVE,
+                    ReportId = defaultReportId,
+                    ResponsibleEntityId = defaultResponsibleEntityId,
+                    Location = new GeoPoint { Latitude = 40.0, Longitude = -8.1 },
+                }
+            ),
+            new Occurrence(
+                new OccurrenceCreateDto
+                {
+                    Title = "Gamma needle",
+                    Description = "baz",
+                    Type = OccurrenceType.FOREST_FIRE,
+                    Priority = PriorityLevel.MEDIUM,
+                    ProximityRadius = 10,
+                    Status = OccurrenceStatus.ACTIVE,
+                    ReportId = defaultReportId,
+                    ResponsibleEntityId = defaultResponsibleEntityId,
+                    Location = new GeoPoint { Latitude = 40.0, Longitude = -8.2 },
+                }
+            )
         );
         _occurrenceContext.SaveChanges();
 
         var page = _occurrenceRepository.GetAllOccurrences(1, 10, "title", "asc", "needle");
 
         Assert.Equal(2, page.Count);
-        Assert.All(page, o => Assert.True(
-            o.Title.Contains("needle", StringComparison.OrdinalIgnoreCase) ||
-            o.Description.Contains("needle", StringComparison.OrdinalIgnoreCase)
-        ));
+        Assert.All(
+            page,
+            o =>
+                Assert.True(
+                    o.Title.Contains("needle", StringComparison.OrdinalIgnoreCase)
+                        || o.Description.Contains("needle", StringComparison.OrdinalIgnoreCase)
+                )
+        );
     }
 
     /// <summary>
@@ -313,35 +377,41 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
     public void GetAllOccurrences_ShouldSortByTitleDesc()
     {
         _occurrenceContext.Occurrences.AddRange(
-            new Models.Occurrence
-            {
-                Title = "Alpha",
-                Description = "a",
-                Type = OccurrenceType.FLOOD,
-                Priority = PriorityLevel.LOW,
-                ProximityRadius = 10,
-                Status = OccurrenceStatus.ACTIVE,
-                ReportId = defaultReportId,
-                Location = new GeoPointModel { Latitude = 40.0, Longitude = -8.0 }
-            },
-            new Models.Occurrence
-            {
-                Title = "Zulu",
-                Description = "z",
-                Type = OccurrenceType.FLOOD,
-                Priority = PriorityLevel.HIGH,
-                ProximityRadius = 10,
-                Status = OccurrenceStatus.ACTIVE,
-                ReportId = defaultReportId,
-                Location = new GeoPointModel { Latitude = 40.0, Longitude = -8.0 }
-            }
+            new Occurrence(
+                new OccurrenceCreateDto
+                {
+                    Title = "Alpha",
+                    Description = "a",
+                    Type = OccurrenceType.FLOOD,
+                    Priority = PriorityLevel.LOW,
+                    ProximityRadius = 10,
+                    Status = OccurrenceStatus.ACTIVE,
+                    ReportId = defaultReportId,
+                    ResponsibleEntityId = defaultResponsibleEntityId,
+                    Location = new GeoPoint { Latitude = 40.0, Longitude = -8.0 },
+                }
+            ),
+            new Occurrence(
+                new OccurrenceCreateDto
+                {
+                    Title = "Zulu",
+                    Description = "z",
+                    Type = OccurrenceType.FLOOD,
+                    Priority = PriorityLevel.HIGH,
+                    ProximityRadius = 10,
+                    Status = OccurrenceStatus.ACTIVE,
+                    ReportId = defaultReportId,
+                    ResponsibleEntityId = defaultResponsibleEntityId,
+                    Location = new GeoPoint { Latitude = 40.0, Longitude = -8.0 },
+                }
+            )
         );
         _occurrenceContext.SaveChanges();
 
         var page = _occurrenceRepository.GetAllOccurrences(1, 10, "title", "desc", string.Empty);
 
         Assert.True(page.Count >= 2);
-        Assert.Equal("Zulu", page.First().Title);
+        Assert.Equal("Zulu", page[0].Title);
     }
 
     /// <summary>
@@ -350,38 +420,44 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
     [Fact]
     public void GetAllOccurrences_UnknownSortBy_DefaultsToId()
     {
-        var a = new Models.Occurrence
-        {
-            Title = "A",
-            Description = "a",
-            Type = OccurrenceType.FLOOD,
-            Priority = PriorityLevel.LOW,
-            ProximityRadius = 10,
-            Status = OccurrenceStatus.ACTIVE,
-            ReportId = defaultReportId,
-            Location = new GeoPointModel { Latitude = 39.9, Longitude = -8.0 }
-        };
-        var b = new Models.Occurrence
-        {
-            Title = "B",
-            Description = "b",
-            Type = OccurrenceType.FLOOD,
-            Priority = PriorityLevel.LOW,
-            ProximityRadius = 10,
-            Status = OccurrenceStatus.ACTIVE,
-            ReportId = defaultReportId,
-            Location = new GeoPointModel { Latitude = 39.9, Longitude = -8.1 }
-        };
+        var a = new Occurrence(
+            new OccurrenceCreateDto
+            {
+                Title = "A",
+                Description = "a",
+                Type = OccurrenceType.FLOOD,
+                Priority = PriorityLevel.LOW,
+                ProximityRadius = 10,
+                Status = OccurrenceStatus.ACTIVE,
+                ReportId = defaultReportId,
+                ResponsibleEntityId = defaultResponsibleEntityId,
+                Location = new GeoPoint { Latitude = 39.9, Longitude = -8.0 },
+            }
+        );
+        var b = new Occurrence(
+            new OccurrenceCreateDto
+            {
+                Title = "B",
+                Description = "b",
+                Type = OccurrenceType.FLOOD,
+                Priority = PriorityLevel.LOW,
+                ProximityRadius = 10,
+                Status = OccurrenceStatus.ACTIVE,
+                ReportId = defaultReportId,
+                ResponsibleEntityId = defaultResponsibleEntityId,
+                Location = new GeoPoint { Latitude = 39.9, Longitude = -8.1 },
+            }
+        );
         _occurrenceContext.Occurrences.AddRange(a, b);
         _occurrenceContext.SaveChanges();
 
         var asc = _occurrenceRepository.GetAllOccurrences(1, 10, "unknown", "asc", string.Empty);
         var desc = _occurrenceRepository.GetAllOccurrences(1, 10, "unknown", "desc", string.Empty);
 
-        Assert.True(asc.First().Id <= asc.Last().Id);
-        Assert.True(desc.First().Id >= desc.Last().Id);
-        Assert.Equal(a.Id, asc.First().Id);
-        Assert.Equal(b.Id, desc.First().Id);
+        Assert.True(asc[0].Id <= asc[asc.Count - 1].Id);
+        Assert.True(desc[0].Id >= desc[desc.Count - 1].Id);
+        Assert.Equal(a.Id, asc[0].Id);
+        Assert.Equal(b.Id, desc[0].Id);
     }
 
     /// <summary>
@@ -392,17 +468,22 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
     {
         for (int i = 0; i < 15; i++)
         {
-            _occurrenceContext.Occurrences.Add(new Models.Occurrence
-            {
-                Title = $"Item {i:D2}",
-                Description = "x",
-                Type = OccurrenceType.FLOOD,
-                Priority = PriorityLevel.LOW,
-                ProximityRadius = 1,
-                Status = OccurrenceStatus.ACTIVE,
-                ReportId = defaultReportId,
-                Location = new GeoPointModel { Latitude = 40.0 + i * 0.001, Longitude = -8.0 }
-            });
+            _occurrenceContext.Occurrences.Add(
+                new Occurrence(
+                    new OccurrenceCreateDto
+                    {
+                        Title = $"Item {i:D2}",
+                        Description = "x",
+                        Type = OccurrenceType.FLOOD,
+                        Priority = PriorityLevel.LOW,
+                        ProximityRadius = 1,
+                        Status = OccurrenceStatus.ACTIVE,
+                        ReportId = defaultReportId,
+                        ResponsibleEntityId = defaultResponsibleEntityId,
+                        Location = new GeoPoint { Latitude = 40.0 + i * 0.001, Longitude = -8.0 },
+                    }
+                )
+            );
         }
         _occurrenceContext.SaveChanges();
 
@@ -421,28 +502,34 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
     public void GetOccurrencesByType_ReturnsMatchingType()
     {
         _occurrenceContext.Occurrences.AddRange(
-            new Models.Occurrence
-            {
-                Title = "Flood A",
-                Description = "d",
-                Type = OccurrenceType.FLOOD,
-                Priority = PriorityLevel.LOW,
-                ProximityRadius = 10,
-                Status = OccurrenceStatus.ACTIVE,
-                ReportId = defaultReportId,
-                Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
-            },
-            new Models.Occurrence
-            {
-                Title = "Fire B",
-                Description = "d",
-                Type = OccurrenceType.FOREST_FIRE,
-                Priority = PriorityLevel.LOW,
-                ProximityRadius = 10,
-                Status = OccurrenceStatus.ACTIVE,
-                ReportId = defaultReportId,
-                Location = new GeoPointModel { Latitude = 41, Longitude = -8 }
-            }
+            new Occurrence(
+                new OccurrenceCreateDto
+                {
+                    Title = "Flood A",
+                    Description = "d",
+                    Type = OccurrenceType.FLOOD,
+                    Priority = PriorityLevel.LOW,
+                    ProximityRadius = 10,
+                    Status = OccurrenceStatus.ACTIVE,
+                    ReportId = defaultReportId,
+                    ResponsibleEntityId = defaultResponsibleEntityId,
+                    Location = new GeoPoint { Latitude = 40, Longitude = -8 },
+                }
+            ),
+            new Occurrence(
+                new OccurrenceCreateDto
+                {
+                    Title = "Fire B",
+                    Description = "d",
+                    Type = OccurrenceType.FOREST_FIRE,
+                    Priority = PriorityLevel.LOW,
+                    ProximityRadius = 10,
+                    Status = OccurrenceStatus.ACTIVE,
+                    ReportId = defaultReportId,
+                    ResponsibleEntityId = defaultResponsibleEntityId,
+                    Location = new GeoPoint { Latitude = 41, Longitude = -8 },
+                }
+            )
         );
         _occurrenceContext.SaveChanges();
 
@@ -458,17 +545,22 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
     [Fact]
     public void GetOccurrencesByStatus_ReturnsMatchingStatus()
     {
-        _occurrenceContext.Occurrences.Add(new Models.Occurrence
-        {
-            Title = "Active 1",
-            Description = "d",
-            Type = OccurrenceType.FLOOD,
-            Priority = PriorityLevel.LOW,
-            ProximityRadius = 10,
-            Status = OccurrenceStatus.ACTIVE,
-            ReportId = defaultReportId,
-            Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
-        });
+        _occurrenceContext.Occurrences.Add(
+            new Occurrence(
+                new OccurrenceCreateDto
+                {
+                    Title = "Active 1",
+                    Description = "d",
+                    Type = OccurrenceType.FLOOD,
+                    Priority = PriorityLevel.LOW,
+                    ProximityRadius = 10,
+                    Status = OccurrenceStatus.ACTIVE,
+                    ReportId = defaultReportId,
+                    ResponsibleEntityId = defaultResponsibleEntityId,
+                    Location = new GeoPoint { Latitude = 40, Longitude = -8 },
+                }
+            )
+        );
         _occurrenceContext.SaveChanges();
 
         var actives = _occurrenceRepository.GetOccurrencesByStatus(OccurrenceStatus.ACTIVE);
@@ -483,25 +575,34 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
     [Fact]
     public void GetAllActiveOccurrences_ReturnsActiveOnly()
     {
-        _occurrenceContext.Occurrences.Add(new Models.Occurrence
-        {
-            Title = "Active X",
-            Description = "d",
-            Type = OccurrenceType.FLOOD,
-            Priority = PriorityLevel.LOW,
-            ProximityRadius = 10,
-            Status = OccurrenceStatus.ACTIVE,
-            ReportId = defaultReportId,
-            Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
-        });
+        _occurrenceContext.Occurrences.Add(
+            new Occurrence(
+                new OccurrenceCreateDto
+                {
+                    Title = "Active X",
+                    Description = "d",
+                    Type = OccurrenceType.FLOOD,
+                    Priority = PriorityLevel.LOW,
+                    ProximityRadius = 10,
+                    Status = OccurrenceStatus.ACTIVE,
+                    ReportId = defaultReportId,
+                    ResponsibleEntityId = defaultResponsibleEntityId,
+                    Location = new GeoPoint { Latitude = 40, Longitude = -8 },
+                }
+            )
+        );
         _occurrenceContext.SaveChanges();
 
         var list = _occurrenceRepository.GetAllActiveOccurrences(1, 100, null, null, null);
 
         Assert.NotEmpty(list);
-        Assert.All(list, o => Assert.True(
-            o.Status == OccurrenceStatus.ACTIVE || o.Status == OccurrenceStatus.IN_PROGRESS
-        ));
+        Assert.All(
+            list,
+            o =>
+                Assert.True(
+                    o.Status == OccurrenceStatus.ACTIVE
+                )
+        );
     }
 
     /// <summary>
@@ -511,28 +612,34 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
     public void GetOccurrencesByPriority_ReturnsMatchingPriority()
     {
         _occurrenceContext.Occurrences.AddRange(
-            new Models.Occurrence
-            {
-                Title = "Low P",
-                Description = "d",
-                Type = OccurrenceType.FLOOD,
-                Priority = PriorityLevel.LOW,
-                ProximityRadius = 10,
-                Status = OccurrenceStatus.ACTIVE,
-                ReportId = defaultReportId,
-                Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
-            },
-            new Models.Occurrence
-            {
-                Title = "High P",
-                Description = "d",
-                Type = OccurrenceType.FLOOD,
-                Priority = PriorityLevel.HIGH,
-                ProximityRadius = 10,
-                Status = OccurrenceStatus.ACTIVE,
-                ReportId = defaultReportId,
-                Location = new GeoPointModel { Latitude = 41, Longitude = -8 }
-            }
+            new Occurrence(
+                new OccurrenceCreateDto
+                {
+                    Title = "Low P",
+                    Description = "d",
+                    Type = OccurrenceType.FLOOD,
+                    Priority = PriorityLevel.LOW,
+                    ProximityRadius = 10,
+                    Status = OccurrenceStatus.ACTIVE,
+                    ReportId = defaultReportId,
+                    ResponsibleEntityId = defaultResponsibleEntityId,
+                    Location = new GeoPoint { Latitude = 40, Longitude = -8 },
+                }
+            ),
+            new Occurrence(
+                new OccurrenceCreateDto
+                {
+                    Title = "High P",
+                    Description = "d",
+                    Type = OccurrenceType.FLOOD,
+                    Priority = PriorityLevel.HIGH,
+                    ProximityRadius = 10,
+                    Status = OccurrenceStatus.ACTIVE,
+                    ReportId = defaultReportId,
+                    ResponsibleEntityId = defaultResponsibleEntityId,
+                    Location = new GeoPoint { Latitude = 41, Longitude = -8 },
+                }
+            )
         );
         _occurrenceContext.SaveChanges();
 
@@ -548,19 +655,22 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
     [Fact]
     public void GetByReportId_ShouldReturnOccurrence_WhenExists()
     {
-        var specificReportId = CreateHelper();
+        var specificReportId = CreateReportHelper();
 
-        var created = new Occurrence
-        {
-            Title = "Report Ref",
-            Description = "d",
-            Type = OccurrenceType.FLOOD,
-            Priority = PriorityLevel.LOW,
-            ProximityRadius = 10,
-            Status = OccurrenceStatus.ACTIVE,
-            ReportId = specificReportId,
-            Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
-        };
+        var created = new Occurrence(
+            new OccurrenceCreateDto
+            {
+                Title = "Report Ref",
+                Description = "d",
+                Type = OccurrenceType.FLOOD,
+                Priority = PriorityLevel.LOW,
+                ProximityRadius = 10,
+                Status = OccurrenceStatus.ACTIVE,
+                ReportId = specificReportId,
+                ResponsibleEntityId = defaultResponsibleEntityId,
+                Location = new GeoPoint { Latitude = 40, Longitude = -8 },
+            }
+        );
         _occurrenceContext.Occurrences.Add(created);
         _occurrenceContext.SaveChanges();
 
@@ -596,17 +706,20 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
     [Fact]
     public void Update_ExistingOccurrence_ReturnsUpdatedOccurrence()
     {
-        var o = new Models.Occurrence
-        {
-            Title = "Old",
-            Description = "OldD",
-            Type = OccurrenceType.FLOOD,
-            Priority = PriorityLevel.LOW,
-            ProximityRadius = 10,
-            Status = OccurrenceStatus.ACTIVE,
-            ReportId = defaultReportId,
-            Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
-        };
+        var o = new Occurrence(
+            new OccurrenceCreateDto
+            {
+                Title = "Old",
+                Description = "OldD",
+                Type = OccurrenceType.FLOOD,
+                Priority = PriorityLevel.LOW,
+                ProximityRadius = 10,
+                Status = OccurrenceStatus.ACTIVE,
+                ReportId = defaultReportId,
+                ResponsibleEntityId = defaultResponsibleEntityId,
+                Location = new GeoPoint { Latitude = 40, Longitude = -8 },
+            }
+        );
         _occurrenceContext.Occurrences.Add(o);
         _occurrenceContext.SaveChanges();
 
@@ -635,18 +748,20 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
     [Fact]
     public void Update_NonExistingOccurrence_ThrowsDbUpdateException()
     {
-        var occurrence = new Models.Occurrence
-        {
-            Id = 987654,
-            Title = "Ghost",
-            Description = "NoRow",
-            Type = OccurrenceType.FLOOD,
-            Priority = PriorityLevel.MEDIUM,
-            ProximityRadius = 1,
-            Status = OccurrenceStatus.ACTIVE,
-            ReportId = defaultReportId,
-            Location = new GeoPointModel { Latitude = 39.5, Longitude = -8.5 }
-        };
+        var occurrence = new Occurrence(
+            new OccurrenceCreateDto
+            {
+                Id = 987654,
+                Title = "Ghost",
+                Description = "NoRow",
+                Type = OccurrenceType.FLOOD,
+                Priority = PriorityLevel.MEDIUM,
+                ProximityRadius = 1,
+                Status = OccurrenceStatus.ACTIVE,
+                ReportId = defaultReportId,
+                Location = new GeoPoint { Latitude = 39.5, Longitude = -8.5 },
+            }
+        );
 
         Assert.Throws<Microsoft.EntityFrameworkCore.DbUpdateException>(() =>
             _occurrenceRepository.Update(occurrence)
@@ -659,17 +774,20 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
     [Fact]
     public void Delete_ExistingOccurrence_ReturnsDeletedOccurrence()
     {
-        var o = new Models.Occurrence
-        {
-            Title = "Del",
-            Description = "D",
-            Type = OccurrenceType.FLOOD,
-            Priority = PriorityLevel.LOW,
-            ProximityRadius = 10,
-            Status = OccurrenceStatus.ACTIVE,
-            ReportId = defaultReportId,
-            Location = new GeoPointModel { Latitude = 40, Longitude = -8 }
-        };
+        var o = new Occurrence(
+            new OccurrenceCreateDto
+            {
+                Title = "Del",
+                Description = "D",
+                Type = OccurrenceType.FLOOD,
+                Priority = PriorityLevel.LOW,
+                ProximityRadius = 10,
+                Status = OccurrenceStatus.ACTIVE,
+                ReportId = defaultReportId,
+                ResponsibleEntityId = defaultResponsibleEntityId,
+                Location = new GeoPoint { Latitude = 40, Longitude = -8 },
+            }
+        );
         _occurrenceContext.Occurrences.Add(o);
         _occurrenceContext.SaveChanges();
 
@@ -696,9 +814,9 @@ public class TestOccurrenceRepositoryTest : IClassFixture<DbFixture>
     public void Model_DefaultConstructor_SetsDefaults()
     {
         var now = DateTime.UtcNow.AddSeconds(-5);
-        var o = new Occurrence();
+        var o = new Occurrence(new OccurrenceCreateDto());
 
-        Assert.Equal(OccurrenceStatus.ACTIVE, o.Status);
+        Assert.Equal(OccurrenceStatus.WAITING, o.Status);
         Assert.Equal(0, o.ReportCount);
         Assert.True(o.CreationDateTime >= now);
     }

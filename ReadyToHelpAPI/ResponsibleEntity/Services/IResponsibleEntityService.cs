@@ -15,5 +15,9 @@ public interface IResponsibleEntityService
     /// <param name="latitude">The latitude of the occurrence.</param>
     /// <param name="longitude">The longitude of the occurrence.</param>
     /// <returns>The responsible entity or null if none found.</returns>
-    ResponsibleEntity? FindResponsibleEntity(OccurrenceType occurrenceType, double latitude, double longitude);
+    ResponsibleEntity? FindResponsibleEntity(
+        OccurrenceType occurrenceType,
+        double latitude,
+        double longitude
+    );
 }

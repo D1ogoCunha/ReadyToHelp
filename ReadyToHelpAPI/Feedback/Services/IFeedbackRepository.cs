@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using readytohelpapi.Feedback.Models;
 
 /// <summary>
-///   Interface for feedback repository operations.
+///   Defines the contract for feedback repository operations.
 /// </summary>
 public interface IFeedbackRepository
 {
@@ -16,43 +16,52 @@ public interface IFeedbackRepository
     Feedback Create(Feedback feedback);
 
     /// <summary>
-    ///  Gets a feedback by its ID.
+    ///   Gets a feedback by its ID.
     /// </summary>
     /// <param name="id">The ID of the feedback.</param>
     /// <returns>The feedback with the specified ID, or null if not found.</returns>
     Feedback? GetFeedbackById(int id);
 
     /// <summary>
-    ///  Gets all feedbacks.
+    ///   Gets all feedbacks.
     /// </summary>
     /// <returns>All feedbacks.</returns>
     List<Feedback> GetAllFeedbacks();
 
     /// <summary>
-    ///  Gets feedbacks by occurrence ID.
+    ///   Gets feedbacks by occurrence ID.
     /// </summary>
     /// <param name="occurrenceId">The ID of the occurrence.</param>
     /// <returns>The feedbacks for the specified occurrence.</returns>
     List<Feedback> GetFeedbacksByOccurrenceId(int occurrenceId);
 
     /// <summary>
-    ///  Gets feedbacks by user ID.
+    ///   Gets feedbacks by user ID.
     /// </summary>
     /// <param name="userId">The ID of the user.</param>
     /// <returns>The feedback for the specified user.</returns>
     List<Feedback> GetFeedbacksByUserId(int userId);
 
     /// <summary>
-    ///  Checks if a user exists by user ID.
+    ///   Checks if a user exists by user ID.
     /// </summary>
     /// <param name="userId">The ID of the user.</param>
     /// <returns>True if the user exists, otherwise false.</returns>
     bool UserExists(int userId);
 
     /// <summary>
-    ///  Checks if an occurrence exists by occurrence ID.
+    ///   Checks if an occurrence exists by occurrence ID.
     /// </summary>
     /// <param name="occurrenceId">The ID of the occurrence.</param>
     /// <returns>True if the occurrence exists, otherwise false.</returns>
     bool OccurrenceExists(int occurrenceId);
+
+    /// <summary>
+    ///   Checks if a user has submitted feedback for a specific occurrence since a given date and time.
+    /// </summary>
+    /// <param name="userId">The ID of the user.</param>
+    /// <param name="occurrenceId">The ID of the occurrence.</param>
+    /// <param name="since">The date and time since when to check for feedback.</param>
+    /// <returns>True if the user has submitted feedback since the specified date and time, otherwise false.</returns>
+    bool HasRecentFeedback(int userId, int occurrenceId, DateTime since);
 }

@@ -29,5 +29,8 @@ public static class GeoUtils
         return R * c;
     }
 
+    /// <summary>
+    /// Converts degrees to radians.
+    /// </summary>
     private static double ToRad(double value) => (Math.PI / 180d) * value;
 }

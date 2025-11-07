@@ -3,7 +3,7 @@ namespace readytohelpapi.Feedback.Models;
 using System.ComponentModel.DataAnnotations;
 
 /// <summary>
-/// Represents feedback provided by a user for a specific occurrence.
+///   Represents feedback provided by a user for a specific occurrence.
 /// </summary>
 public class Feedback
 {

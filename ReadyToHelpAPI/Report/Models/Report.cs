@@ -16,7 +16,7 @@ public class Report
     /// <summary>
     ///   Gets or sets the description of the report.
     /// </summary>
-    public string Description { get; set; }
+    public required string Description { get; set; }
 
     /// <summary>
     ///   Gets or sets the date and time the report was created.
@@ -26,17 +26,12 @@ public class Report
     /// <summary>
     ///   Gets or sets the title of the occurrence on the report.
     /// </summary>
-    public string Title { get; set; }
+    public required string Title { get; set; }
 
     /// <summary>
     ///   Gets or sets the status of the occurrence on the report.
     /// </summary>
     public OccurrenceStatus Status { get; set; }
-
-    /// <summary>
-    ///   Gets or sets the priority level of the occurrence on the report.
-    /// </summary>
-    public PriorityLevel Priority { get; set; }
 
     /// <summary>
     ///   Gets or sets the type of occurrence reported.
@@ -51,5 +46,5 @@ public class Report
     /// <summary>
     ///   Gets or sets the geographical location of the report.
     /// </summary>
-    public GeoPoint Location { get; set; }
+    public required GeoPoint Location { get; set; }
 }

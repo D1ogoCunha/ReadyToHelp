@@ -16,18 +16,36 @@ public static class ReportFixture
         string description = "Default description",
         int userId = 1,
         OccurrenceType type = OccurrenceType.ROAD_DAMAGE,
-        PriorityLevel priority = PriorityLevel.MEDIUM,
         GeoPoint? location = null
     )
     {
-        r ??= new Report();
-        if (id.HasValue) r.Id = id.Value;
+        location ??= new GeoPoint { Latitude = 41.3678, Longitude = -8.2012 };
+
+        if (r == null)
+        {
+            r = new Report
+            {
+                Title = title,
+                Description = description,
+                UserId = userId,
+                Type = type,
+                Location = location,
+            };
+
+            if (id.HasValue)
+                r.Id = id.Value;
+
+            return r;
+        }
+
+        if (id.HasValue)
+            r.Id = id.Value;
         r.Title = title;
         r.Description = description;
         r.UserId = userId;
         r.Type = type;
-        r.Priority = priority;
-        r.Location = location ?? new GeoPoint { Latitude = 41.3678, Longitude = -8.2012 };
+        r.Location ??= location;
+
         return r;
     }
 }

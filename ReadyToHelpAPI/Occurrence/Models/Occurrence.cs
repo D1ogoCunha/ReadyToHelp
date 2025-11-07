@@ -1,57 +1,13 @@
 namespace readytohelpapi.Occurrence.Models;
 
-using System.ComponentModel.DataAnnotations;
 using readytohelpapi.GeoPoint.Models;
+using readytohelpapi.Occurrence.DTOs;
 
 /// <summary>
 ///   Represents an occurrence.
 /// </summary>
 public class Occurrence
 {
-
-    /// <summary>
-    ///  Initializes a new instance of the <see cref="Occurrence" /> class.
-    ///  Default constructor that sets CreationDateTime to current UTC time and Status to ACTIVE.
-    /// </summary>
-    public Occurrence()
-    {
-        CreationDateTime = DateTime.UtcNow;
-        Status = OccurrenceStatus.ACTIVE;
-        ReportCount = 0;
-    }
-
-    /// <summary>
-    ///  Initializes a new instance of the <see cref="Occurrence" /> class with specified parameters.
-    /// Constructor that initializes all properties except CreationDateTime, which is set to current UTC time.
-    /// </summary>
-    /// <param name="id">The unique identifier for the occurrence.</param>
-    /// <param name="title">The title of the occurrence.</param>
-    /// <param name="description">The description of the occurrence.</param>
-    /// <param name="type">The type of the occurrence.</param>
-    /// <param name="status">The status of the occurrence.</param>
-    /// <param name="priority">The priority level of the occurrence.</param>
-    /// <param name="proximityRadius">The proximity radius of the occurrence.</param>
-    /// <param name="endDateTime">The end date and time of the occurrence.</param>
-    /// <param name="reportCount">The report count of the occurrence.</param>
-    /// <param name="reportId">The report identifier associated with the occurrence.</param>
-    /// <param name="responsibleEntityId">The responsible entity identifier associated with the occurrence.</param>
-    public Occurrence(int id, string title, string description, OccurrenceType type, OccurrenceStatus status, PriorityLevel priority, double proximityRadius, DateTime endDateTime, int reportCount, int reportId, int responsibleEntityId, GeoPoint location)
-    {
-        Id = id;
-        Title = title;
-        Description = description;
-        Type = type;
-        Status = status;
-        Priority = priority;
-        ProximityRadius = proximityRadius;
-        CreationDateTime = DateTime.UtcNow;
-        EndDateTime = endDateTime;
-        ReportCount = reportCount;
-        ReportId = reportId;
-        ResponsibleEntityId = responsibleEntityId;
-        Location = location;
-    }
-
     /// <summary>
     ///   Gets or sets the unique identifier for the occurrence.
     /// </summary>
@@ -110,10 +66,52 @@ public class Occurrence
     /// <summary>
     /// Gets or sets the responsible entity identifier associated with the occurrence.
     /// </summary>
-    public int ResponsibleEntityId { get; set; }
+    public int? ResponsibleEntityId { get; set; }
 
     /// <summary>
     /// Gets or sets the location of the occurrence.
     /// </summary>
     public GeoPoint Location { get; set; }
+
+    /// <summary>
+    ///  Initializes a new instance of the <see cref="Occurrence" /> class.
+    /// </summary>
+    public Occurrence()
+    {
+        Title = string.Empty;
+        Description = string.Empty;
+        Location = new GeoPoint();
+    }
+
+    /// <summary>
+    ///  Initializes a new instance of the <see cref="Occurrence" /> class with specified parameters.
+    /// Constructor that initializes all properties except CreationDateTime, which is set to current UTC time.
+    /// </summary>
+    /// <param name="id">The unique identifier for the occurrence.</param>
+    /// <param name="title">The title of the occurrence.</param>
+    /// <param name="description">The description of the occurrence.</param>
+    /// <param name="type">The type of the occurrence.</param>
+    /// <param name="status">The status of the occurrence.</param>
+    /// <param name="priority">The priority level of the occurrence.</param>
+    /// <param name="proximityRadius">The proximity radius of the occurrence.</param>
+    /// <param name="endDateTime">The end date and time of the occurrence.</param>
+    /// <param name="reportCount">The report count of the occurrence.</param>
+    /// <param name="reportId">The report identifier associated with the occurrence.</param>
+    /// <param name="responsibleEntityId">The responsible entity identifier associated with the occurrence.</param>
+    public Occurrence(OccurrenceCreateDto dto)
+    {
+        Id = dto.Id;
+        Title = dto.Title;
+        Description = dto.Description;
+        Type = dto.Type;
+        Status = dto.Status;
+        Priority = dto.Priority;
+        ProximityRadius = dto.ProximityRadius;
+        CreationDateTime = DateTime.UtcNow;
+        EndDateTime = dto.EndDateTime;
+        ReportCount = dto.ReportCount;
+        ReportId = dto.ReportId;
+        ResponsibleEntityId = dto.ResponsibleEntityId;
+        Location = dto.Location;
+    }
 }

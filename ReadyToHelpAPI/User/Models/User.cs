@@ -1,15 +1,10 @@
-﻿// <copyright file="User.cs" company="PlaceholderCompany">
-// Copyright (c) PlaceholderCompany. All rights reserved.
-// </copyright>
-
-namespace readytohelpapi.User.Models;
+﻿namespace readytohelpapi.User.Models;
 
 /// <summary>
 ///     Represents a user.
 /// </summary>
 public class User
 {
-
     /// <summary>
     ///     Gets or sets the ID of the user.
     /// </summary>
@@ -18,17 +13,17 @@ public class User
     /// <summary>
     ///     Gets or sets the full name of the user.
     /// </summary>
-    public string Name { get; set; }
+    public required string Name { get; set; }
 
     /// <summary>
     ///     Gets or sets the email of the user.
     /// </summary>
-    public string Email { get; set; }
+    public required string Email { get; set; }
 
     /// <summary>
     ///     Gets or sets the password of the user.
     /// </summary>
-    public string Password { get; set; }
+    public required string Password { get; set; }
 
     /// <summary>
     ///     Gets or sets the profile of the user.
@@ -56,5 +51,4 @@ public class User
         Password = password;
         Profile = profile;
     }
-
 }

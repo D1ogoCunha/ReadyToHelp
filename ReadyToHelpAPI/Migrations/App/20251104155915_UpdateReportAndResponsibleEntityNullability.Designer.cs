@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NetTopologySuite.Geometries;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -12,9 +13,11 @@ using readytohelpapi.Common.Data;
 namespace ReadyToHelpAPI.ReadyToHelpAPI.Migrations.App
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251104155915_UpdateReportAndResponsibleEntityNullability")]
+    partial class UpdateReportAndResponsibleEntityNullability
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -109,6 +112,8 @@ namespace ReadyToHelpAPI.ReadyToHelpAPI.Migrations.App
 
                     b.HasIndex("ReportId");
 
+                    b.HasIndex("ResponsibleEntityId");
+
                     b.ToTable("occurrences", (string)null);
                 });
 
@@ -155,7 +160,6 @@ namespace ReadyToHelpAPI.ReadyToHelpAPI.Migrations.App
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Address")
-                        .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
@@ -247,6 +251,13 @@ namespace ReadyToHelpAPI.ReadyToHelpAPI.Migrations.App
                         .HasForeignKey("ReportId")
                         .OnDelete(DeleteBehavior.SetNull)
                         .HasConstraintName("FK_occurrences_report");
+
+                    b.HasOne("readytohelpapi.ResponsibleEntity.Models.ResponsibleEntity", null)
+                        .WithMany()
+                        .HasForeignKey("ResponsibleEntityId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .IsRequired()
+                        .HasConstraintName("FK_occurrences_responsible_entity");
 
                     b.OwnsOne("readytohelpapi.GeoPoint.Models.GeoPoint", "Location", b1 =>
                         {

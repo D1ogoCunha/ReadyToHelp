@@ -9,9 +9,7 @@ RUN dotnet publish "ReadyToHelpAPI.csproj" -c Release -o /app/publish /p:UseAppH
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
-ENV ASPNETCORE_URLS=http://+:80
-EXPOSE 80
-
+ENV ASPNETCORE_URLS=http://0.0.0.0:8080
+EXPOSE 8080
 COPY --from=build /app/publish ./
-
 ENTRYPOINT ["dotnet", "ReadyToHelpAPI.dll"]

@@ -1,11 +1,11 @@
 namespace readytohelpapi.Occurrence.Services;
 
-using readytohelpapi.Occurrence.Models;
-using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.EntityFrameworkCore;
 using readytohelpapi.Common.Data;
+using readytohelpapi.Occurrence.Models;
 
 /// <summary>
 ///    Implements the occurrence repository for managing occurrence data.
@@ -23,13 +23,11 @@ public class OccurrenceRepository : IOccurrenceRepository
         occurrenceContext = context;
     }
 
-    /// <summary>
-    ///   Creates an occurrence in the repository.
-    /// </summary>
-    /// <param name="occurrence">The occurrence object to be created.</param>
+    /// <inheritdoc />
     public Occurrence Create(Occurrence occurrence)
     {
-        if (occurrence == null) throw new ArgumentNullException(nameof(occurrence));
+        if (occurrence == null)
+            throw new ArgumentNullException(nameof(occurrence));
         try
         {
             var created = occurrenceContext.Occurrences.Add(occurrence).Entity;
@@ -42,11 +40,7 @@ public class OccurrenceRepository : IOccurrenceRepository
         }
     }
 
-    /// <summary>
-    /// Updates an occurrence in the repository.
-    /// </summary>
-    /// <param name="occurrence">The occurrence to update.</param>
-    /// <returns>The updated occurrence entity.</returns>
+    /// <inheritdoc />
     public Occurrence Update(Occurrence occurrence)
     {
         if (occurrence == null)
@@ -60,7 +54,7 @@ public class OccurrenceRepository : IOccurrenceRepository
         }
         catch (KeyNotFoundException)
         {
-            throw;
+            throw new KeyNotFoundException("Occurrence not found for update");
         }
         catch (Exception ex)
         {
@@ -68,15 +62,12 @@ public class OccurrenceRepository : IOccurrenceRepository
         }
     }
 
-    /// <summary>
-    /// Deletes an occurrence by ID.
-    /// </summary>
-    /// <param name="id">The occurrence ID.</param>
-    /// <returns>The deleted occurrence entity if found; otherwise, null.</returns>
+    /// <inheritdoc />
     public Occurrence? Delete(int id)
     {
         var existing = occurrenceContext.Occurrences.Find(id);
-        if (existing == null) return null;
+        if (existing == null)
+            return null;
         try
         {
             occurrenceContext.Occurrences.Remove(existing);
@@ -89,50 +80,42 @@ public class OccurrenceRepository : IOccurrenceRepository
         }
     }
 
-    /// <summary>
-    ///   Retrieves an occurrence by ID.
-    /// </summary>
-    /// <param name="id">The occurrence ID.</param>
-    /// <returns>The occurrence with the specified ID or null.</returns>
+    /// <inheritdoc />
     public Occurrence? GetOccurrenceById(int id)
     {
-        if (id <= 0) return null;
-        return occurrenceContext.Occurrences
-            .AsNoTracking()
-            .FirstOrDefault(o => o.Id == id);
+        if (id <= 0)
+            return null;
+        return occurrenceContext.Occurrences.AsNoTracking().FirstOrDefault(o => o.Id == id);
     }
 
-    /// <summary>
-    ///   Retrieves occurrences by partial or full title.
-    /// </summary>
-    /// <param name="title">The title to search for.</param>
-    /// <returns>A list of occurrences that match the title.</returns>
+    /// <inheritdoc />
     public List<Occurrence> GetOccurrenceByTitle(string title)
     {
         if (string.IsNullOrWhiteSpace(title))
             return new List<Occurrence>();
 
         var pattern = $"%{title.Trim()}%";
-        return occurrenceContext.Occurrences
-            .AsNoTracking()
+        return occurrenceContext
+            .Occurrences.AsNoTracking()
             .Where(o => EF.Functions.ILike(o.Title, pattern))
             .ToList();
     }
 
-    /// <summary>
-    ///   Retrieves a paginated, filtered, and sorted list of occurrences.
-    /// </summary>
-    /// <param name="pageNumber">The page number for pagination.</param>
-    /// <param name="pageSize">The number of items per page.</param>
-    /// <param name="sortBy">The field by which to sort the results.</param
-    /// <param name="sortOrder">The sort order, either "asc" or "desc".</param>
-    /// <param name="filter">The string to filter the occurrence data.</param>  
-    /// <returns>A paginated, sorted, and filtered list of occurrences.</returns>
-    public List<Occurrence> GetAllOccurrences(int pageNumber, int pageSize, string sortBy, string sortOrder, string filter)
+    /// <inheritdoc />
+    public List<Occurrence> GetAllOccurrences(
+        int pageNumber,
+        int pageSize,
+        string sortBy,
+        string sortOrder,
+        string filter
+    )
     {
-        if (pageNumber <= 0) pageNumber = 1;
-        if (pageSize <= 0) pageSize = 10;
-        if (pageSize > 1000) pageSize = 1000;
+        if (pageNumber <= 0)
+            pageNumber = 1;
+        if (pageSize <= 0)
+            pageSize = 10;
+        if (pageSize > 1000)
+            pageSize = 1000;
 
         var query = occurrenceContext.Occurrences.AsNoTracking().AsQueryable();
 
@@ -141,8 +124,9 @@ public class OccurrenceRepository : IOccurrenceRepository
             var trimmed = filter.Trim();
             var pattern = $"%{trimmed}%";
             query = query.Where(o =>
-                EF.Functions.ILike(o.Title ?? string.Empty, pattern) ||
-                EF.Functions.ILike(o.Description ?? string.Empty, pattern));
+                EF.Functions.ILike(o.Title ?? string.Empty, pattern)
+                || EF.Functions.ILike(o.Description ?? string.Empty, pattern)
+            );
         }
 
         var asc = string.Equals(sortOrder, "asc", StringComparison.OrdinalIgnoreCase);
@@ -152,7 +136,9 @@ public class OccurrenceRepository : IOccurrenceRepository
                 query = asc ? query.OrderBy(o => o.Title) : query.OrderByDescending(o => o.Title);
                 break;
             case "priority":
-                query = asc ? query.OrderBy(o => o.Priority) : query.OrderByDescending(o => o.Priority);
+                query = asc
+                    ? query.OrderBy(o => o.Priority)
+                    : query.OrderByDescending(o => o.Priority);
                 break;
             case "status":
                 query = asc ? query.OrderBy(o => o.Status) : query.OrderByDescending(o => o.Status);
@@ -166,57 +152,48 @@ public class OccurrenceRepository : IOccurrenceRepository
         return query.Skip(skip).Take(pageSize).ToList();
     }
 
-    /// <summary>
-    ///    Retrieves all occurrences by type.
-    /// </summary>
-    /// <param name="type">The type of the occurrence.</param>
-    /// <returns>A list of occurrences of the specified type.</returns>
+    /// <inheritdoc />
     public List<Occurrence> GetOccurrencesByType(OccurrenceType type)
     {
-        return occurrenceContext.Occurrences
-            .AsNoTracking()
-            .Where(o => o.Type == type)
-            .ToList();
+        return occurrenceContext.Occurrences.AsNoTracking().Where(o => o.Type == type).ToList();
     }
 
-    /// <summary>
-    ///   Retrieves all occurrences by the specified status.
-    /// </summary>
-    /// <param name="status">The status of the occurrences to retrieve.</param>
-    /// <returns>A list of occurrences with the specified status.</returns>
+    /// <inheritdoc />
     public List<Occurrence> GetOccurrencesByStatus(OccurrenceStatus status)
     {
-        return occurrenceContext.Occurrences
-            .AsNoTracking()
-            .Where(o => o.Status == status)
-            .ToList();
+        return occurrenceContext.Occurrences.AsNoTracking().Where(o => o.Status == status).ToList();
     }
 
-    /// <summary>
-    ///   Retrieves all occurrences by the specified priority level.
-    /// </summary>
-    /// <param name="priority">The priority level of the occurrence.</param>
-    /// <returns>A list of occurrences of the specified priority level.</returns>
+    /// <inheritdoc />
     public List<Occurrence> GetOccurrencesByPriority(PriorityLevel priority)
     {
-        return occurrenceContext.Occurrences
-            .AsNoTracking()
+        return occurrenceContext
+            .Occurrences.AsNoTracking()
             .Where(o => o.Priority == priority)
             .ToList();
     }
 
-    /// <summary>
-    ///   Retrieves all occurrences with status ACTIVE or IN_PROGRESS with pagination and optional filters.
-    /// </summary>
-    public List<Occurrence> GetAllActiveOccurrences(int pageNumber, int pageSize, OccurrenceType? type, PriorityLevel? priority, int? responsibleEntityId)
+    /// <inheritdoc />
+    public List<Occurrence> GetAllActiveOccurrences(
+        int pageNumber,
+        int pageSize,
+        OccurrenceType? type,
+        PriorityLevel? priority,
+        int? responsibleEntityId
+    )
     {
-        if (pageNumber <= 0) pageNumber = 1;
-        if (pageSize <= 0) pageSize = 10;
-        if (pageSize > 1000) pageSize = 1000;
+        if (pageNumber <= 0)
+            pageNumber = 1;
+        if (pageSize <= 0)
+            pageSize = 10;
+        if (pageSize > 1000)
+            pageSize = 1000;
 
-        var query = occurrenceContext.Occurrences
-            .AsNoTracking()
-            .Where(o => o.Status == OccurrenceStatus.ACTIVE || o.Status == OccurrenceStatus.IN_PROGRESS);
+        var query = occurrenceContext
+            .Occurrences.AsNoTracking()
+            .Where(o =>
+                o.Status == OccurrenceStatus.ACTIVE
+            );
 
         if (type.HasValue)
             query = query.Where(o => o.Type == type.Value);
@@ -227,24 +204,19 @@ public class OccurrenceRepository : IOccurrenceRepository
         if (responsibleEntityId.HasValue)
             query = query.Where(o => o.ResponsibleEntityId == responsibleEntityId.Value);
 
-        query = query
-            .OrderByDescending(o => o.Priority)
-            .ThenByDescending(o => o.CreationDateTime);
+        query = query.OrderByDescending(o => o.Priority).ThenByDescending(o => o.CreationDateTime);
 
         var skip = (pageNumber - 1) * pageSize;
         return query.Skip(skip).Take(pageSize).ToList();
     }
 
-    /// <summary>
-    ///     Retrieves an occurrence by reportId.
-    /// </summary>
-    /// <param name="reportId">The report identifier.</param>
-    /// <returns>The occurrence with the specified reportId or null.</returns>
+    /// <inheritdoc />
     public Occurrence? GetByReportId(int reportId)
     {
-        if (reportId <= 0) return null;
-        return occurrenceContext.Occurrences
-            .AsNoTracking()
+        if (reportId <= 0)
+            return null;
+        return occurrenceContext
+            .Occurrences.AsNoTracking()
             .FirstOrDefault(o => o.ReportId == reportId);
     }
 }

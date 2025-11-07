@@ -1,6 +1,6 @@
-using readytohelpapi.Authentication.Models;
-
 namespace readytohelpapi.Authentication.Service;
+
+using readytohelpapi.Authentication.Models;
 
 /// <summary>
 /// Defines the contract for user authentication services, including login methods for mobile and web.
@@ -12,12 +12,12 @@ public interface IUserAuthService
     /// </summary>
     /// <param name="authentication">The authentication model containing email and password.</param>
     /// <returns>JWT token string.</returns>
-    string UserLoginMobile(Models.Authentication authentication);
+    string UserLoginMobile(Authentication authentication);
 
     /// <summary>
     /// Authenticates a user for web access and returns a JWT if successful.
     /// </summary>
     /// <param name="authentication">The authentication model containing email and password.</param>
     /// <returns>JWT token string.</returns>
-    string UserLoginWeb(Models.Authentication authentication);
+    string UserLoginWeb(Authentication authentication);
 }

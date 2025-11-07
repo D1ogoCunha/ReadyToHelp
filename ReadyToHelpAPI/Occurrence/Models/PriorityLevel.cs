@@ -1,11 +1,11 @@
 namespace readytohelpapi.Occurrence.Models;
 
 /// <summary>
-/// Defines the occurrence statuses.   
+/// Enumeration for priority levels of an occurrence.
 /// </summary>
 public enum PriorityLevel
 {
     LOW,
     MEDIUM,
-    HIGH
+    HIGH,
 }

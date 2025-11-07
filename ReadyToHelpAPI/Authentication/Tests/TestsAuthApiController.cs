@@ -1,17 +1,17 @@
-using Microsoft.AspNetCore.Http;
+namespace readytohelpapi.Authentication.Tests;
+
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using readytohelpapi.Authentication.Controllers;
 using readytohelpapi.Authentication.Service;
-using AuthDto = readytohelpapi.Authentication.Models.Authentication;
-using AuthException = System.Security.Authentication.AuthenticationException;
 using Xunit;
-
-namespace ReadyToHelpAPI.Tests.Controllers;
+using AuthDto = Models.Authentication;
+using AuthException = System.Security.Authentication.AuthenticationException;
 
 /// <summary>
 /// Unit tests for the AuthApiController.
 /// </summary>
+[Trait("Category", "Unit")]
 public class TestsAuthApiController
 {
     /// <summary>
@@ -23,10 +23,7 @@ public class TestsAuthApiController
     {
         return new AuthApiController(svc)
         {
-            ControllerContext = new ControllerContext
-            {
-                HttpContext = new DefaultHttpContext()
-            }
+            ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() },
         };
     }
 
@@ -97,7 +94,8 @@ public class TestsAuthApiController
     public void LoginWeb_ReturnsForbid_OnUnauthorizedAccess()
     {
         var svc = new Mock<IAuthService>();
-        svc.Setup(s => s.UserLoginWeb(It.IsAny<AuthDto>())).Throws(new UnauthorizedAccessException());
+        svc.Setup(s => s.UserLoginWeb(It.IsAny<AuthDto>()))
+            .Throws(new UnauthorizedAccessException());
         var ctrl = MakeController(svc.Object);
 
         var res = ctrl.LoginWeb(new AuthDto("citizen@mail.com", "1234"));
@@ -124,7 +122,8 @@ public class TestsAuthApiController
     public void LoginWeb_ReturnsBadRequest_OnArgumentException()
     {
         var svc = new Mock<IAuthService>();
-        svc.Setup(s => s.UserLoginWeb(It.IsAny<AuthDto>())).Throws(new ArgumentException("invalid"));
+        svc.Setup(s => s.UserLoginWeb(It.IsAny<AuthDto>()))
+            .Throws(new ArgumentException("invalid"));
         var ctrl = MakeController(svc.Object);
 
         var res = ctrl.LoginWeb(new AuthDto("e@mail.com", "p"));
@@ -186,7 +185,7 @@ public class TestsAuthApiController
     {
         var svc = new Mock<IAuthService>();
         svc.Setup(s => s.UserLoginMobile(It.IsAny<AuthDto>()))
-           .Throws(new ArgumentException("invalid"));
+            .Throws(new ArgumentException("invalid"));
         var ctrl = MakeController(svc.Object);
 
         var res = ctrl.LoginMobile(new AuthDto("e@mail.com", "p"));
@@ -201,8 +200,7 @@ public class TestsAuthApiController
     public void LoginMobile_Returns500_OnUnexpectedException()
     {
         var svc = new Mock<IAuthService>();
-        svc.Setup(s => s.UserLoginMobile(It.IsAny<AuthDto>()))
-           .Throws(new Exception("boom"));
+        svc.Setup(s => s.UserLoginMobile(It.IsAny<AuthDto>())).Throws(new Exception("boom"));
         var ctrl = MakeController(svc.Object);
 
         var res = ctrl.LoginMobile(new AuthDto("e@mail.com", "p"));
@@ -231,8 +229,7 @@ public class TestsAuthApiController
     public void LoginWeb_Returns500_OnUnexpectedException()
     {
         var svc = new Mock<IAuthService>();
-        svc.Setup(s => s.UserLoginWeb(It.IsAny<AuthDto>()))
-           .Throws(new Exception("boom"));
+        svc.Setup(s => s.UserLoginWeb(It.IsAny<AuthDto>())).Throws(new Exception("boom"));
         var ctrl = MakeController(svc.Object);
 
         var res = ctrl.LoginWeb(new AuthDto("e@mail.com", "p"));
@@ -248,7 +245,7 @@ public class TestsAuthApiController
     public void RefreshToken_ReturnsBadRequest_OnHeaderWithoutBearerPrefix()
     {
         var ctrl = MakeController(new Mock<IAuthService>().Object);
-        ctrl.HttpContext.Request.Headers.Authorization = "abc"; // sem 'Bearer '
+        ctrl.HttpContext.Request.Headers.Authorization = "abc";
 
         var res = ctrl.RefreshToken();
 
@@ -262,7 +259,7 @@ public class TestsAuthApiController
     public void RefreshToken_ReturnsBadRequest_OnEmptyBearerToken()
     {
         var ctrl = MakeController(new Mock<IAuthService>().Object);
-        ctrl.HttpContext.Request.Headers.Authorization = "Bearer    "; // só espaços
+        ctrl.HttpContext.Request.Headers.Authorization = "Bearer    ";
 
         var res = ctrl.RefreshToken();
 
@@ -278,7 +275,7 @@ public class TestsAuthApiController
         var svc = new Mock<IAuthService>();
         svc.Setup(s => s.RefreshToken("AbC")).Returns("newtok");
         var ctrl = MakeController(svc.Object);
-        ctrl.HttpContext.Request.Headers.Authorization = "bearer AbC"; // case-insensitive
+        ctrl.HttpContext.Request.Headers.Authorization = "bearer AbC";
 
         var res = ctrl.RefreshToken();
 
@@ -301,5 +298,113 @@ public class TestsAuthApiController
 
         var ok = Assert.IsType<OkObjectResult>(res.Result);
         Assert.Equal("newtok", Assert.IsType<string>(ok.Value));
+    }
+
+    /// <summary>
+    /// Tests that Logout returns NoContent when provided a valid Authorization header.
+    /// </summary>
+    [Fact]
+    public void Logout_ReturnsNoContent_OnValidHeader()
+    {
+        var svc = new Mock<IAuthService>();
+        svc.Setup(s => s.RevokeToken("abc")).Verifiable();
+        var ctrl = MakeController(svc.Object);
+        ctrl.HttpContext.Request.Headers.Authorization = "Bearer abc";
+
+        var res = ctrl.Logout();
+
+        Assert.IsType<NoContentResult>(res);
+        svc.Verify(s => s.RevokeToken("abc"), Times.Once);
+    }
+
+    /// <summary>
+    /// Tests that Logout returns BadRequest when the Authorization header is missing.
+    /// </summary>
+    [Fact]
+    public void Logout_ReturnsBadRequest_WhenMissingHeader()
+    {
+        var ctrl = MakeController(new Mock<IAuthService>().Object);
+
+        var res = ctrl.Logout();
+
+        Assert.IsType<BadRequestObjectResult>(res);
+    }
+
+    /// <summary>
+    /// Tests that Logout returns BadRequest when the Authorization header does not start with "Bearer".
+    /// </summary>
+    [Fact]
+    public void Logout_ReturnsBadRequest_OnHeaderWithoutBearerPrefix()
+    {
+        var ctrl = MakeController(new Mock<IAuthService>().Object);
+        ctrl.HttpContext.Request.Headers.Authorization = "abc";
+
+        var res = ctrl.Logout();
+
+        Assert.IsType<BadRequestObjectResult>(res);
+    }
+
+    /// <summary>
+    /// Tests that Logout returns BadRequest when the Bearer token is empty or whitespace.
+    /// </summary>
+    [Fact]
+    public void Logout_ReturnsBadRequest_OnEmptyBearerToken()
+    {
+        var ctrl = MakeController(new Mock<IAuthService>().Object);
+        ctrl.HttpContext.Request.Headers.Authorization = "Bearer    ";
+
+        var res = ctrl.Logout();
+
+        Assert.IsType<BadRequestObjectResult>(res);
+    }
+
+    /// <summary>
+    /// Tests that Logout returns BadRequest when the authentication service throws an ArgumentException.
+    /// </summary>
+    [Fact]
+    public void Logout_ReturnsBadRequest_OnServiceThrowsArgumentException()
+    {
+        var svc = new Mock<IAuthService>();
+        svc.Setup(s => s.RevokeToken("abc")).Throws(new ArgumentException("invalid"));
+        var ctrl = MakeController(svc.Object);
+        ctrl.HttpContext.Request.Headers.Authorization = "Bearer abc";
+
+        var res = ctrl.Logout();
+
+        Assert.IsType<BadRequestObjectResult>(res);
+    }
+
+    /// <summary>
+    /// Tests that Logout returns 500 when an unexpected exception occurs.
+    /// </summary>
+    [Fact]
+    public void Logout_Returns500_OnUnexpectedException()
+    {
+        var svc = new Mock<IAuthService>();
+        svc.Setup(s => s.RevokeToken("abc")).Throws(new Exception("boom"));
+        var ctrl = MakeController(svc.Object);
+        ctrl.HttpContext.Request.Headers.Authorization = "Bearer abc";
+
+        var res = ctrl.Logout();
+
+        var obj = Assert.IsType<ObjectResult>(res);
+        Assert.Equal(500, obj.StatusCode);
+    }
+
+    /// <summary>
+    /// Tests that Logout accepts case-insensitive 'Bearer' and trims whitespace around the token.
+    /// </summary>
+    [Fact]
+    public void Logout_AcceptsCaseInsensitiveBearer_AndTrimsToken()
+    {
+        var svc = new Mock<IAuthService>();
+        svc.Setup(s => s.RevokeToken("AbC")).Verifiable();
+        var ctrl = MakeController(svc.Object);
+        ctrl.HttpContext.Request.Headers.Authorization = "bearer    AbC   ";
+
+        var res = ctrl.Logout();
+
+        Assert.IsType<NoContentResult>(res);
+        svc.Verify(s => s.RevokeToken("AbC"), Times.Once);
     }
 }

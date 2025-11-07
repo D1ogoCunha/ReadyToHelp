@@ -51,19 +51,24 @@ public interface IUserService
     /// <param name="sortOrder">The sort order, either "asc" or "desc".</param>
     /// <param name="filter">The string to filter the user data.</param>
     /// <returns>A paginated, sorted, and filtered list of users.</returns>
-    List<User> GetAllUsers(int pageNumber, int pageSize, string sortBy, string sortOrder, string filter);
-
+    List<User> GetAllUsers(
+        int pageNumber,
+        int pageSize,
+        string sortBy,
+        string sortOrder,
+        string filter
+    );
 
     /// <summary>
     ///     Retrieves a user by email.
     /// </summary>
     /// <param name="email">The email of the user.</param>
     /// <returns>The user entity if found; otherwise, null.</returns>
-    Models.User? GetUserByEmail(string email);
+    User? GetUserByEmail(string email);
 
     /// <summary>
     /// Registers for a new user in the mobile app, forces the user was a CITIZEN.
     /// </summary>
     /// <param name="user">The user object containing registration details.</param>
-    Models.User Register(User user);
+    User Register(User user);
 }

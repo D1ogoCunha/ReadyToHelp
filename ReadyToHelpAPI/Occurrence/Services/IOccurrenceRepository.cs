@@ -1,7 +1,7 @@
 namespace readytohelpapi.Occurrence.Services;
 
-using readytohelpapi.Occurrence.Models;
 using System.Collections.Generic;
+using readytohelpapi.Occurrence.Models;
 
 /// <summary>
 ///     Defines the contract for an occurrence repository to manage data.
@@ -16,13 +16,6 @@ public interface IOccurrenceRepository
     Occurrence Create(Occurrence occurrence);
 
     /// <summary>
-    ///     Retrieves an occurrence by ID.
-    /// </summary>
-    /// <param name="id">The occurrence ID.</param>
-    /// <returns>The occurrence entity if found; otherwise, null.</returns>
-    Occurrence? GetOccurrenceById(int id);
-
-    /// <summary>
     ///     Updates an occurrence in the repository.
     /// </summary>
     /// <param name="occurrence">The occurrence to update.</param>
@@ -35,6 +28,13 @@ public interface IOccurrenceRepository
     /// <param name="id">The occurrence ID.</param>
     /// <returns>The deleted occurrence entity if found; otherwise, null.</returns>
     Occurrence? Delete(int id);
+
+    /// <summary>
+    ///     Retrieves an occurrence by ID.
+    /// </summary>
+    /// <param name="id">The occurrence ID.</param>
+    /// <returns>The occurrence entity if found; otherwise, null.</returns>
+    Occurrence? GetOccurrenceById(int id);
 
     /// <summary>
     ///     Retrieves occurrences by partial or full title.
@@ -52,7 +52,13 @@ public interface IOccurrenceRepository
     /// <param name="sortOrder">The sort order, either "asc" or "desc".</param>
     /// <param name="filter">The string to filter the occurrence data.</param>
     /// <returns>A paginated, sorted, and filtered list of occurrences.</returns>
-    List<Occurrence> GetAllOccurrences(int pageNumber, int pageSize, string sortBy, string sortOrder, string filter);
+    List<Occurrence> GetAllOccurrences(
+        int pageNumber,
+        int pageSize,
+        string sortBy,
+        string sortOrder,
+        string filter
+    );
 
     /// <summary>
     ///     Retrieves all occurrences by type.
@@ -84,7 +90,13 @@ public interface IOccurrenceRepository
     /// <param name="priority">Optional priority filter.</param>
     /// <param name="responsibleEntityId">Optional responsible entity filter.</param>
     /// <returns>Filtered, paginated occurrences.</returns>
-    List<Occurrence> GetAllActiveOccurrences(int pageNumber, int pageSize, OccurrenceType? type, PriorityLevel? priority, int? responsibleEntityId);
+    List<Occurrence> GetAllActiveOccurrences(
+        int pageNumber,
+        int pageSize,
+        OccurrenceType? type,
+        PriorityLevel? priority,
+        int? responsibleEntityId
+    );
 
     /// <summary>
     ///     Retrieves an occurrence by reportId.

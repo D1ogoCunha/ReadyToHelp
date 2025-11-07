@@ -20,14 +20,11 @@ public class ReportRepository : IReportRepository
         reportContext = context;
     }
 
-    /// <summary>
-    ///     Creates a new report in the database.
-    /// </summary>
-    /// <param name="report">The report to create.</param>
-    /// <returns>The created report.</returns>
+    /// <inheritdoc />
     public Report Create(Report report)
     {
-        if (report == null) throw new ArgumentNullException(nameof(report));
+        if (report == null)
+            throw new ArgumentNullException(nameof(report));
         try
         {
             if (report.ReportDateTime == default)
@@ -43,16 +40,11 @@ public class ReportRepository : IReportRepository
         }
     }
 
-    /// <summary>
-    ///     Retrieves a report by its ID.
-    /// </summary>
-    /// <param name="id">The ID of the report.</param>
-    /// <returns>The report if found; otherwise, null.</returns>
+    /// <inheritdoc />
     public Report? GetById(int id)
     {
-        if (id <= 0) return null;
-        return reportContext.Reports
-            .AsNoTracking()
-            .FirstOrDefault(r => r.Id == id);
+        if (id <= 0)
+            return null;
+        return reportContext.Reports.AsNoTracking().FirstOrDefault(r => r.Id == id);
     }
 }

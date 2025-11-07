@@ -3,6 +3,8 @@ namespace readytohelpapi.Feedback.Services;
 using System;
 using System.Collections.Generic;
 using readytohelpapi.Feedback.Models;
+using readytohelpapi.Occurrence.Services;
+using readytohelpapi.Occurrence.Models;
 
 /// <summary>
 ///   Implementation of feedback service operations.
@@ -10,21 +12,20 @@ using readytohelpapi.Feedback.Models;
 public class FeedbackServiceImpl : IFeedbackService
 {
     private readonly IFeedbackRepository repo;
+    private readonly IOccurrenceService occurrenceService;
 
     /// <summary>
     ///   Initializes a new instance of the <see cref="FeedbackServiceImpl"/> class.
     /// </summary>
     /// <param name="repo">The feedback repository.</param>
-    public FeedbackServiceImpl(IFeedbackRepository repo)
+    /// <param name="occurrenceService">The occurrence service.</param>
+    public FeedbackServiceImpl(IFeedbackRepository repo, IOccurrenceService? occurrenceService)
     {
         this.repo = repo ?? throw new ArgumentNullException(nameof(repo));
+        this.occurrenceService = occurrenceService ?? throw new ArgumentNullException(nameof(occurrenceService));
     }
 
-    /// <summary>
-    ///   Creates a new feedback.
-    /// </summary>
-    /// <param name="feedback">The feedback to create.</param>
-    /// <returns>The created feedback.</returns>
+    /// <inheritdoc />
     public Feedback Create(Feedback feedback)
     {
         if (feedback == null)
@@ -33,24 +34,58 @@ public class FeedbackServiceImpl : IFeedbackService
         if (!repo.UserExists(feedback.UserId))
             throw new ArgumentException(
                 $"User with id {feedback.UserId} does not exist",
-                nameof(feedback.UserId)
+                nameof(feedback)
             );
 
         if (!repo.OccurrenceExists(feedback.OccurrenceId))
             throw new ArgumentException(
                 $"Occurrence with id {feedback.OccurrenceId} does not exist",
-                nameof(feedback.OccurrenceId)
+                nameof(feedback)
             );
 
-        feedback.FeedbackDateTime = DateTime.UtcNow;
-        return repo.Create(feedback);
+        var now = DateTime.UtcNow;
+        var cutoff = now.AddHours(-1);
+        if (repo.HasRecentFeedback(feedback.UserId, feedback.OccurrenceId, cutoff))
+            throw new ArgumentException(
+                "User already submitted feedback for this occurrence within the last hour.",
+                nameof(feedback)
+            );
+
+        var occCheck = occurrenceService.GetOccurrenceById(feedback.OccurrenceId);
+        if (occCheck != null && occCheck.Status == OccurrenceStatus.WAITING)
+            throw new InvalidOperationException("Cannot submit feedback for an occurrence with WAITING status.");
+
+        feedback.FeedbackDateTime = now;
+
+        var created = repo.Create(feedback) ?? throw new InvalidOperationException("Failed to create feedback.");
+        try
+        {
+            if (!created.IsConfirmed)
+            {
+                var allForOccurrence = repo.GetFeedbacksByOccurrenceId(created.OccurrenceId) ?? new List<Feedback>();
+                var negativeCount = allForOccurrence.Count(f => f != null && !f.IsConfirmed);
+
+                if (negativeCount >= 5)
+                {
+                    var occ = occurrenceService.GetOccurrenceById(created.OccurrenceId);
+                    if (occ != null && occ.EndDateTime == default)
+                    {
+                        occ.Status = OccurrenceStatus.CLOSED;
+                        occ.EndDateTime = DateTime.UtcNow;
+                        occurrenceService.Update(occ);
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException("Failed to process occurrence status update based on feedback.", ex);
+        }
+
+        return created;
     }
 
-    /// <summary>
-    ///   Gets feedback by its Id.
-    /// </summary>
-    /// <param name="id">The feedback Id.</param>
-    /// <returns>The feedback if found; otherwise, null.</returns>
+    /// <inheritdoc />
     public Feedback? GetFeedbackById(int id)
     {
         if (id <= 0)
@@ -59,17 +94,10 @@ public class FeedbackServiceImpl : IFeedbackService
         return repo.GetFeedbackById(id);
     }
 
-    /// <summary>
-    ///   Gets all feedbacks.
-    /// </summary>
-    /// <returns>All feedbacks.</returns>
-    public List<Feedback> GetAllFeedbacks() => repo.GetAllFeedbacks();
+    /// <inheritdoc />
+    public List<Feedback> GetAllFeedbacks() { return repo.GetAllFeedbacks(); }
 
-    /// <summary>
-    ///   Gets feedbacks by occurrence Id.
-    /// </summary>
-    /// <param name="occurrenceId">The occurrence Id.</param>
-    /// <returns>The feedbacks associated with the specified occurrence Id.</returns>
+    /// <inheritdoc />
     public List<Feedback> GetFeedbacksByOccurrenceId(int occurrenceId)
     {
         if (occurrenceId <= 0)
@@ -84,11 +112,7 @@ public class FeedbackServiceImpl : IFeedbackService
         return repo.GetFeedbacksByOccurrenceId(occurrenceId);
     }
 
-    /// <summary>
-    ///   Gets feedbacks by user Id.
-    /// </summary>
-    /// <param name="userId">The user Id.</param>
-    /// <returns>The feedbacks associated with the specified user Id.</returns>
+    /// <inheritdoc />
     public List<Feedback> GetFeedbacksByUserId(int userId)
     {
         if (userId <= 0)

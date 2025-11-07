@@ -1,9 +1,9 @@
 ﻿namespace readytohelpapi.User.Services;
 
-using Models;
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using BCrypt.Net;
+using readytohelpapi.User.Models;
 
 /// <summary>
 ///     Implements the user service operations.
@@ -21,34 +21,30 @@ public class UserServiceImpl : IUserService
         this.userRepository = userRepository;
     }
 
-    /// <summary>
-    ///   Creates a user.
-    /// </summary>
-    /// <param name="user">The user to create.</param>
-    /// <returns>The created user.</returns>
+    /// <inheritdoc />
     public User Create(User user)
     {
         if (user == null)
             throw new ArgumentNullException(nameof(user), "User object is null");
 
         if (string.IsNullOrWhiteSpace(user.Email) || string.IsNullOrEmpty(user.Email))
-            throw new ArgumentException("Email cannot be null or empty", nameof(user.Email));
+            throw new ArgumentException("Email cannot be null or empty");
 
         if (string.IsNullOrWhiteSpace(user.Name) || string.IsNullOrEmpty(user.Name))
-            throw new ArgumentException("User name cannot be null or empty", nameof(user.Name));
+            throw new ArgumentException("User name cannot be null or empty");
 
         if (string.IsNullOrWhiteSpace(user.Password) || string.IsNullOrEmpty(user.Password))
-            throw new ArgumentException("User password cannot be null or empty", nameof(user.Password));
+            throw new ArgumentException("User password cannot be null or empty");
 
         if (!Enum.IsDefined(typeof(Profile), user.Profile))
-            throw new ArgumentOutOfRangeException(nameof(user.Profile), "Invalid profile");
+            throw new ArgumentOutOfRangeException(nameof(user), "Invalid profile");
 
         var existingUsers = this.userRepository.GetUserByEmail(user.Email);
 
         if (existingUsers != null)
             throw new ArgumentException($"Email {user.Email} already exists.");
 
-        user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
+        user.Password = BCrypt.HashPassword(user.Password);
 
         try
         {
@@ -56,19 +52,14 @@ public class UserServiceImpl : IUserService
         }
         catch (Exception e)
         {
-            throw new InvalidOperationException("An error occurred while trying to create a user.", e);
+            throw new InvalidOperationException(
+                "An error occurred while trying to create a user.",
+                e
+            );
         }
     }
 
-    /// <summary>
-    ///   Updates a user.
-    /// </summary>
-    /// <param name="user">The user to update.</param>
-    /// <returns>The updated user.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when the user is null.</exception>
-    /// <exception cref="ArgumentException">Thrown when the user has invalid properties.</exception>
-    /// <exception cref="KeyNotFoundException">Thrown when the user is not found.</exception>
-    /// <exception cref="InvalidOperationException">Thrown when an error occurs while updating the user.</exception>
+    /// <inheritdoc />
     public User Update(User user)
     {
         if (user == null)
@@ -98,9 +89,9 @@ public class UserServiceImpl : IUserService
             {
                 try
                 {
-                    sameAsExisting = BCrypt.Net.BCrypt.Verify(user.Password, existingUser.Password);
+                    sameAsExisting = BCrypt.Verify(user.Password, existingUser.Password);
                 }
-                catch (BCrypt.Net.SaltParseException)
+                catch (SaltParseException)
                 {
                     sameAsExisting = false;
                 }
@@ -108,7 +99,7 @@ public class UserServiceImpl : IUserService
 
             user.Password = sameAsExisting
                 ? existingUser.Password
-                : BCrypt.Net.BCrypt.HashPassword(user.Password);
+                : BCrypt.HashPassword(user.Password);
         }
 
         var emailExists = this.userRepository.GetUserByEmail(user.Email);
@@ -121,17 +112,14 @@ public class UserServiceImpl : IUserService
         }
         catch (Exception e)
         {
-            throw new InvalidOperationException("An error occurred while trying to update a user.", e);
+            throw new InvalidOperationException(
+                "An error occurred while trying to update a user.",
+                e
+            );
         }
     }
 
-    /// <summary>
-    ///   Deletes a user by id.
-    /// </summary>
-    /// <param name="id">The id of the user to delete.</param>
-    /// <returns>The deleted user.</returns>
-    /// <exception cref="ArgumentException">Thrown when the user id is invalid.</exception>
-    /// <exception cref="InvalidOperationException">Thrown when an error occurs while deleting the user.</exception>
+    /// <inheritdoc />
     public User Delete(int id)
     {
         if (id <= 0)
@@ -141,21 +129,21 @@ public class UserServiceImpl : IUserService
 
         try
         {
-            return this.userRepository.Delete(id);
+            var user = userRepository.Delete(id);
+            if (user == null)
+                throw new KeyNotFoundException($"User with id {id} not found.");
+            return user;
         }
         catch (Exception e)
         {
-            throw new InvalidOperationException("An error occurred while trying to delete a user.", e);
+            throw new InvalidOperationException(
+                "An error occurred while trying to delete a user.",
+                e
+            );
         }
     }
 
-    /// <summary>
-    ///  Gets a user by id.
-    /// </summary>
-    /// <param name="id">The id of the user to get.</param>
-    /// <returns>The user with the specified id.</returns>
-    /// <exception cref="ArgumentException">Thrown when the user id is invalid.</exception>
-    /// <exception cref="KeyNotFoundException">Thrown when the user is not found.</exception>
+    /// <inheritdoc />
     public User GetUserById(int id)
     {
         if (id <= 0)
@@ -168,28 +156,20 @@ public class UserServiceImpl : IUserService
         return user;
     }
 
-    /// <summary>
-    /// Gets users by name.
-    /// </summary>
-    /// <param name="name">The name of the users to get.</param>
-    /// <returns>A list of users with the specified name.</returns>
+    /// <inheritdoc />
     public List<User> GetUserByName(string name)
     {
         return this.userRepository.GetUserByName(name);
     }
 
-    /// <summary>
-    /// Gets all users with pagination, sorting, and filtering.
-    /// </summary>
-    /// <param name="pageNumber">The page number to retrieve.</param>
-    /// <param name="pageSize">The number of users per page.</param>
-    /// <param name="sortBy">The field to sort by.</param>
-    /// <param name="sortOrder">The sort order (asc or desc).</param>
-    /// <param name="filter">The filter to apply.</param>
-    /// <returns>A list of users matching the criteria.</returns>
-    /// <exception cref="ArgumentException">Thrown when any of the parameters are invalid.</exception>
-    /// <exception cref="InvalidOperationException">Thrown when an error occurs while retrieving users.</exception>
-    public List<User> GetAllUsers(int pageNumber, int pageSize, string sortBy, string sortOrder, string filter)
+    /// <inheritdoc />
+    public List<User> GetAllUsers(
+        int pageNumber,
+        int pageSize,
+        string sortBy,
+        string sortOrder,
+        string filter
+    )
     {
         if (string.IsNullOrEmpty(sortBy))
             throw new ArgumentException("Sort field cannot be null or empty.", nameof(sortBy));
@@ -198,14 +178,23 @@ public class UserServiceImpl : IUserService
             throw new ArgumentException("Sort order must be 'asc' or 'desc'.", nameof(sortOrder));
 
         if (pageNumber <= 0)
-            throw new ArgumentException("Page number must be greater than zero.", nameof(pageNumber));
+            throw new ArgumentException(
+                "Page number must be greater than zero.",
+                nameof(pageNumber)
+            );
 
         if (pageSize <= 0 || pageSize > 1000)
             throw new ArgumentException("Page size must be between 1 and 1000.", nameof(pageSize));
 
         try
         {
-            var users = this.userRepository.GetAllUsers(pageNumber, pageSize, sortBy, sortOrder, filter);
+            var users = this.userRepository.GetAllUsers(
+                pageNumber,
+                pageSize,
+                sortBy,
+                sortOrder,
+                filter
+            );
             return users ?? new List<User>();
         }
         catch (Exception e)
@@ -214,16 +203,8 @@ public class UserServiceImpl : IUserService
         }
     }
 
-
-
-    /// <summary>
-    ///   Gets a user by email.
-    /// </summary>
-    /// <param name="email">The email of the user to get.</param>
-    /// <returns>The user with the specified email, or null if not found.</returns>
-    /// <exception cref="ArgumentException">Thrown when the email is null or empty.</exception>
-
-    public Models.User? GetUserByEmail(string email)
+    /// <inheritdoc />
+    public User? GetUserByEmail(string email)
     {
         if (string.IsNullOrWhiteSpace(email) || string.IsNullOrEmpty(email))
             throw new ArgumentException("Email cannot be null or empty", nameof(email));
@@ -231,13 +212,8 @@ public class UserServiceImpl : IUserService
         return userRepository.GetUserByEmail(email);
     }
 
-    /// <summary>
-    ///   Registers a new citizen user.
-    /// </summary>
-    /// <param name="user">The user to register.</param>
-    /// <returns>The registered user.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when the user is null.</exception>
-    public Models.User Register(Models.User user)
+    /// <inheritdoc />
+    public User Register(User user)
     {
         if (user == null)
             throw new ArgumentNullException(nameof(user), "User object is null");
