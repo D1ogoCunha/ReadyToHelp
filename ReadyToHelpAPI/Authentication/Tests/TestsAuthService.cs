@@ -1,7 +1,6 @@
 namespace readytohelpapi.Authentication.Controllers;
 
 using System.IdentityModel.Tokens.Jwt;
-using System.Security.Authentication;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.Extensions.Caching.Distributed;
@@ -12,7 +11,7 @@ using readytohelpapi.Authentication.Service;
 using readytohelpapi.User.Models;
 using readytohelpapi.User.Services;
 using Xunit;
-using AuthDto = readytohelpapi.Authentication.Models.Authentication;
+using AuthDto = Models.Authentication;
 using AuthException = System.Security.Authentication.AuthenticationException;
 
 /// <summary>
