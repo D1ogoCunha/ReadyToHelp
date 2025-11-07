@@ -120,9 +120,7 @@ public class OccurrenceApiController : ControllerBase
     /// </summary>
     /// <param name="id">The ID of the occurrence to retrieve.</param>
     /// <returns>The occurrence details if found; otherwise, a NotFound result.</returns>
-    [Authorize]
     [HttpGet("{id:int}")]
-    [HttpGet("/api/occurrences/{id:int}")]
     public ActionResult<OccurrenceDetailsDto> GetById(int id)
     {
         try

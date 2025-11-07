@@ -386,34 +386,6 @@ public class TestOccurrenceApiController_Unit
     }
 
     /// <summary>
-    ///   Ensures GetById has [Authorize] and both route templates (singular and plural).
-    /// </summary>
-    [Fact]
-    public void GetById_HasAuthorizeAndRoutes()
-    {
-        var mi = typeof(OccurrenceApiController).GetMethod("GetById");
-        Assert.NotNull(mi);
-
-        var authorizeAttrs = mi!.GetCustomAttributes(
-            typeof(Microsoft.AspNetCore.Authorization.AuthorizeAttribute),
-            true
-        );
-        Assert.NotEmpty(authorizeAttrs);
-
-        var httpGets = mi.GetCustomAttributes(typeof(HttpGetAttribute), true)
-            .Cast<HttpGetAttribute>()
-            .ToArray();
-        Assert.True(httpGets.Length >= 1);
-
-        var templates = httpGets.Select(a => a.Template ?? string.Empty).ToArray();
-        Assert.Contains(templates, t => t.Equals("{id:int}", StringComparison.OrdinalIgnoreCase));
-        Assert.Contains(
-            templates,
-            t => t.Contains("api/occurrences", StringComparison.OrdinalIgnoreCase)
-        );
-    }
-
-    /// <summary>
     ///   Tests GetAll returning a list of occurrences.
     /// </summary>
     [Fact]
