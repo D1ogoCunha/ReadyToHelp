@@ -192,7 +192,7 @@ public class OccurrenceRepository : IOccurrenceRepository
         var query = occurrenceContext
             .Occurrences.AsNoTracking()
             .Where(o =>
-                o.Status == OccurrenceStatus.ACTIVE || o.Status == OccurrenceStatus.IN_PROGRESS
+                o.Status == OccurrenceStatus.ACTIVE
             );
 
         if (type.HasValue)

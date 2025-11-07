@@ -114,8 +114,6 @@ public class DashboardServiceImpl : IDashboardService
 
         var waiting = occurrences.Count(o => o.Status == OccurrenceStatus.WAITING);
         var active = occurrences.Count(o => o.Status == OccurrenceStatus.ACTIVE);
-        var inProgress = occurrences.Count(o => o.Status == OccurrenceStatus.IN_PROGRESS);
-        var resolved = occurrences.Count(o => o.Status == OccurrenceStatus.RESOLVED);
         var closed = occurrences.Count(o => o.Status == OccurrenceStatus.CLOSED);
 
         var high = occurrences.Count(o => o.Priority == PriorityLevel.HIGH);
@@ -141,8 +139,6 @@ public class DashboardServiceImpl : IDashboardService
             TotalOccurrences = total,
             Waiting = waiting,
             Active = active,
-            InProgress = inProgress,
-            Resolved = resolved,
             Closed = closed,
             HighPriority = high,
             MediumPriority = medium,
@@ -304,7 +300,6 @@ public class DashboardServiceImpl : IDashboardService
         {
             OccurrenceStatus.WAITING,
             OccurrenceStatus.ACTIVE,
-            OccurrenceStatus.IN_PROGRESS,
         };
         var activeOccurrences = assignedOccs.Count(o => activeStatuses.Contains(o.Status));
 

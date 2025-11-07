@@ -7,7 +7,5 @@ public enum OccurrenceStatus
 {
     WAITING,
     ACTIVE,
-    IN_PROGRESS,
-    RESOLVED,
     CLOSED,
 }
