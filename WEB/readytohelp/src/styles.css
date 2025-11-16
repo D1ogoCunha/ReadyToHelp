@@ -1,1 +1,10 @@
 @import 'mapbox-gl/dist/mapbox-gl.css';
+
+.custom-marker {
+  width: 62px;
+  height: 62px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  cursor: pointer;
+}
