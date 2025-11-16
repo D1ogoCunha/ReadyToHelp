@@ -52,33 +52,16 @@ export class AuthService {
     return this.currentUserSubject.value;
   }
 
-    login(credentials: { email: string; password: string }): Observable<void> {
-    const url = `${this.baseAuthUrl}/login/web`;
-    return this.http.post(url, credentials, { responseType: 'text' }).pipe(
-      tap(responseText => {
-        const token = (typeof responseText === 'string' && responseText.trim()) ? responseText.trim() : null;
-        if (token) {
-          this.setToken(token);
-          this.fetchCurrentUser().subscribe(); 
-        } else {
-          console.warn('AuthService.login: token not found in response', responseText);
-        }
-      }),
-      map(() => {})
-    );
-  }
-
-   fetchCurrentUser(): Observable<any> {
-    return this.http.get<any>('/api/users/me').pipe(
-      tap(user => {
-        if (user) {
-          localStorage.setItem('user', JSON.stringify(user));
-          try { this.userService.setUser(user); } catch {}
-        }
-      }),
-      catchError(() => of(null))
-    );
-  }
+    login(credentials: { email: string; password: string }): Observable<string> {
+  const url = `${this.baseAuthUrl}/login/web`;
+  return this.http.post(url, credentials, { responseType: 'text' }).pipe(
+    tap(responseText => {
+      const token = (typeof responseText === 'string' && responseText.trim()) ? responseText.trim() : null;
+      if (token) this.setToken(token);
+      else console.warn('AuthService.login: token not found in response', responseText);
+    })
+  );
+}
 
   refreshToken(): Observable<string | null> {
     const token = this.getToken();
