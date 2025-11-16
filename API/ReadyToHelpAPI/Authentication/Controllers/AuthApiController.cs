@@ -59,7 +59,7 @@ public class AuthApiController : ControllerBase
     /// </summary>
     /// <param name="authentication">The authentication details.</param>
     /// <returns>A JWT token if successful or an error message if not.</returns>
-    [AllowAnonymous]
+    [Authorize(Roles = "ADMIN,MANAGER")]
     [HttpPost("login/web")]
     public ActionResult<string> LoginWeb([FromBody] Models.Authentication? authentication)
     {
