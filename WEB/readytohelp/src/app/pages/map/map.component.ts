@@ -4,10 +4,13 @@ import {
   inject,
   OnInit,
 } from '@angular/core';
+import { Router } from '@angular/router';
 import * as mapboxgl from 'mapbox-gl';
 import { OccurrenceService } from '../../services/occurrence.service';
 import { OccurrenceMap } from '../../models/occurrenceMap.model';
-import { OccurrenceType } from '../../models/occurrence-type.enum'; 
+import { OccurrenceType } from '../../models/occurrence-type.enum';
+import { OccurrenceStatus } from '../../models/occurrence-status.enum';
+import { PriorityLevel } from '../../models/priority-level.enum';
 
 @Component({
   selector: 'app-map',
@@ -19,8 +22,8 @@ import { OccurrenceType } from '../../models/occurrence-type.enum';
 })
 export class MapComponent implements OnInit {
   private map?: mapboxgl.Map;
-
   private occurrenceService = inject(OccurrenceService);
+  private router = inject(Router);
 
   constructor() {}
 
@@ -38,10 +41,10 @@ export class MapComponent implements OnInit {
 
     this.map.on('load', () => {
       this.loadOccurrences();
-    }); 
+    });
   }
 
-   /**
+  /**
    * Vai buscar as ocorrências à API e adiciona-as ao mapa
    */
   private loadOccurrences(): void {
@@ -52,39 +55,76 @@ export class MapComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error loading occurrences', err);
-      }
+      },
     });
   }
 
-  /**
-   * Adiciona os marcadores ao mapa
-   */
- private addMarkersToMap(occurrences: OccurrenceMap[]): void {
-    if (!this.map) return; 
+  private addMarkersToMap(occurrences: OccurrenceMap[]): void {
+    if (!this.map) return;
 
     for (const occ of occurrences) {
-      // 1. Criar o HTML para o popup
-      const popupHtml = `
-        <div  class="p-2">
-          <h3 class="font-bold text-lg text-blue-600">${occ.title}</h3>
-          <p class="text-sm text-gray-700">Tipo: ${occ.type}</p>
-          <p class="text-sm text-gray-700">Prioridade: ${occ.priority}</p>
-        </div>
-      `;
+      // Create the main container for the popup
+      const popupContent = document.createElement('div');
+      popupContent.className = 'w-64 p-3 space-y-2';
 
-      // 2. Criar o Popup
-      const popup = new mapboxgl.Popup({ offset: 25 })
-        .setHTML(popupHtml);
+      // Title
+      const title = document.createElement('h3');
+      title.className = 'font-bold text-lg text-blue-600';
+      title.innerText = occ.title;
 
-      // 3. Criar o Elemento 'div' personalizado
+      // Type
+      const type = document.createElement('p');
+      type.className = 'text-sm text-gray-800';
+      type.innerHTML = `<strong>Type:</strong> ${this.formatEnum(occ.type)}`;
+
+      // Priority
+      const priority = document.createElement('p');
+      priority.className = 'text-sm text-gray-800';
+      priority.innerHTML = `<strong>Priority:</strong> ${this.formatEnum(
+        occ.priority
+      )}`;
+
+      // Status
+      const status = document.createElement('p');
+      status.className = 'text-sm text-gray-800';
+      status.innerHTML = `<strong>Status:</strong> ${this.formatEnum(
+        occ.status
+      )}`;
+
+      //"View Details" button
+      const button = document.createElement('button');
+      button.className =
+        'bg-blue-600 hover:bg-blue-700 text-white text-sm py-1 px-3 rounded-md w-full mt-3 transition-colors duration-150';
+      button.innerText = 'View Details';
+
+      // Add the event listener
+      button.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.onViewDetails(occ.id);
+      });
+
+      // Add all elements to the container
+      popupContent.appendChild(title);
+      popupContent.appendChild(type);
+      popupContent.appendChild(priority);
+      popupContent.appendChild(status);
+      popupContent.appendChild(button);
+
+      // Create the popup and set its content
+      const popup = new mapboxgl.Popup({ offset: 25 }).setDOMContent(
+        popupContent
+      );
+
+      // Create a custom marker element
       const el = document.createElement('div');
-      el.className = 'custom-marker'; // Aplicar a classe CSS
-      
-      // 4. Definir a imagem de fundo com base no tipo
-      el.style.backgroundImage = `url(${this.getPinForType(occ.type)})`;
+      el.className = 'custom-marker';
 
-      // 5. Criar o Marcador com o elemento personalizado
-      new mapboxgl.Marker(el) // Passar o 'div' personalizado
+      const pinPath = this.getPinForType(occ.type);
+      console.log('A tentar carregar o pin:', pinPath);
+      el.style.backgroundImage = `url(${pinPath})`;
+
+      // Create the marker and add it to the map
+      new mapboxgl.Marker({ element: el, anchor: 'bottom' })
         .setLngLat([occ.longitude, occ.latitude])
         .setPopup(popup)
         .addTo(this.map);
@@ -139,7 +179,7 @@ export class MapComponent implements OnInit {
         return `${basePath}MEDICAL_EMERGENCY.png`;
       case OccurrenceType.WORK_ACCIDENT:
         return `${basePath}WORK_ACCIDENT.png`;
-        
+
       default:
         console.warn(
           `Pin não encontrado para o tipo: ${type}, a usar default.`
@@ -148,4 +188,19 @@ export class MapComponent implements OnInit {
     }
   }
 
+  private formatEnum(
+    value: string | OccurrenceType | PriorityLevel | OccurrenceStatus
+  ): string {
+    if (!value) return '';
+    return value
+      .toString()
+      .split('_')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+  }
+
+  private onViewDetails(id: number): void {
+    console.log('Button clicked! Navigating to details for ID:', id);
+    this.router.navigate(['/occurrence', id]);
+  }
 }

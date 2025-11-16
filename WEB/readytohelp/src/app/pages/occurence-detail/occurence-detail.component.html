@@ -1,0 +1,83 @@
+<div class="p-8 max-w-4xl mx-auto">
+
+  <!-- Loading State -->
+  @if (isLoading()) {
+    <div class="text-center p-12">
+      <h2 class="text-2xl font-semibold text-gray-600">Loading details...</h2>
+    </div>
+  }
+
+  <!-- Data Loaded State -->
+  @if (occurrence(); as occ) {
+    <div class="bg-white shadow-xl rounded-lg overflow-hidden">
+      
+      <!-- Header with Title -->
+      <div class="p-6 bg-blue-600 text-white">
+        <h1 class="text-3xl font-bold">{{ occ.title }}</h1>
+        <p class="mt-2 text-blue-100 text-lg">
+          {{ formatEnum(occ.type) }}
+        </p>
+      </div>
+      
+      <!-- Body with Details -->
+      <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        <!-- Description -->
+        <div class="md:col-span-2">
+          <h2 class="text-xl font-semibold text-gray-800 mb-2">Description</h2>
+          <p class="text-gray-700 whitespace-pre-wrap">{{ occ.description }}</p>
+        </div>
+        
+        <!-- Status -->
+        <div>
+          <h3 class="text-sm font-medium text-gray-500">Status</h3>
+          <p class="mt-1 text-lg font-semibold"
+             [class.text-green-600]="occ.status === 'ACTIVE'"
+             [class.text-red-600]="occ.status === 'CLOSED'"
+             [class.text-yellow-600]="occ.status === 'WAITING'">
+            {{ formatEnum(occ.status) }}
+          </p>
+        </div>
+
+        <!-- Priority -->
+        <div>
+          <h3 class="text-sm font-medium text-gray-500">Priority</h3>
+          <p class="mt-1 text-lg font-semibold"
+             [class.text-red-600]="occ.priority === 'HIGH'"
+             [class.text-yellow-500]="occ.priority === 'MEDIUM'"
+             [class.text-gray-600]="occ.priority === 'LOW'">
+            {{ formatEnum(occ.priority) }}
+          </p>
+        </div>
+
+        <!-- Creation Date -->
+        <div>
+          <h3 class="text-sm font-medium text-gray-500">Reported On</h3>
+          <p class="mt-1 text-gray-800">{{ formatDate(occ.creationDateTime) }}</p>
+        </div>
+
+        <!-- End Date -->
+        <div>
+          <h3 class="text-sm font-medium text-gray-500">Concluded On</h3>
+          <p class="mt-1 text-gray-800">{{ formatDate(occ.endDateTime) }}</p>
+        </div>
+
+        <!-- Location -->
+        <div class="md:col-span-2">
+          <h3 class="text-sm font-medium text-gray-500">Location</h3>
+          <p class="mt-1 text-gray-800">
+            Lat: {{ occ.latitude }}, Lng: {{ occ.longitude }}
+          </p>
+        </div>
+        
+      </div>
+    </div>
+  } @else if (!isLoading()) {
+    <!-- Error State -->
+    <div class="text-center p-12 bg-red-50 rounded-lg">
+      <h2 class="text-2xl font-semibold text-red-700">Error</h2>
+      <p class="mt-2 text-red-600">Could not load occurrence details.</p>
+    </div>
+  }
+
+</div>
