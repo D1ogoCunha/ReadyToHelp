@@ -14,16 +14,16 @@ describe('AppComponent', () => {
     expect(app).toBeTruthy();
   });
 
-  it(`should have the 'r2h-web' title`, () => {
+  it(`should have the 'readytohelp' title`, () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
-    expect(app.title).toEqual('r2h-web');
+    expect(app.title).toEqual('readytohelp');
   });
 
   it('should render title', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, r2h-web');
+    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, readytohelp');
   });
 });
