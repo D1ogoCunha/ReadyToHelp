@@ -1,0 +1,20 @@
+.login-card{
+  width:320px;
+  margin:60px auto;
+  padding:20px;
+  border-radius:6px;
+  box-shadow:0 2px 8px rgba(0,0,0,.12);
+  background:#fff;
+  font-family:Arial, sans-serif;
+}
+.login-card h2{ margin:0 0 12px; text-align:center; }
+.login-card label{ display:block; margin:10px 0 4px; font-size:13px; }
+.login-card input{
+  width:100%; padding:8px; box-sizing:border-box; border:1px solid #ccc; border-radius:4px;
+}
+.login-card button{
+  margin-top:14px; width:100%; padding:10px; background:#1976d2; color:white; border:none; border-radius:4px;
+  cursor:pointer;
+}
+.login-card button[disabled]{ opacity:.7; cursor:default; }
+.login-card .error{ margin-top:10px; color:#b00020; font-size:13px; text-align:center; }
