@@ -12,7 +12,7 @@ nav {
   position: fixed !important;
   top: 0;
   bottom: 0;
-  left: -40px;
+  left: 40px;
   right: auto;
   z-index: 9999;
   float: left;
@@ -27,18 +27,19 @@ nav ul {
   list-style: none !important;
 }
 
-nav ul li {
+.nav-link {
   position: relative;
+  display: block;
   width: 70px;
-  cursor: pointer;
-  background: rgb(0, 0, 0);
-  text-transform: uppercase;
-  transition: all 0.4s ease-out;
+  height: 88px;
+  text-decoration: none;
+  color: #fff;
 }
 
-nav ul li:after {
+/* era: nav ul li:after  -> passa a estar no <a> para ser clicável */
+nav ul li .nav-link:after {
   position: absolute;
-  background: transparent transparent;
+  background: transparent;
   color: rgb(0, 0, 0);
   top: 0;
   left: 70px;
@@ -48,21 +49,22 @@ nav ul li:after {
   transform: perspective(400px) rotateY(90deg);
   transform-origin: 0 100%;
   transition: all 0.4s ease-out;
+  content: ""; /* default, é substituído abaixo */
 }
 
-nav ul li:nth-child(1):after {
-  content: "Map";
-  line-height: 88px;
-}
-nav ul li:nth-child(2):after {
-  content: "History";
-  line-height: 88px;
-}
-nav ul li:nth-child(3):after {
-  content: "Profile";
-  line-height: 88px;
+/* conteúdos por item (mantém nth-child) */
+nav ul li:nth-child(1) .nav-link:after { content: "Map";     line-height: 88px; }
+nav ul li:nth-child(2) .nav-link:after { content: "History"; line-height: 88px; }
+nav ul li:nth-child(3) .nav-link:after { content: "Profile"; line-height: 88px; }
+
+/* hover: mantém a translação do <li>, e revela o label do <a> */
+nav ul li:hover { transform: translateX(-70px); }
+nav ul li:hover .nav-link:after {
+  opacity: 1;
+  transform: perspective(400px) rotateY(0deg) scale(1);
 }
 
+/* mantém o ícone como estava */
 .nav-icon {
   font-size: 32px;
   color: white;
@@ -135,171 +137,4 @@ nav ul li div {
   height: 20px;
   margin: 0 auto;
   background: white;
-}
-/*door*/
-.front:after {
-  position: absolute;
-  background: crimson;
-  width: 11px;
-  height: 13px;
-  bottom: 0;
-  left: 9px;
-}
-
-/*/// About me ////*/
-
-.head {
-  width: 32px;
-  height: 35px;
-  background: white;
-  border-radius: 8px;
-}
-/*mouth*/
-.head:after {
-  width: 4px;
-  height: 10px;
-  background: white;
-  position: absolute;
-  border-radius: 4px 0 0 4px;
-  top: 21px;
-  left: 14px;
-  transform: rotate(270deg);
-}
-
-.eyes {
-  width: 8px;
-  height: 5px;
-  border-radius: 50%;
-  position: absolute;
-  top: 10px;
-  left: 5px;
-  background: crimson;
-}
-/*right eye*/
-.eyes:after {
-  width: 8px;
-  height: 5px;
-  border-radius: 50%;
-  position: absolute;
-  top: 0;
-  left: 14px;
-  background: crimson;
-}
-
-.beard {
-  width: 32px;
-  height: 17px;
-  background: crimson;
-  border: 2px solid white;
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  border-radius: 0 0 8px 8px;
-}
-/*nose*/
-.beard:after {
-  position: absolute;
-  top: -2px;
-  left: 11px;
-  background: white;
-  width: 6px;
-  height: 4px;
-  border-left: 1px solid crimson;
-  border-right: 1px solid crimson;
-}
-
-/*//work//*/
-
-.paper {
-  position: relative;
-  height: 32px;
-  width: 29px;
-  background: white;
-  border: 2px solid white;
-}
-
-/*window*/
-.paper:after {
-  position: absolute;
-  top: 1px;
-  left: 0;
-  width: 25px;
-  height: 29px;
-  background: white;
-  border-top: 4px solid crimson;
-}
-
-.lines {
-  position: absolute;
-  top: 36px;
-  left: 5px;
-  width: 11px;
-  box-shadow: 0 0 0 1px crimson;
-}
-
-.lines:after {
-  position: absolute;
-  top: 4px;
-  left: 3px;
-  width: 14px;
-  box-shadow: 0 0 0 1px crimson;
-}
-
-.lines:nth-child(2) {
-  position: absolute;
-  top: 44px;
-  left: 8px;
-  width: 11px;
-}
-
-.lines:nth-child(2):after {
-  position: absolute;
-  top: 4px;
-  left: -3px;
-  width: 11px;
-}
-
-.lines:nth-child(3) {
-  position: absolute;
-  top: 52px;
-  left: 8px;
-  width: 14px;
-}
-
-.lines:nth-child(3):after {
-  display: none;
-}
-
-/*//mail //*/
-
-.mail-base {
-  position: relative;
-  width: 32px;
-  height: 18px;
-  background: white;
-}
-
-.mail-top {
-  position: absolute;
-  z-index: 20;
-  left: 0;
-  top: 0;
-  width: 0;
-  height: 0;
-  transform: rotate(180deg);
-  border-style: solid;
-  border-width: 0 16px 11px 16px;
-  border-color: transparent transparent crimson transparent;
-}
-
-.mail-top:after {
-  position: absolute;
-  z-index: 20;
-  left: -16px;
-  top: 3px;
-  width: 0;
-  height: 0;
-  border-style: solid;
-  border-width: 0 16px 9px 16px;
-  border-color: transparent transparent white transparent;
 }

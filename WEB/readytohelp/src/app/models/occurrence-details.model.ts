@@ -3,6 +3,7 @@ import { OccurrenceType } from './occurrence-type.enum';
 import { PriorityLevel } from './priority-level.enum';
 
 export interface OccurrenceDetails {
+lastUpdatedDateTime: string|null|undefined;
   id: number;
   title: string;
   description: string;

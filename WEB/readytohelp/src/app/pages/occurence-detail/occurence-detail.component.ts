@@ -17,6 +17,12 @@ import { PriorityLevel } from '../../models/priority-level.enum';
   styleUrl: './occurence-detail.component.css'
 })
 export class OccurrenceDetailComponent implements OnInit {
+goBack() {
+throw new Error('Method not implemented.');
+}
+refresh() {
+throw new Error('Method not implemented.');
+}
   
   private route = inject(ActivatedRoute);
   private occurrenceService = inject(OccurrenceService);
