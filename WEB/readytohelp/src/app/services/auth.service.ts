@@ -15,7 +15,7 @@ interface DecodedToken {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AuthService {
   private readonly baseAuthUrl = 'http://localhost:5134/api/auth';
@@ -52,28 +52,37 @@ export class AuthService {
     return this.currentUserSubject.value;
   }
 
-    login(credentials: { email: string; password: string }): Observable<string> {
-  const url = `${this.baseAuthUrl}/login/web`;
-  return this.http.post(url, credentials, { responseType: 'text' }).pipe(
-    tap(responseText => {
-      const token = (typeof responseText === 'string' && responseText.trim()) ? responseText.trim() : null;
-      if (token) this.setToken(token);
-      else console.warn('AuthService.login: token not found in response', responseText);
-    })
-  );
-}
+  login(credentials: { email: string; password: string }): Observable<string> {
+    const url = `${this.baseAuthUrl}/login/web`;
+    return this.http.post(url, credentials, { responseType: 'text' }).pipe(
+      tap((responseText) => {
+        const token =
+          typeof responseText === 'string' && responseText.trim()
+            ? responseText.trim()
+            : null;
+        if (token) this.setToken(token);
+        else
+          console.warn(
+            'AuthService.login: token not found in response',
+            responseText
+          );
+      })
+    );
+  }
 
   refreshToken(): Observable<string | null> {
     const token = this.getToken();
     if (!token) return of(null);
     const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-    return this.http.post<string>(`${this.baseAuthUrl}/refresh-token`, {}, { headers }).pipe(
-      map(newToken => {
-        if (newToken) this.setToken(newToken);
-        return newToken || null;
-      }),
-      catchError(() => of(null))
-    );
+    return this.http
+      .post<string>(`${this.baseAuthUrl}/refresh-token`, {}, { headers })
+      .pipe(
+        map((newToken) => {
+          if (newToken) this.setToken(newToken);
+          return newToken || null;
+        }),
+        catchError(() => of(null))
+      );
   }
 
   logout(remote = true): void {
@@ -82,14 +91,16 @@ export class AuthService {
       const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
       this.http.post(`${this.baseAuthUrl}/logout`, {}, { headers }).subscribe({
         next: () => {},
-        error: () => {}
+        error: () => {},
       });
     }
 
     localStorage.removeItem(this.tokenKey);
     localStorage.removeItem('user');
     this.currentUserSubject.next(null);
-    try { this.userService.clearUser(); } catch {}
+    try {
+      this.userService.clearUser();
+    } catch {}
     this.router.navigate(['/login']);
   }
 
@@ -108,28 +119,30 @@ export class AuthService {
     }
   }
 
-   private setToken(token: string) {
+  private setToken(token: string) {
     localStorage.setItem(this.tokenKey, token);
 
     try {
-    const decoded = jwtDecode<any>(token);
-    const userFromToken = {
-      email: decoded.email ?? decoded.sub ?? null,
-      role: decoded.role ?? decoded.roles ?? decoded.profile ?? null,
-    };
+      const decoded = jwtDecode<any>(token);
+      const userFromToken = {
+        email: decoded.email ?? decoded.sub ?? null,
+        role: decoded.role ?? decoded.roles ?? decoded.profile ?? null,
+      };
 
-    localStorage.setItem('user', JSON.stringify(userFromToken));
-    this.userService.setUser(userFromToken);
-    this.currentUserSubject.next(decoded);
-  } catch (e) {
-    console.error('Error decoding token on setToken:', e);
-    this.currentUserSubject.next(null);
+      localStorage.setItem('user', JSON.stringify(userFromToken));
+      this.userService.setUser(userFromToken);
+      this.currentUserSubject.next(decoded);
+    } catch (e) {
+      console.error('Error decoding token on setToken:', e);
+      this.currentUserSubject.next(null);
+    }
   }
-}
 
   register(userData: any): Observable<any> {
     return this.http.post<any>('/api/register', userData).pipe(
-      catchError(err => { throw err; })
+      catchError((err) => {
+        throw err;
+      })
     );
   }
 }
