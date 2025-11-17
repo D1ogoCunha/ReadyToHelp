@@ -45,7 +45,6 @@ nav ul li {
   color: #fff;
 }
 
-/* era: nav ul li:after  -> passa a estar no <a> para ser clicável */
 .nav-link:after {
   position: absolute;
   background: transparent;
@@ -58,10 +57,9 @@ nav ul li {
   transform: perspective(400px) rotateY(90deg);
   transform-origin: 0 100%;
   transition: all 0.4s ease-out;
-  content: ""; /* default, é substituído abaixo */
+  content: "";
 }
 
-/* conteúdos por item (mantém nth-child) */
 nav ul li:nth-child(1) .nav-link:after {
   content: "Map";
   line-height: 88px;
@@ -75,7 +73,6 @@ nav ul li:nth-child(3) .nav-link:after {
   line-height: 88px;
 }
 
-/* hover: mantém a translação do <li>, e revela o label do <a> */
 nav ul li:hover {
   transform: translateX(-70px);
 }
@@ -84,22 +81,12 @@ nav ul li:hover .nav-link:after {
   transform: perspective(400px) rotateY(0deg) scale(1);
 }
 
-/* mantém o ícone como estava */
 .nav-icon {
   font-size: 32px;
   color: white;
   display: inline-block;
   padding: 25px 0;
   background: transparent;
-}
-
-nav ul li:hover {
-  transform: translateX(-70px);
-}
-
-nav ul li:hover:after {
-  opacity: 1;
-  transform: perspective(400px) rotateY(0deg) scale(1);
 }
 
 nav ul li > div {

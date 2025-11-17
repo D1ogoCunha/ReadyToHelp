@@ -42,7 +42,7 @@ throw new Error('Method not implemented.');
       // Call the service to fetch data
       this.occurrenceService.getOccurrenceById(occurrenceId).subscribe({
         next: (data) => {
-          this.occurrence.set(data); // Set the data in the signal
+          this.occurrence.set(data);
           this.isLoading.set(false);
           console.log('Data loaded:', data);
         },
