@@ -1,9 +1,12 @@
 import { Routes } from '@angular/router';
+import { LoginComponent } from './components/auth/login/login.component';
 import { MapComponent } from './pages/map/map.component';
 import { OccurrenceDetailComponent } from './pages/occurence-detail/occurence-detail.component'; 
+import { AuthGuard } from './guards/auth.guard';
 
 export const appRoutes: Routes = [
     // Route 1: Change homepage to redirect to /map
+    { path: 'login', component: LoginComponent },
     {
         path: '',
         redirectTo: '/map', // Redirect from empty path
@@ -26,3 +29,4 @@ export const appRoutes: Routes = [
         pathMatch: 'full' 
     }
 ];
+

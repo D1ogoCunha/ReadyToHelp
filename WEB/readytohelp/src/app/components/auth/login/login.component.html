@@ -1,0 +1,41 @@
+<div class="login-container">
+  <div class="branding-side">
+    <img src="/Logo.jpg" alt="ReadyToHelp Logo" class="main-logo" />
+    <p class="slogan">A sua plataforma de resposta a emergências.</p>
+  </div>
+  <div class="form-side">
+    <div class="form-wrapper">
+      <h2>Bem vindo de volta!</h2>
+      ç
+      <form (ngSubmit)="submit()" #f="ngForm" novalidate>
+        <div class="form-group">
+          <label for="email" class="sr-only">Email</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            placeholder="Email"
+            required
+            [(ngModel)]="email"
+          />
+        </div>
+        <div class="form-group">
+          <label for="password" class="sr-only">Password</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            placeholder="Password"
+            required
+            [(ngModel)]="password"
+          />
+        </div>
+        <button type="submit" class="btn-submit" [disabled]="loading">
+          <span *ngIf="!loading">Entrar</span>
+          <span *ngIf="loading">Entrando...</span>
+        </button>
+        <div class="error" *ngIf="error" role="alert">{{ error }}</div>
+      </form>
+    </div>
+  </div>
+</div>
