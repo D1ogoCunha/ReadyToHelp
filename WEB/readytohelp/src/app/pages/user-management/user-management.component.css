@@ -75,6 +75,12 @@ table.table th i {
   margin: 0 5px;
   cursor: pointer;
 }
+
+table.table td a,
+table.table td a i {
+  cursor: pointer;
+}
+
 table.table td:last-child i {
   opacity: 0.9;
   font-size: 22px;
@@ -159,4 +165,66 @@ table.table .avatar {
   float: left;
   margin-top: 10px;
   font-size: 13px;
+}
+
+/* Modal custom (z-index acima da navbar 9999) */
+.custom-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 10040;
+}
+
+.custom-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 480px;
+  max-width: 90%;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  border-radius: 4px;
+  z-index: 10050;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+}
+
+.custom-modal .modal-header,
+.custom-modal .modal-footer {
+  padding: 15px;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.custom-modal .modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.custom-modal .modal-footer {
+  border-top: 1px solid #e5e5e5;
+  border-bottom: none;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.custom-modal .modal-body {
+  padding: 15px;
+}
+
+.custom-modal .close {
+  background: transparent;
+  border: 0;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+/* Toast no canto superior direito */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 10060;
+  min-width: 260px;
 }
