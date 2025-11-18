@@ -1,0 +1,250 @@
+<div class="layout-container">
+  <!-- SIDEBAR: Filtros -->
+  <aside class="sidebar-filters shadow-sm">
+    <div class="sidebar-header">
+      <h3>Filtros</h3>
+      <button class="btn-clear" (click)="clearFilters()" title="Limpar filtros">
+        <span class="material-symbols-outlined">filter_alt_off</span>
+      </button>
+    </div>
+
+    <div class="filter-group">
+      <label>Tipo</label>
+      <select
+        [ngModel]="filterType()"
+        (ngModelChange)="filterType.set($event); onFilterChange()"
+        class="form-select"
+      >
+        <option value="">Todos</option>
+        @for (type of types; track type) {
+        <option [value]="type">{{ formatEnum(type) }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label>Prioridade</label>
+      <select
+        [ngModel]="filterPriority()"
+        (ngModelChange)="filterPriority.set($event); onFilterChange()"
+        class="form-select"
+      >
+        <option value="">Todas</option>
+        @for (prio of priorities; track prio) {
+        <option [value]="prio">{{ formatEnum(prio) }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label>Período</label>
+      <div class="date-inputs">
+        <input
+          type="date"
+          class="form-control mb-2"
+          [ngModel]="filterStartDate()"
+          (ngModelChange)="filterStartDate.set($event); onFilterChange()"
+          title="Data Início"
+        />
+        <input
+          type="date"
+          class="form-control"
+          [ngModel]="filterEndDate()"
+          (ngModelChange)="filterEndDate.set($event); onFilterChange()"
+          title="Data Fim"
+        />
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT: Tabela -->
+  <main class="main-content">
+    <div class="table-wrapper shadow-sm">
+      <div class="table-title">
+        <div class="d-flex justify-content-between align-items-center w-100">
+          <div>
+            <h2>Histórico <b>Ocorrências</b></h2>
+          </div>
+          <div class="search-box-top">
+            <input
+              type="text"
+              placeholder="Pesquisar ID, título..."
+              [ngModel]="filterSearch()"
+              (change)="
+                filterSearch.set($any($event.target).value); onFilterChange()
+              "
+            />
+            <span class="material-symbols-outlined search-icon">search</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading -->
+      @if (isLoading()) {
+      <div class="state-container">
+        <div class="spinner-border text-primary" role="status"></div>
+        <div class="mt-2 text-muted">A carregar dados...</div>
+      </div>
+      }
+
+      <!-- Error -->
+      @else if (error()) {
+      <div class="state-container text-danger">
+        <span class="material-symbols-outlined fs-1">error</span>
+        <p>{{ error() }}</p>
+      </div>
+      }
+
+      <!-- Empty -->
+      @else if (occurrencesClosed().length === 0) {
+      <div class="state-container text-muted">
+        <span class="material-symbols-outlined fs-1">folder_open</span>
+        <p class="mt-2">Sem resultados para os filtros aplicados.</p>
+      </div>
+      }
+
+      <!-- Tabela -->
+      @else {
+      <div class="table-responsive">
+        <table class="table table-striped table-hover">
+          <thead>
+            <tr>
+              <!-- Coluna ID (Ordenável) -->
+              <th
+                style="width: 80px; cursor: pointer"
+                (click)="toggleSort('Id')"
+              >
+                <div class="d-flex align-items-center gap-1">
+                  ID
+                  <span
+                    class="material-symbols-outlined sort-icon"
+                    [class.active]="currentSortBy() === 'Id'"
+                  >
+                    {{
+                      currentSortBy() === "Id" && currentSortOrder() === "asc"
+                        ? "arrow_upward"
+                        : "arrow_downward"
+                    }}
+                  </span>
+                </div>
+              </th>
+
+              <th>Título</th>
+              <th>Tipo</th>
+              <th>Prioridade</th>
+
+              <!-- Coluna Data Início (Ordenável) -->
+              <th
+                style="cursor: pointer"
+                (click)="toggleSort('CreationDateTime')"
+              >
+                <div class="d-flex align-items-center gap-1">
+                  Data Início
+                  <span
+                    class="material-symbols-outlined sort-icon"
+                    [class.active]="currentSortBy() === 'CreationDateTime'"
+                  >
+                    {{
+                      currentSortBy() === "CreationDateTime" &&
+                      currentSortOrder() === "asc"
+                        ? "arrow_upward"
+                        : "arrow_downward"
+                    }}
+                  </span>
+                </div>
+              </th>
+
+              <!-- Coluna Data Fim (Ordenável) -->
+              <th style="cursor: pointer" (click)="toggleSort('EndDateTime')">
+                <div class="d-flex align-items-center gap-1">
+                  Data Fim
+                  <span
+                    class="material-symbols-outlined sort-icon"
+                    [class.active]="currentSortBy() === 'EndDateTime'"
+                  >
+                    {{
+                      currentSortBy() === "EndDateTime" &&
+                      currentSortOrder() === "asc"
+                        ? "arrow_upward"
+                        : "arrow_downward"
+                    }}
+                  </span>
+                </div>
+              </th>
+
+              <th class="text-center">Reports</th>
+              <th class="text-right">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (o of occurrencesClosed(); track o.id) {
+            <tr>
+              <!-- ID Separado -->
+              <td>
+                <span class="text-muted">#{{ o.id }}</span>
+              </td>
+              <!-- Título Separado -->
+              <td>
+                <div class="fw-bold text-dark">{{ o.title }}</div>
+              </td>
+              <td>
+                <span class="badge-type">{{ formatEnum(o.type) }}</span>
+              </td>
+              <td>
+                @if (o.priority === 'HIGH') {
+                <span class="status-badge status-high">High</span>
+                } @else if (o.priority === 'MEDIUM') {
+                <span class="status-badge status-medium">Medium</span>
+                } @else {
+                <span class="status-badge status-low">Low</span>
+                }
+              </td>
+              <!-- Datas Separadas -->
+              <td>
+                <div class="text-success small">
+                  {{ formatDate(o.creationDateTime) }}
+                </div>
+              </td>
+              <td>
+                <div class="text-danger small">
+                  {{ formatDate(o.endDateTime) }}
+                </div>
+              </td>
+              <td class="text-center">{{ o.reportCount }}</td>
+              <td class="text-right">
+                <a
+                  class="btn-action"
+                  [routerLink]="['/occurrence', o.id]"
+                  title="Ver Detalhes"
+                >
+                  <span class="material-symbols-outlined">visibility</span>
+                </a>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Paginação -->
+      <div class="pagination-wrapper clearfix">
+        <div class="hint-text">
+          Página <b>{{ pageNumber() }}</b> ({{ occurrencesClosed().length }}
+          items)
+        </div>
+        <ul class="pagination">
+          <li [class.disabled]="pageNumber() === 1 || isLoading()">
+            <a (click)="prevPage()">Anterior</a>
+          </li>
+          <li class="active">
+            <a>{{ pageNumber() }}</a>
+          </li>
+          <li [class.disabled]="!hasNextPage() || isLoading()">
+            <a (click)="nextPage()">Próxima</a>
+          </li>
+        </ul>
+      </div>
+      }
+    </div>
+  </main>
+</div>

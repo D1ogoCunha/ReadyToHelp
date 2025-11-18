@@ -1,16 +1,20 @@
 <!-- This is your new vertical navbar, now with working links -->
-<nav class="fixed inset-y-0 left-0 z-[9999] w-20 md:w-24 bg-blue-600 text-white">
-  
+<nav
+  class="fixed inset-y-0 left-0 z-[9999] w-20 md:w-24 bg-blue-600 text-white"
+>
   <!-- We add 'h-full' to the <ul> to help with alignment -->
-  <ul class="h-full flex flex-col items-center justify-center gap-6 list-none m-0 p-0">
-    
+  <ul
+    class="h-full flex flex-col items-center justify-center gap-6 list-none m-0 p-0"
+  >
     <!-- Map Link -->
     <li>
-      <a class="nav-link text-white text-center"
-         [routerLink]="['/map']"
-         routerLinkActive="active"
-         [routerLinkActiveOptions]="{exact: true}"
-         title="Map">
+      <a
+        class="nav-link text-white text-center"
+        [routerLink]="['/map']"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: true }"
+        title="Map"
+      >
         <span class="material-symbols-outlined nav-icon">map</span>
         <span class="sr-only">Map</span>
       </a>
@@ -18,9 +22,11 @@
 
     <!-- History Link -->
     <li>
-      <a [routerLink]="['/history']"
-         routerLinkActive="active"
-         class="nav-link">
+      <a
+        [routerLink]="['/occurrences/history']"
+        routerLinkActive="active"
+        class="nav-link"
+      >
         <span class="material-symbols-outlined nav-icon">history</span>
         <span class="sr-only">History</span>
       </a>
@@ -28,9 +34,7 @@
 
     <!-- Profile Link -->
     <li>
-      <a [routerLink]="['/profile']"
-         routerLinkActive="active"
-         class="nav-link">
+      <a [routerLink]="['/profile']" routerLinkActive="active" class="nav-link">
         <span class="material-symbols-outlined nav-icon">person</span>
         <span class="sr-only">Profile</span>
       </a>
