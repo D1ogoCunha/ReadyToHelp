@@ -18,7 +18,8 @@ interface DecodedToken {
   providedIn: 'root',
 })
 export class AuthService {
-  private readonly baseAuthUrl = 'http://localhost:5134/api/auth';
+  private readonly baseAuthUrl =
+    'https://readytohelp-api.azurewebsites.net/api/auth';
   private readonly tokenKey = 'authToken';
 
   private readonly currentUserSubject: BehaviorSubject<DecodedToken | null>;
