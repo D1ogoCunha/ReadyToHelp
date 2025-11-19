@@ -3,6 +3,7 @@ import { LoginComponent } from './components/auth/login/login.component';
 import { MapComponent } from './pages/map/map.component';
 import { OccurrenceDetailComponent } from './pages/occurence-detail/occurence-detail.component';
 import { AuthGuard } from './guards/auth.guard';
+import { OccurrencesHistoryComponent } from './components/occurrences-history/occurrences-history.component';
 import { UserManagementComponent } from './pages/user-management/user-management.component';
 
 export const appRoutes: Routes = [
@@ -23,6 +24,11 @@ export const appRoutes: Routes = [
   {
     path: 'occurrence/:id',
     component: OccurrenceDetailComponent,
+  },
+  // The occurrences history page
+    {
+    path: 'occurrences/history',
+    component: OccurrencesHistoryComponent,
   },
   // The user management page
   {
