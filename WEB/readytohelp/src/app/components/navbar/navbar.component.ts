@@ -12,4 +12,6 @@ import { RouterModule } from '@angular/router';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NavbarComponent {
+  isOpen = true;
+  toggle() { this.isOpen = !this.isOpen; }
 }

@@ -1,12 +1,21 @@
-<!-- This is your new vertical navbar, now with working links -->
+<!-- Toggle button (always visible) -->
+<button type="button"
+        class="toggle-btn"
+        (click)="toggle()"
+        [attr.aria-expanded]="isOpen"
+        aria-label="Toggle sidebar">
+  <span class="material-symbols-outlined">
+    {{ isOpen ? 'chevron_left' : 'menu' }}
+  </span>
+</button>
+
+<!-- Keep existing navbar; just add collapsed class binding -->
 <nav
   class="fixed inset-y-0 left-0 z-[9999] w-20 md:w-24 bg-blue-600 text-white"
->
-  <!-- We add 'h-full' to the <ul> to help with alignment -->
+  [class.collapsed]="!isOpen">
   <ul
     class="h-full flex flex-col items-center justify-center gap-6 list-none m-0 p-0"
   >
-    <!-- Map Link -->
     <li>
       <a
         class="nav-link text-white text-center"
@@ -19,8 +28,6 @@
         <span class="sr-only">Map</span>
       </a>
     </li>
-
-    <!-- History Link -->
     <li>
       <a
         [routerLink]="['/occurrences/history']"
@@ -31,27 +38,27 @@
         <span class="sr-only">History</span>
       </a>
     </li>
-
-    <!-- Edit Users Link -->
     <li>
       <a
         [routerLink]="['/users']"
         routerLinkActive="active"
         class="nav-link"
-        title="Editar Utilizadores"
+        title="Users"
       >
-        <span class="material-symbols-outlined nav-icon">
-          deployed_code_account
-        </span>
+        <span class="material-symbols-outlined nav-icon">deployed_code_account</span>
         <span class="sr-only">Users</span>
       </a>
     </li>
-
-    <!-- Profile Link -->
     <li>
-      <a [routerLink]="['/profile']" routerLinkActive="active" class="nav-link">
+      <a [routerLink]="['/login']" routerLinkActive="active" class="nav-link">
         <span class="material-symbols-outlined nav-icon">person</span>
-        <span class="sr-only">Profile</span>
+        <span class="sr-only">Login</span>
+      </a>
+    </li>
+    <li>
+      <a [routerLink]="['/logout']" routerLinkActive="active" class="nav-link">
+        <span class="material-symbols-outlined nav-icon">logout</span>
+        <span class="sr-only">Logout</span>
       </a>
     </li>
   </ul>
