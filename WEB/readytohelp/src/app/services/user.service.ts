@@ -11,7 +11,7 @@ export class UserService {
   );
   user$ = this.userSubject.asObservable();
 
-  private apiUrl = 'https://readytohelp-api.azurewebsites.net/api/user';
+  private apiUrl = 'http://localhost:5134/api/user';
 
   constructor(private http: HttpClient) {}
 

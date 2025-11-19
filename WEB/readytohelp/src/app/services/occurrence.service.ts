@@ -8,7 +8,7 @@ import { OccurrenceDetails } from '../models/occurrence-details.model';
   providedIn: 'root',
 })
 export class OccurrenceService {
-  private apiUrl = 'https://readytohelp-api.azurewebsites.net/api/occurrence';
+  private apiUrl = 'http://localhost:5134/api/occurrence';
 
   private http = inject(HttpClient);
 

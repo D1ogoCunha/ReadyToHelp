@@ -146,9 +146,8 @@ export class UserManagementComponent implements OnInit {
           profile: this.editedUser.profile,
         })
         .subscribe({
-          next: (res) =>
-            done(true, `Utilizador "${res.name}" atualizado com sucesso.`),
-          error: () => done(false, 'Falha ao atualizar o utilizador.'),
+          next: () => done(true, 'User updated successfully'),
+          error: () => done(false, 'Failed to update user'),
         });
     } else {
       this.userService
@@ -159,12 +158,12 @@ export class UserManagementComponent implements OnInit {
           profile: this.editedUser.profile,
         })
         .subscribe({
-          next: (res) =>
-            done(true, `Utilizador "${res.name}" criado com sucesso.`),
-          error: () => done(false, 'Falha ao criar o utilizador.'),
+          next: () => done(true, 'User created successfully'),
+          error: () => done(false, 'Failed to create user'),
         });
     }
   }
+
 
   onDelete(u: User, ev?: Event) {
     ev?.preventDefault();
