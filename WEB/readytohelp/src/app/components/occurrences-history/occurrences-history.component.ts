@@ -7,11 +7,12 @@ import { OccurrenceDetails } from '../../models/occurrence-details.model';
 import { OccurrenceStatus } from '../../models/occurrence-status.enum';
 import { PriorityLevel } from '../../models/priority-level.enum';
 import { OccurrenceType } from '../../models/occurrence-type.enum';
+import { LegalFooterComponent } from '../legal-footer/legal-footer.component';
 
 @Component({
   selector: 'app-occurrences-history',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, LegalFooterComponent],
   templateUrl: './occurrences-history.component.html',
   styleUrls: ['./occurrences-history.component.css'],
 })

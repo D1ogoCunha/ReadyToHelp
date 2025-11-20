@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { UserService } from '../../services/user.service';
 import { User } from '../../models/user.model';
 import { FormsModule } from '@angular/forms';
+import { LegalFooterComponent } from '../../components/legal-footer/legal-footer.component';
 
 @Component({
   selector: 'app-user-management',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, LegalFooterComponent],
   templateUrl: './user-management.component.html',
   styleUrl: './user-management.component.css',
 })

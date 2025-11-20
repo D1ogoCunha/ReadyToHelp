@@ -13,21 +13,32 @@
    HEADER
    ========================================= */
 .um-header {
-  height: 80px;
-  padding: 24px 32px 24px 55px;
+  height: 150px;
+  padding: 32px 32px 34px 55px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #fff;
+  background: #4353ab;
   border-bottom: 1px solid #e2e8f0;
+  position: relative;
+  justify-content: flex-start;
 }
 
 .um-title {
-  margin: 0;
-  font-size: 1.85rem;
-  font-weight: 700;
-  color: #0f172a;
+  align-self: center;
+  font-size: 2.5rem;
+  font-weight: bolder;
+  color: #ffffff;
   letter-spacing: -0.025em;
+}
+
+.um-title-wrap {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  width: max-content;
 }
 
 .um-sub {
@@ -382,4 +393,37 @@
   border-color: #3b82f6;
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
   outline: none;
+}
+
+/* Floating Action Button */
+.fab-add-user {
+  position: fixed;
+  bottom: 14px;
+  right: 24px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: #4353ab;
+  color: #fff;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px -6px rgba(0,0,0,0.3), 0 4px 12px -4px rgba(0,0,0,0.25);
+  cursor: pointer;
+  transition: background .2s, box-shadow .2s, transform .2s;
+  z-index: 500; /* abaixo dos modais (1040+) */
+}
+.fab-add-user .material-icons {
+  font-size: 32px;
+  line-height: 1;
+}
+.fab-add-user:hover {
+  background: #37469a;
+  box-shadow: 0 10px 28px -6px rgba(0,0,0,0.35), 0 6px 14px -4px rgba(0,0,0,0.3);
+  transform: translateY(-2px);
+}
+.fab-add-user:active {
+  transform: translateY(0);
+  box-shadow: 0 6px 16px -4px rgba(0,0,0,0.3);
 }
