@@ -206,7 +206,7 @@
       <button 
         class="btn btn-primary px-4" 
         (click)="saveUser()"
-        [disabled]="!editedUser.name?.trim() || !editedUser.email?.trim() || (!isEditing && !editedUser.password?.trim())"
+        [disabled]="!editedUser.name.trim() || !editedUser.email.trim() || (!isEditing && !editedUser.password?.trim())"
       >
         {{ isEditing ? "Save" : "Create" }}
       </button>
