@@ -40,12 +40,22 @@ export class UserManagementComponent implements OnInit {
     profile: 'CITIZEN' | 'MANAGER' | 'ADMIN';
   } = { name: '', email: '', password: '', profile: 'CITIZEN' };
 
+  /**
+   * Constructor for UserManagementComponent
+   * @param userService The user service to manage users
+   */
   constructor(private userService: UserService) {}
 
+  /**
+   * OnInit lifecycle hook to load users initially
+   */
   ngOnInit() {
     this.load();
   }
 
+  /**
+   * Load users with current settings
+   */
   load() {
     this.loading = true;
     this.error = '';
@@ -69,11 +79,19 @@ export class UserManagementComponent implements OnInit {
         },
       });
   }
+
+  /**
+   * Apply filter and reload users
+   */
   applyFilter() {
     this.pageNumber = 1;
     this.load();
   }
 
+  /**
+   * Change sorting field and order, then reload users
+   * @param field The field to sort by
+   */
   changeSort(field: string) {
     if (this.sortBy === field) {
       this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
@@ -84,11 +102,17 @@ export class UserManagementComponent implements OnInit {
     this.load();
   }
 
+  /**
+   * Go to the next page and reload users
+   */
   nextPage() {
     this.pageNumber++;
     this.load();
   }
 
+  /**
+   * Go to the previous page and reload users
+   */
   prevPage() {
     if (this.pageNumber > 1) {
       this.pageNumber--;
@@ -96,7 +120,10 @@ export class UserManagementComponent implements OnInit {
     }
   }
 
-  // Abrir modal para criar
+  /**
+   * Open modal to create a new user
+   * @param ev Optional event to prevent default
+   */
   openCreate(ev?: Event) {
     ev?.preventDefault();
     this.isEditing = false;
@@ -104,7 +131,11 @@ export class UserManagementComponent implements OnInit {
     this.editModalOpen = true;
   }
 
-  // Abrir modal para editar
+  /**
+   * Open modal to edit an existing user
+   * @param u The user to edit
+   * @param ev Optional event to prevent default
+   */
   openEdit(u: User, ev?: Event) {
     ev?.preventDefault();
     if (!u || u.id === 1) return;
@@ -119,12 +150,19 @@ export class UserManagementComponent implements OnInit {
     this.editModalOpen = true;
   }
 
+  /**
+   * Close edit modal
+   * @param ev Optional event to prevent default
+   */
   closeEdit(ev?: Event) {
     ev?.preventDefault();
     if (this.saving) return;
     this.editModalOpen = false;
   }
 
+  /**
+   * Save the edited or new user
+   */
   saveUser() {
     if (!this.editedUser.name?.trim() || !this.editedUser.email?.trim()) return;
     if (!this.isEditing && !this.editedUser.password?.trim()) return;
@@ -165,7 +203,11 @@ export class UserManagementComponent implements OnInit {
     }
   }
 
-
+  /**   
+   * Delete a user directly (without confirmation modal)
+   * @param u The user to delete
+   * @param ev Optional event to prevent default
+   */
   onDelete(u: User, ev?: Event) {
     ev?.preventDefault();
     if (!u || u.id === 1) return;
@@ -187,6 +229,12 @@ export class UserManagementComponent implements OnInit {
     });
   }
 
+  /**
+   * Open modal to confirm user deletion
+   * @param u The user to confirm deletion
+   * @param ev Optional event to prevent default
+   * @returns 
+   */
   openConfirm(u: User, ev?: Event) {
     ev?.preventDefault();
     if (!u || u.id === 1) return;
@@ -194,7 +242,10 @@ export class UserManagementComponent implements OnInit {
     this.confirmModalOpen = true;
   }
 
-  // Close modal
+  /**
+   * Close confirmation modal
+   * @param ev Optional event to prevent default
+   */
   closeConfirm(ev?: Event) {
     ev?.preventDefault();
     if (this.deletingId) return;
@@ -202,7 +253,9 @@ export class UserManagementComponent implements OnInit {
     this.userPendingDelete = null;
   }
 
-  // Confirm and delete
+  /**
+   * Confirm deletion of the pending user
+   */
   confirmDelete() {
     const u = this.userPendingDelete;
     if (!u) return;
@@ -228,7 +281,12 @@ export class UserManagementComponent implements OnInit {
     });
   }
 
-  private showToast(message: string, type: 'success' | 'error') {
+  /**
+   * Show a toast message
+   * @param message The message to show
+   * @param type The type of the message ('success' or 'error')
+   */
+  showToast(message: string, type: 'success' | 'error') {
     this.toast = { show: true, message, type };
     setTimeout(() => (this.toast.show = false), 3000);
   }

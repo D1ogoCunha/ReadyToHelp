@@ -12,9 +12,13 @@ import { AuthService } from '../../services/auth.service';
 })
 export class NavbarComponent {
   private readonly storageKey = 'rt-sidebar-open';
+  private auth = inject(AuthService);
 
   isOpen = false;
 
+  /**
+   * OnInit lifecycle hook to initialize sidebar state from localStorage.
+   */
   ngOnInit(): void {
     try {
       const saved = localStorage.getItem(this.storageKey);
@@ -22,19 +26,27 @@ export class NavbarComponent {
     } catch { }
   }
 
+  /**
+   * Toggles the sidebar open/closed state and persists it to localStorage.
+   */
   toggle() {
     this.isOpen = !this.isOpen;
     try {
       localStorage.setItem(this.storageKey, this.isOpen ? '1' : '0');
     } catch { }
   }
-
-  private auth = inject(AuthService);
   
+  /**
+   * Checks if the user is authenticated.
+   * @returns True if authenticated, false otherwise.
+   */
   get isAuthenticated(): boolean {
     return this.auth.isAuthenticated();
   }
 
+  /**   
+   * Logs out the current user.
+   */
   logout(): void {
     this.auth.logout(true);
   }

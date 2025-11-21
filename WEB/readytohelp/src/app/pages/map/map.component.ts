@@ -25,8 +25,14 @@ export class MapComponent implements OnInit {
   private occurrenceService = inject(OccurrenceService);
   private router = inject(Router);
 
+  /**
+   * Constructor for MapComponent
+   */
   constructor() {}
 
+  /**
+   * OnInit lifecycle hook to initialize the map and load occurrences.
+   */
   ngOnInit(): void {
     this.map = new mapboxgl.Map({
       accessToken:
@@ -45,7 +51,7 @@ export class MapComponent implements OnInit {
   }
 
   /**
-   * Vai buscar as ocorrências à API e adiciona-as ao mapa
+   * Loads active occurrences from the service and adds them to the map as markers.
    */
   private loadOccurrences(): void {
     this.occurrenceService.getActiveOccurrences().subscribe({
@@ -61,22 +67,21 @@ export class MapComponent implements OnInit {
 
  
   /**
-   * Creates and adds custom markers with COMPACT PROFESSIONAL popups
+   * Adds markers to the map for each occurrence.
+   * @param occurrences The list of occurrences to add as markers.
    */
   private addMarkersToMap(occurrences: OccurrenceMap[]): void {
     if (!this.map) return; 
 
     for (const occ of occurrences) {
 
-      // --- CONSTRUÇÃO DO NOVO POPUP (LADO A LADO) ---
+      // Popup construction
 
-      // 1. Container Principal
       const popupContainer = document.createElement('div');
       popupContainer.className = 'card border-0 shadow-none'; 
-      // Mantemos compacto (260px)
       popupContainer.style.width = '260px'; 
 
-      // 2. Cabeçalho
+      // Header
       const headerClass = 'card-header bg-primary text-white py-3 px-3';
       const header = document.createElement('div');
       header.className = headerClass;
@@ -86,15 +91,13 @@ export class MapComponent implements OnInit {
         </h5>
       `;
 
-      // 3. Corpo do Card
+      // Body
       const body = document.createElement('div');
       body.className = 'card-body p-3';
 
-      // --- ALTERAÇÃO PRINCIPAL: LINHA ÚNICA (LADO A LADO) ---
       const infoRow = document.createElement('div');
       infoRow.className = 'd-flex justify-content-between align-items-start mb-3'; // mb-3 dá espaço para o botão
 
-      // Coluna da Esquerda: TIPO
       const typeCol = document.createElement('div');
       typeCol.innerHTML = `
         <div>
@@ -103,7 +106,6 @@ export class MapComponent implements OnInit {
         </div>
       `;
 
-      // Coluna da Direita: PRIORIDADE
       let priorityClass = 'badge-light';
       if (occ.priority === PriorityLevel.HIGH) priorityClass = 'badge-danger';
       if (occ.priority === PriorityLevel.MEDIUM) priorityClass = 'badge-warning';
@@ -118,14 +120,14 @@ export class MapComponent implements OnInit {
         </div>
       `;
 
-      // Juntar as colunas na linha
+      // Append the columns to the row
       infoRow.appendChild(typeCol);
       infoRow.appendChild(priorityCol);
       
-      // Adicionar a linha ao corpo
+      // Append the row to the body
       body.appendChild(infoRow);
 
-      // 4. Rodapé com Botão (Mais compacto)
+      // Footer with Button
       const footer = document.createElement('div');
       footer.className = 'card-footer bg-white border-0 p-3 pt-0'; 
       
@@ -140,12 +142,12 @@ export class MapComponent implements OnInit {
 
       footer.appendChild(button);
 
-      // 5. Montar o Popup Final
+      // Assemble the popup
       popupContainer.appendChild(header);
       popupContainer.appendChild(body);
       popupContainer.appendChild(footer);
 
-      // --- FIM DA CONSTRUÇÃO DO POPUP ---
+      // End of popup construction 
 
       const popup = new mapboxgl.Popup({ 
         offset: 35, 
@@ -169,6 +171,11 @@ export class MapComponent implements OnInit {
   }
 
 
+  /**
+   * Gets the file path for the pin image corresponding to the occurrence type.
+   * @param type The occurrence type.
+   * @returns The file path for the pin image corresponding to the occurrence type.
+   */
   private getPinForType(type: OccurrenceType): string {
     const basePath = 'assets/pins/';
 
@@ -226,6 +233,11 @@ export class MapComponent implements OnInit {
     }
   }
 
+  /**
+   * Formats an enum value into a more readable string.
+   * @param value The enum value to format.
+   * @returns A formatted string with spaces and capitalization.
+   */
   private formatEnum(
     value: string | OccurrenceType | PriorityLevel | OccurrenceStatus
   ): string {
@@ -237,6 +249,10 @@ export class MapComponent implements OnInit {
       .join(' ');
   }
 
+  /**
+   * Handles the click event for the "View Details" button in the popup.
+   * @param id The ID of the occurrence to view details for.
+   */
   private onViewDetails(id: number): void {
     console.log('Button clicked! Navigating to details for ID:', id);
     this.router.navigate(['/occurrence', id]);

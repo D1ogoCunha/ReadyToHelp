@@ -1,145 +1,109 @@
-body {
-  background: #f5f7fa;
-}
-
-.loading-block h2 {
-  font-weight: 500;
-}
-
-.occ-card {
-  border-radius: 0.8rem;
-}
-
-.card-header {
-  background: linear-gradient(120deg, #f9fbfd, #eef3ff);
-  border-bottom: 1px solid #e3e9f1;
-}
-
-.badge {
-  font-size: 0.6rem;
-  padding: 0.35rem 0.55rem;
-  letter-spacing: 0.5px;
-  border-radius: 0.35rem;
-  text-transform: uppercase;
-}
-
-.badge-dark {
-  background: #343a40;
-  color: #fff;
-}
-
-.badge-status-active {
-  background: #d1fae5;
-  color: #065f46;
-}
-.badge-status-closed {
-  background: #fee2e2;
-  color: #991b1b;
-}
-.badge-status-other {
-  background: #fff3cd;
-  color: #8a6d00;
-}
-
-.badge-priority-high {
-  background: #dc3545;
-  color: #fff;
-}
-.badge-priority-medium {
-  background: #ffc107;
-  color: #343a40;
-}
-.badge-priority-low {
-  background: #6c757d;
-  color: #fff;
-}
-
-.media-box {
-  min-height: 300px;
-}
-
-.placeholder-overlay {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  background: rgba(0, 0, 0, 0.5);
-  color: #fff;
-  padding: 0.35rem 0.6rem;
-  font-size: 0.65rem;
-  border-top-left-radius: 0.4rem;
-}
-
-.info-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.6rem;
-}
-
-.table-product tbody tr td:first-child {
-  font-weight: 600;
-}
-.info-item {
-  background: #fff;
-  border: 1px solid #e2e6ea;
-  border-radius: 0.55rem;
-  padding: 0.4rem 0.6rem;
-  font-size: 0.7rem;
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-}
-
-.section-title {
-  font-size: 0.9rem;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  color: #495057;
-}
-
-.details-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 0.75rem 0.85rem;
-  margin-top: 0.5rem;
-}
-
-.details-grid > div {
+/* =========================================
+    PAGE LAYOUT
+   ========================================= */
+.od-page {
+  background: #f8fafc; /* Fundo claro */
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
-  background: #fff;
-  border: 1px solid #e4e9ee;
-  border-radius: 0.55rem;
-  padding: 0.55rem 0.7rem;
-  font-size: 0.7rem;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  font-size: 1rem;
 }
 
-.details-grid label {
-  font-weight: 600;
-  color: #34495e;
-  font-size: 0.65rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+/* =========================================
+   HEADER
+   ========================================= */
+.od-header {
+  height: 150px;
+  padding: 32px 55px; 
+  display: flex;
+  align-items: center;
+  background: #4353ab;
+  border-bottom: 1px solid #e2e8f0;
+  color: #ffffff;
+}
+
+.od-title {
   margin: 0;
+  font-size: 2.5rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
 }
 
-.card-footer {
-  border-top: 1px solid #e3e9f1;
-  background: #fafbfc;
+/* =========================================
+    BODY
+   ========================================= */
+.od-body {
+  flex: 1; 
+  padding: 40px 55px; 
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
 }
 
-.alert {
-  border-radius: 0.8rem;
+/* Map image */
+.map-preview-box {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 
-@media (max-width: 576px) {
-  .details-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-  .info-grid {
-    grid-template-columns: 1fr 1fr;
-  }
+/* Text Sections */
+.section-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 16px;
+  border-left: 5px solid #4353ab;
+  padding-left: 16px;
+  line-height: 1;
+}
+
+.description-text {
+  font-size: 1.5rem;
+  line-height: 1.6;
+  color: #475569;
+  white-space: pre-wrap;
+}
+
+/* Information Table */
+.info-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+}
+
+.info-table td {
+  padding: 20px 24px; 
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 1.15rem;
+  vertical-align: middle;
+}
+
+.info-table tr:last-child td {
+  border-bottom: none;
+}
+
+.info-label {
+  font-weight: 600;
+  color: #64748b;
+  width: 30%;
+  background-color: #f8fafc;
+}
+
+.info-value {
+  font-weight: 500;
+  color: #0f172a;
+}
+
+/* Loading and Error State */
+.state-container {
+  padding: 60px;
+  text-align: center;
+  color: #64748b;
 }

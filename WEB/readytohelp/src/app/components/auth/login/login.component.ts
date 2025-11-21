@@ -9,7 +9,7 @@ import { AuthService } from '../../../services/auth.service';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './login.component.html',
-  styleUrls: ['./login.component.css']
+  styleUrls: ['./login.component.css'],
 })
 export class LoginComponent {
   email = '';
@@ -18,6 +18,12 @@ export class LoginComponent {
   error: string | null = null;
   returnUrl = '/';
 
+  /**
+   * Constructor for LoginComponent
+   * @param auth The authentication service
+   * @param router The router service
+   * @param route The activated route service
+   */
   constructor(
     private readonly auth: AuthService,
     private readonly router: Router,
@@ -27,6 +33,9 @@ export class LoginComponent {
     if (q) this.returnUrl = q;
   }
 
+  /**
+   * Submits the login form and handles authentication.
+   */
   submit() {
     this.error = null;
     this.loading = true;
@@ -43,9 +52,10 @@ export class LoginComponent {
           return;
         }
         if (err?.status === 403) {
-          this.error = 'Access denied: account does not have permission to log in.';
+          this.error =
+            'Access denied: account does not have permission to log in.';
           return;
-  }
+        }
 
         if (err?.error) {
           if (typeof err.error === 'string') {
@@ -56,9 +66,10 @@ export class LoginComponent {
             this.error = JSON.stringify(err.error);
           }
         } else {
-          this.error = err?.message || 'An unknown error occurred during login.';
+          this.error =
+            err?.message || 'An unknown error occurred during login.';
         }
-      }
+      },
     });
   }
 }

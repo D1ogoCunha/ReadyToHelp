@@ -148,7 +148,7 @@
 
   <!-- FOOTER -->
   <div class="um-footer" *ngIf="!loading && users.length">
-    <!-- 1. Previous Button -->
+    <!-- Previous Button -->
     <button
       class="btn btn-nav"
       (click)="prevPage()"
@@ -158,12 +158,12 @@
       Previous
     </button>
 
-    <!-- 2. Page Counter / Info -->
+    <!-- Page Counter / Info -->
     <div class="page-counter">
       Page <strong>{{ pageNumber }}</strong>
     </div>
 
-    <!-- 3. Next Button -->
+    <!-- Next Button -->
     <button class="btn btn-nav" (click)="nextPage()">
       Next
       <span class="material-icons" style="font-size: 18px">chevron_right</span>

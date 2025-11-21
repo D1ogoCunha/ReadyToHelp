@@ -7,32 +7,29 @@
 }
 
 /* =========================================
-   PERSONALIZAÇÃO DO POPUP MAPBOX
+   Popup Customization
    ========================================= */
 
-/* Remove o padding padrão e arredonda os cantos da janela do popup */
 ::ng-deep .mapboxgl-popup-content {
   padding: 0 !important;
   border-radius: 12px !important;
   border: none !important;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
-  overflow: hidden; /* Garante que o cabeçalho não sai fora dos cantos */
-  /* AJUSTADO: Largura mínima reduzida para 260px */
-  min-width: 260px; 
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+  overflow: hidden;
+  min-width: 260px;
 }
 
-/* Ajusta a "seta" (tip) do popup para combinar */
 ::ng-deep .mapboxgl-popup-tip {
   border-top-color: #fff !important;
-  margin-bottom: 10px; /* Afasta um pouco do pin */
+  margin-bottom: 10px;
 }
 
-/* Personaliza o botão de fechar (X) para ser branco e visível no cabeçalho azul */
 ::ng-deep .mapboxgl-popup-close-button {
   color: white;
-  font-size: 24px; 
+  font-size: 24px;
   right: 12px;
-  top: 18px; 
+  top: 18px;
   font-weight: normal;
   z-index: 10;
   outline: none;

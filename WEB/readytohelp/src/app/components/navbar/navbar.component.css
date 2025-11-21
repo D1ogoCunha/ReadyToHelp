@@ -1,4 +1,6 @@
-/* Toggle button */
+/* =========================================
+   TOGGLE BUTTON
+   ========================================= */
 .toggle-btn {
   position: fixed;
   top: 8px;
@@ -16,13 +18,15 @@
   cursor: pointer;
 }
 .toggle-btn:hover {
-  background:#1e5fd3;
+  background: #1e5fd3;
 }
 .toggle-btn .material-symbols-outlined {
-  font-size:22px;
+  font-size: 22px;
 }
 
-/* Animate hide/show */
+/* =========================================
+   NAVBAR ANIMATION
+   ========================================= */
 nav {
   transition: transform .35s cubic-bezier(.4,0,.2,1);
 }
@@ -30,12 +34,18 @@ nav.collapsed {
   transform: translateX(-100%);
 }
 
-/* Keep existing styles below */
+/* =========================================
+   NAVBAR LAYOUT
+   ========================================= */
 nav {
   position: fixed !important;
   top: 0;
   bottom: 0;
 }
+
+/* =========================================
+   NAVBAR LIST
+   ========================================= */
 nav ul {
   height: 100%;
   display: flex;
@@ -52,6 +62,10 @@ nav ul li {
   text-transform: uppercase;
   transition: all 0.4s ease-out;
 }
+
+/* =========================================
+   NAVBAR LINK
+   ========================================= */
 .nav-link {
   position: relative;
   width: 70px;
@@ -74,17 +88,27 @@ nav ul li {
   transition: all 0.4s ease-out;
   content: attr(data-label);
 }
-nav ul li:hover { transform: translateX(-70px); }
+nav ul li:hover { 
+  transform: translateX(-70px); 
+}
 nav ul li:hover .nav-link:after {
   opacity: 1;
   transform: perspective(400px) rotateY(0deg) scale(1);
 }
+
+/* =========================================
+   NAVBAR ICON
+   ========================================= */
 .nav-icon {
   font-size: 32px;
   color: white;
   padding: 25px 0;
   background: transparent;
 }
+
+/* =========================================
+   NAVBAR ITEM CONTENT
+   ========================================= */
 nav ul li > div {
   padding: 15px 0;
   background: transparent;

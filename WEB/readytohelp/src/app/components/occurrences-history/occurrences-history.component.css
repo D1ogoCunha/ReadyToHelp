@@ -1,4 +1,6 @@
-/* Base layout aligned with user-management */
+/* =========================================
+   PAGE LAYOUT
+   ========================================= */
 .user-mgmt-page {
   background: #f8fafc;
   min-height: 100vh;
@@ -7,17 +9,18 @@
   font-size: 1rem;
 }
 
-/* Header */
+/* =========================================
+   HEADER
+   ========================================= */
 .um-header {
   height: 150px;
   padding: 32px 32px 34px 55px;
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
   background: #4353ab;
   border-bottom: 1px solid #e2e8f0;
   position: relative;
-  justify-content: flex-start;
 }
 
 .um-title {
@@ -44,7 +47,9 @@
   font-weight: 400;
 }
 
-/* Toolbar */
+/* =========================================
+   TOOLBAR / FILTERS
+   ========================================= */
 .um-toolbar {
   padding: 20px 32px;
   display: flex;
@@ -54,6 +59,7 @@
   border-bottom: 1px solid #e2e8f0;
   flex-wrap: wrap;
 }
+
 .filter-group {
   position: relative;
   display: flex;
@@ -61,6 +67,7 @@
   flex: 1;
   min-width: 240px;
 }
+
 .filter-input {
   height: 44px;
   padding-left: 44px !important;
@@ -107,7 +114,6 @@
   border-radius: 8px;
   background: #fff;
 }
-
 .toolbar-select:focus,
 .toolbar-date:focus {
   border-color: #3b82f6;
@@ -115,7 +121,9 @@
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
 }
 
-/* Body */
+/* =========================================
+   BODY
+   ========================================= */
 .um-body {
   flex: 1;
   padding: 0;
@@ -124,7 +132,9 @@
   flex-direction: column;
 }
 
-/* Table */
+/* =========================================
+   TABLE
+   ========================================= */
 .table-responsive {
   border: none;
   flex: 1;
@@ -180,7 +190,9 @@
   font-size: 1.05rem;
 }
 
-/* Badge / Priority */
+/* =========================================
+   BADGES / PRIORITY
+   ========================================= */
 .badge-type {
   background: #eef2ff;
   color: #4338ca;
@@ -222,7 +234,9 @@
   letter-spacing: 0.02em;
 }
 
-/* Actions */
+/* =========================================
+   ACTIONS
+   ========================================= */
 .action-group .btn {
   width: 36px;
   height: 36px;
@@ -244,7 +258,9 @@
   font-size: 20px;
 }
 
-/* States */
+/* =========================================
+   STATES (LOADING, EMPTY)
+   ========================================= */
 .loading-state,
 .empty-state {
   background: #fff;
@@ -253,7 +269,9 @@
   opacity: 0.7;
 }
 
-/* Footer / Pagination */
+/* =========================================
+   FOOTER / PAGINATION
+   ========================================= */
 .um-footer {
   padding: 16px 32px;
   background: #fff;
@@ -296,7 +314,9 @@
   color: #0f172a;
 }
 
-/* Scrollbar (opcional) */
+/* =========================================
+   SCROLLBAR (OPCIONAL)
+   ========================================= */
 .table-responsive::-webkit-scrollbar {
   width: 10px;
 }
@@ -311,7 +331,9 @@
   background: #94a3b8;
 }
 
-/* Responsive */
+/* =========================================
+   RESPONSIVE
+   ========================================= */
 @media (max-width: 992px) {
   .um-header {
     padding: 20px 24px;
@@ -336,7 +358,6 @@
   }
 }
 
-/* Super small */
 @media (max-width: 560px) {
   .toolbar-inline-group {
     min-width: 100%;
