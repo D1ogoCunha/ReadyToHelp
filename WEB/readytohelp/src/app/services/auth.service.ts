@@ -19,7 +19,7 @@ interface DecodedToken {
 })
 export class AuthService {
   private readonly baseAuthUrl =
-    'https://readytohelp-api.azurewebsites.net/api/auth';
+    'http://localhost:5134/api/auth';
   private readonly tokenKey = 'authToken';
 
   private readonly currentUserSubject: BehaviorSubject<DecodedToken | null>;
@@ -49,10 +49,18 @@ export class AuthService {
     this.currentUser = this.currentUserSubject.asObservable();
   }
 
+  /**
+   * Gets the current decoded token value.
+   */
   public get currentUserValue(): DecodedToken | null {
     return this.currentUserSubject.value;
   }
 
+  /**
+   * Logs in a user with the provided credentials.
+   * @param credentials An object containing email and password.
+   * @returns An observable of the authentication token as a string.
+   */
   login(credentials: { email: string; password: string }): Observable<string> {
     const url = `${this.baseAuthUrl}/login/web`;
     return this.http.post(url, credentials, { responseType: 'text' }).pipe(

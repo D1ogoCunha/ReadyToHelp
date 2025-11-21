@@ -1,250 +1,226 @@
-<div class="layout-container">
-  <!-- SIDEBAR: Filtros -->
-  <aside class="sidebar-filters shadow-sm">
-    <div class="sidebar-header">
-      <h3>Filtros</h3>
-      <button class="btn-clear" (click)="clearFilters()" title="Limpar filtros">
-        <span class="material-symbols-outlined">filter_alt_off</span>
-      </button>
+<!-- Página padronizada estilo User Management -->
+<div class="user-mgmt-page">
+
+  <!-- HEADER -->
+  <div class="um-header">
+    <div class="um-title-wrap">
+      <h2 class="um-title">Occurrences History</h2>
+    </div>
+  </div>
+
+  <!-- TOOLBAR / FILTERS -->
+  <div class="um-toolbar flex-wrap">
+    <!-- Search -->
+    <div class="filter-group" style="max-width: 320px;">
+      <span class="material-icons filter-icon">search</span>
+      <input
+        class="filter-input"
+        [ngModel]="filterSearch()"
+        (keyup.enter)="filterSearch.set($any($event.target).value); onFilterChange()"
+        (blur)="filterSearch.set($any($event.target).value); onFilterChange()"
+        placeholder="Search ID or Title..."
+      />
     </div>
 
-    <div class="filter-group">
-      <label>Tipo</label>
+    <!-- Type -->
+    <div class="toolbar-inline-group">
+      <label class="toolbar-label">Type</label>
       <select
+        class="toolbar-select"
         [ngModel]="filterType()"
         (ngModelChange)="filterType.set($event); onFilterChange()"
-        class="form-select"
       >
-        <option value="">Todos</option>
-        @for (type of types; track type) {
-        <option [value]="type">{{ formatEnum(type) }}</option>
+        <option value="">All</option>
+        @for (t of types; track t) {
+          <option [value]="t">{{ formatEnum(t) }}</option>
         }
       </select>
     </div>
 
-    <div class="filter-group">
-      <label>Prioridade</label>
+    <!-- Priority -->
+    <div class="toolbar-inline-group">
+      <label class="toolbar-label">Priority</label>
       <select
+        class="toolbar-select"
         [ngModel]="filterPriority()"
         (ngModelChange)="filterPriority.set($event); onFilterChange()"
-        class="form-select"
       >
-        <option value="">Todas</option>
-        @for (prio of priorities; track prio) {
-        <option [value]="prio">{{ formatEnum(prio) }}</option>
+        <option value="">All</option>
+        @for (p of priorities; track p) {
+          <option [value]="p">{{ formatEnum(p) }}</option>
         }
       </select>
     </div>
 
-    <div class="filter-group">
-      <label>Período</label>
-      <div class="date-inputs">
-        <input
-          type="date"
-          class="form-control mb-2"
-          [ngModel]="filterStartDate()"
-          (ngModelChange)="filterStartDate.set($event); onFilterChange()"
-          title="Data Início"
-        />
-        <input
-          type="date"
-          class="form-control"
-          [ngModel]="filterEndDate()"
-          (ngModelChange)="filterEndDate.set($event); onFilterChange()"
-          title="Data Fim"
-        />
-      </div>
+    <!-- Dates -->
+    <div class="toolbar-inline-group">
+      <label class="toolbar-label">Start</label>
+      <input
+        type="date"
+        class="toolbar-date"
+        [ngModel]="filterStartDate()"
+        (ngModelChange)="filterStartDate.set($event); onFilterChange()"
+      />
     </div>
-  </aside>
+    <div class="toolbar-inline-group">
+      <label class="toolbar-label">End</label>
+      <input
+        type="date"
+        class="toolbar-date"
+        [ngModel]="filterEndDate()"
+        (ngModelChange)="filterEndDate.set($event); onFilterChange()"
+      />
+    </div>
 
-  <!-- MAIN CONTENT: Tabela -->
-  <main class="main-content">
-    <div class="table-wrapper shadow-sm">
-      <div class="table-title">
-        <div class="d-flex justify-content-between align-items-center w-100">
-          <div>
-            <h2>Histórico <b>Ocorrências</b></h2>
-          </div>
-          <div class="search-box-top">
-            <input
-              type="text"
-              placeholder="Pesquisar ID, título..."
-              [ngModel]="filterSearch()"
-              (change)="
-                filterSearch.set($any($event.target).value); onFilterChange()
-              "
-            />
-            <span class="material-symbols-outlined search-icon">search</span>
-          </div>
-        </div>
+    <!-- Clear -->
+    <div class="d-flex gap-2 ms-auto">
+      <button
+        class="btn btn-outline-secondary btn-sm"
+        style="height:40px; padding:0 16px;"
+        (click)="clearFilters()"
+        title="Reset filters"
+      >
+        Reset
+      </button>
+    </div>
+  </div>
+
+  <!-- BODY / TABLE / STATES -->
+  <div class="um-body">
+    <!-- Loading -->
+    @if (isLoading()) {
+      <div class="loading-state p-5 text-center text-muted">
+        <div class="spinner-border text-primary spinner-border-sm" role="status"></div>
+        <span class="ms-2">Loading occurrences...</span>
       </div>
-
-      <!-- Loading -->
-      @if (isLoading()) {
-      <div class="state-container">
-        <div class="spinner-border text-primary" role="status"></div>
-        <div class="mt-2 text-muted">A carregar dados...</div>
+    }
+    <!-- Error -->
+    @else if (error()) {
+      <div class="alert alert-danger m-4 rounded">{{ error() }}</div>
+    }
+    <!-- Empty -->
+    @else if (occurrencesClosed().length === 0) {
+      <div class="empty-state py-5 text-center">
+        <span class="material-icons empty-icon" style="font-size:48px; color:#cbd5e1;">folder_open</span>
+        <h5 class="mt-3 text-muted">No closed occurrences found</h5>
       </div>
-      }
-
-      <!-- Error -->
-      @else if (error()) {
-      <div class="state-container text-danger">
-        <span class="material-symbols-outlined fs-1">error</span>
-        <p>{{ error() }}</p>
-      </div>
-      }
-
-      <!-- Empty -->
-      @else if (occurrencesClosed().length === 0) {
-      <div class="state-container text-muted">
-        <span class="material-symbols-outlined fs-1">folder_open</span>
-        <p class="mt-2">Sem resultados para os filtros aplicados.</p>
-      </div>
-      }
-
-      <!-- Tabela -->
-      @else {
+    }
+    <!-- Table -->
+    @else {
       <div class="table-responsive">
-        <table class="table table-striped table-hover">
+        <table class="um-table">
           <thead>
             <tr>
-              <!-- Coluna ID (Ordenável) -->
-              <th
-                style="width: 80px; cursor: pointer"
-                (click)="toggleSort('Id')"
-              >
-                <div class="d-flex align-items-center gap-1">
-                  ID
-                  <span
-                    class="material-symbols-outlined sort-icon"
-                    [class.active]="currentSortBy() === 'Id'"
-                  >
-                    {{
-                      currentSortBy() === "Id" && currentSortOrder() === "asc"
-                        ? "arrow_upward"
-                        : "arrow_downward"
-                    }}
-                  </span>
-                </div>
+              <th (click)="toggleSort('Id')" [class.sorted]="currentSortBy() === 'Id'" style="width:70px;">
+                ID
+                <span class="sort-ind" *ngIf="currentSortBy() === 'Id'">
+                  {{ currentSortOrder() === 'asc' ? '▲' : '▼' }}
+                </span>
               </th>
-
-              <th>Título</th>
-              <th>Tipo</th>
-              <th>Prioridade</th>
-
-              <!-- Coluna Data Início (Ordenável) -->
-              <th
-                style="cursor: pointer"
-                (click)="toggleSort('CreationDateTime')"
-              >
-                <div class="d-flex align-items-center gap-1">
-                  Data Início
-                  <span
-                    class="material-symbols-outlined sort-icon"
-                    [class.active]="currentSortBy() === 'CreationDateTime'"
-                  >
-                    {{
-                      currentSortBy() === "CreationDateTime" &&
-                      currentSortOrder() === "asc"
-                        ? "arrow_upward"
-                        : "arrow_downward"
-                    }}
-                  </span>
-                </div>
+              <th (click)="toggleSort('Title')" [class.sorted]="currentSortBy() === 'Title'">
+                Title
+                <span class="sort-ind" *ngIf="currentSortBy() === 'Title'">
+                  {{ currentSortOrder() === 'asc' ? '▲' : '▼' }}
+                </span>
               </th>
-
-              <!-- Coluna Data Fim (Ordenável) -->
-              <th style="cursor: pointer" (click)="toggleSort('EndDateTime')">
-                <div class="d-flex align-items-center gap-1">
-                  Data Fim
-                  <span
-                    class="material-symbols-outlined sort-icon"
-                    [class.active]="currentSortBy() === 'EndDateTime'"
-                  >
-                    {{
-                      currentSortBy() === "EndDateTime" &&
-                      currentSortOrder() === "asc"
-                        ? "arrow_upward"
-                        : "arrow_downward"
-                    }}
-                  </span>
-                </div>
+              <th (click)="toggleSort('Type')" [class.sorted]="currentSortBy() === 'Type'" style="width:130px;">
+                Type
+                <span class="sort-ind" *ngIf="currentSortBy() === 'Type'">
+                  {{ currentSortOrder() === 'asc' ? '▲' : '▼' }}
+                </span>
               </th>
-
-              <th class="text-center">Reports</th>
-              <th class="text-right">Ações</th>
+              <th (click)="toggleSort('Priority')" [class.sorted]="currentSortBy() === 'Priority'" style="width:120px;">
+                Priority
+                <span class="sort-ind" *ngIf="currentSortBy() === 'Priority'">
+                  {{ currentSortOrder() === 'asc' ? '▲' : '▼' }}
+                </span>
+              </th>
+              <th (click)="toggleSort('CreationDateTime')" [class.sorted]="currentSortBy() === 'CreationDateTime'" style="width:180px;">
+                Start Date
+                <span class="sort-ind" *ngIf="currentSortBy() === 'CreationDateTime'">
+                  {{ currentSortOrder() === 'asc' ? '▲' : '▼' }}
+                </span>
+              </th>
+              <th (click)="toggleSort('EndDateTime')" [class.sorted]="currentSortBy() === 'EndDateTime'" style="width:180px;">
+                End Date
+                <span class="sort-ind" *ngIf="currentSortBy() === 'EndDateTime'">
+                  {{ currentSortOrder() === 'asc' ? '▲' : '▼' }}
+                </span>
+              </th>
+              <th style="width:90px;">Reports</th>
+              <th class="text-right" style="width:80px;">Actions</th>
             </tr>
           </thead>
           <tbody>
             @for (o of occurrencesClosed(); track o.id) {
-            <tr>
-              <!-- ID Separado -->
-              <td>
-                <span class="text-muted">#{{ o.id }}</span>
-              </td>
-              <!-- Título Separado -->
-              <td>
-                <div class="fw-bold text-dark">{{ o.title }}</div>
-              </td>
-              <td>
-                <span class="badge-type">{{ formatEnum(o.type) }}</span>
-              </td>
-              <td>
-                @if (o.priority === 'HIGH') {
-                <span class="status-badge status-high">High</span>
-                } @else if (o.priority === 'MEDIUM') {
-                <span class="status-badge status-medium">Medium</span>
-                } @else {
-                <span class="status-badge status-low">Low</span>
-                }
-              </td>
-              <!-- Datas Separadas -->
-              <td>
-                <div class="text-success small">
-                  {{ formatDate(o.creationDateTime) }}
-                </div>
-              </td>
-              <td>
-                <div class="text-danger small">
-                  {{ formatDate(o.endDateTime) }}
-                </div>
-              </td>
-              <td class="text-center">{{ o.reportCount }}</td>
-              <td class="text-right">
-                <a
-                  class="btn-action"
-                  [routerLink]="['/occurrence', o.id]"
-                  title="Ver Detalhes"
-                >
-                  <span class="material-symbols-outlined">visibility</span>
-                </a>
-              </td>
-            </tr>
+              <tr>
+                <td class="text-muted font-weight-bold">#{{ o.id }}</td>
+                <td>
+                  <div class="occ-title">{{ o.title }}</div>
+                </td>
+                <td>
+                  <span class="badge badge-type">{{ formatEnum(o.type) }}</span>
+                </td>
+                <td>
+                  @if (o.priority === 'HIGH') {
+                    <span class="status-badge status-high">High</span>
+                  } @else if (o.priority === 'MEDIUM') {
+                    <span class="status-badge status-medium">Medium</span>
+                  } @else {
+                    <span class="status-badge status-low">Low</span>
+                  }
+                </td>
+                <td>
+                  <div class="date-cell text-success small">{{ formatDate(o.creationDateTime) }}</div>
+                </td>
+                <td>
+                  <div class="date-cell text-danger small">{{ formatDate(o.endDateTime) }}</div>
+                </td>
+                <td class="text-center">{{ o.reportCount }}</td>
+                <td class="text-right">
+                  <div class="action-group">
+                    <a
+                      class="btn"
+                      [routerLink]="['/occurrence', o.id]"
+                      title="View details"
+                    >
+                      <span class="material-icons">visibility</span>
+                    </a>
+                  </div>
+                </td>
+              </tr>
             }
           </tbody>
         </table>
       </div>
+    }
+  </div>
 
-      <!-- Paginação -->
-      <div class="pagination-wrapper clearfix">
-        <div class="hint-text">
-          Página <b>{{ pageNumber() }}</b> ({{ occurrencesClosed().length }}
-          items)
-        </div>
-        <ul class="pagination">
-          <li [class.disabled]="pageNumber() === 1 || isLoading()">
-            <a (click)="prevPage()">Anterior</a>
-          </li>
-          <li class="active">
-            <a>{{ pageNumber() }}</a>
-          </li>
-          <li [class.disabled]="!hasNextPage() || isLoading()">
-            <a (click)="nextPage()">Próxima</a>
-          </li>
-        </ul>
-      </div>
-      }
+  <!-- PAGINATION -->
+  <div class="um-footer" *ngIf="!isLoading() && occurrencesClosed().length">
+    <button
+      class="btn btn-nav"
+      (click)="prevPage()"
+      [disabled]="pageNumber() === 1 || isLoading()"
+    >
+      <span class="material-icons" style="font-size:18px;">chevron_left</span>
+      Previous
+    </button>
+
+    <div class="page-counter">
+      Page <strong>{{ pageNumber() }}</strong>
     </div>
-  </main>
+
+    <button
+      class="btn btn-nav"
+      (click)="nextPage()"
+      [disabled]="!hasNextPage() || isLoading()"
+    >
+      Next
+      <span class="material-icons" style="font-size:18px;">chevron_right</span>
+    </button>
+  </div>
+
+  <!-- LEGAL FOOTER -->
+  <app-legal-footer></app-legal-footer>
 </div>

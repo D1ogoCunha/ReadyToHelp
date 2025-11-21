@@ -25,8 +25,14 @@ export class MapComponent implements OnInit {
   private occurrenceService = inject(OccurrenceService);
   private router = inject(Router);
 
+  /**
+   * Constructor for MapComponent
+   */
   constructor() {}
 
+  /**
+   * OnInit lifecycle hook to initialize the map and load occurrences.
+   */
   ngOnInit(): void {
     this.map = new mapboxgl.Map({
       accessToken:
@@ -45,7 +51,7 @@ export class MapComponent implements OnInit {
   }
 
   /**
-   * Vai buscar as ocorrências à API e adiciona-as ao mapa
+   * Loads active occurrences from the service and adds them to the map as markers.
    */
   private loadOccurrences(): void {
     this.occurrenceService.getActiveOccurrences().subscribe({
@@ -59,78 +65,117 @@ export class MapComponent implements OnInit {
     });
   }
 
+ 
+  /**
+   * Adds markers to the map for each occurrence.
+   * @param occurrences The list of occurrences to add as markers.
+   */
   private addMarkersToMap(occurrences: OccurrenceMap[]): void {
-    if (!this.map) return;
+    if (!this.map) return; 
 
     for (const occ of occurrences) {
-      // Create the main container for the popup
-      const popupContent = document.createElement('div');
-      popupContent.className = 'w-64 p-3 space-y-2';
 
-      // Title
-      const title = document.createElement('h3');
-      title.className = 'font-bold text-lg text-blue-600';
-      title.innerText = occ.title;
+      // Popup construction
 
-      // Type
-      const type = document.createElement('p');
-      type.className = 'text-sm text-gray-800';
-      type.innerHTML = `<strong>Type:</strong> ${this.formatEnum(occ.type)}`;
+      const popupContainer = document.createElement('div');
+      popupContainer.className = 'card border-0 shadow-none'; 
+      popupContainer.style.width = '260px'; 
 
-      // Priority
-      const priority = document.createElement('p');
-      priority.className = 'text-sm text-gray-800';
-      priority.innerHTML = `<strong>Priority:</strong> ${this.formatEnum(
-        occ.priority
-      )}`;
+      // Header
+      const headerClass = 'card-header bg-primary text-white py-3 px-3';
+      const header = document.createElement('div');
+      header.className = headerClass;
+      header.innerHTML = `
+        <h5 class="mb-0 font-weight-bold text-truncate" style="padding-right: 25px; font-size: 1.2rem; line-height: 1.2;">
+          ${occ.title}
+        </h5>
+      `;
 
-      // Status
-      const status = document.createElement('p');
-      status.className = 'text-sm text-gray-800';
-      status.innerHTML = `<strong>Status:</strong> ${this.formatEnum(
-        occ.status
-      )}`;
+      // Body
+      const body = document.createElement('div');
+      body.className = 'card-body p-3';
 
-      //"View Details" button
+      const infoRow = document.createElement('div');
+      infoRow.className = 'd-flex justify-content-between align-items-start mb-3'; // mb-3 dá espaço para o botão
+
+      const typeCol = document.createElement('div');
+      typeCol.innerHTML = `
+        <div>
+          <small class="text-muted d-block text-uppercase font-weight-bold" style="font-size: 0.75rem; letter-spacing: 0.5px; margin-bottom: 2px;">Type</small>
+          <span class="font-weight-bold text-dark" style="font-size: 1.2rem;">${this.formatEnum(occ.type)}</span>
+        </div>
+      `;
+
+      let priorityClass = 'badge-light';
+      if (occ.priority === PriorityLevel.HIGH) priorityClass = 'badge-danger';
+      if (occ.priority === PriorityLevel.MEDIUM) priorityClass = 'badge-warning';
+      if (occ.priority === PriorityLevel.LOW) priorityClass = 'badge-info';
+
+      const priorityCol = document.createElement('div');
+      priorityCol.className = 'text-right'; // Alinha o texto à direita
+      priorityCol.innerHTML = `
+        <div>
+           <small class="text-muted d-block text-uppercase font-weight-bold" style="font-size: 0.75rem; letter-spacing: 0.5px; margin-bottom: 4px;">Priority</small>
+           <span class="badge ${priorityClass} px-3 py-2" style="font-size: 1rem;">${this.formatEnum(occ.priority)}</span>
+        </div>
+      `;
+
+      // Append the columns to the row
+      infoRow.appendChild(typeCol);
+      infoRow.appendChild(priorityCol);
+      
+      // Append the row to the body
+      body.appendChild(infoRow);
+
+      // Footer with Button
+      const footer = document.createElement('div');
+      footer.className = 'card-footer bg-white border-0 p-3 pt-0'; 
+      
       const button = document.createElement('button');
-      button.className =
-        'bg-blue-600 hover:bg-blue-700 text-white text-sm py-1 px-3 rounded-md w-full mt-3 transition-colors duration-150';
-      button.innerText = 'View Details';
-
-      // Add the event listener
+      button.className = 'btn btn-outline-primary btn-block font-weight-bold btn-sm'; 
+      button.innerHTML = 'View Details <i class="fas fa-arrow-right ml-1"></i>';
+      
       button.addEventListener('click', (e) => {
         e.stopPropagation();
         this.onViewDetails(occ.id);
       });
 
-      // Add all elements to the container
-      popupContent.appendChild(title);
-      popupContent.appendChild(type);
-      popupContent.appendChild(priority);
-      popupContent.appendChild(status);
-      popupContent.appendChild(button);
+      footer.appendChild(button);
 
-      // Create the popup and set its content
-      const popup = new mapboxgl.Popup({ offset: 25 }).setDOMContent(
-        popupContent
-      );
+      // Assemble the popup
+      popupContainer.appendChild(header);
+      popupContainer.appendChild(body);
+      popupContainer.appendChild(footer);
 
-      // Create a custom marker element
+      // End of popup construction 
+
+      const popup = new mapboxgl.Popup({ 
+        offset: 35, 
+        closeButton: true, 
+        closeOnClick: false,
+        maxWidth: '280px'
+      })
+      .setDOMContent(popupContainer);
+
       const el = document.createElement('div');
-      el.className = 'custom-marker';
-
+      el.className = 'custom-marker'; 
+      
       const pinPath = this.getPinForType(occ.type);
-      console.log('A tentar carregar o pin:', pinPath);
       el.style.backgroundImage = `url(${pinPath})`;
 
-      // Create the marker and add it to the map
       new mapboxgl.Marker({ element: el, anchor: 'bottom' })
         .setLngLat([occ.longitude, occ.latitude])
-        .setPopup(popup)
+        .setPopup(popup) 
         .addTo(this.map);
     }
   }
 
+
+  /**
+   * Gets the file path for the pin image corresponding to the occurrence type.
+   * @param type The occurrence type.
+   * @returns The file path for the pin image corresponding to the occurrence type.
+   */
   private getPinForType(type: OccurrenceType): string {
     const basePath = 'assets/pins/';
 
@@ -188,6 +233,11 @@ export class MapComponent implements OnInit {
     }
   }
 
+  /**
+   * Formats an enum value into a more readable string.
+   * @param value The enum value to format.
+   * @returns A formatted string with spaces and capitalization.
+   */
   private formatEnum(
     value: string | OccurrenceType | PriorityLevel | OccurrenceStatus
   ): string {
@@ -199,6 +249,10 @@ export class MapComponent implements OnInit {
       .join(' ');
   }
 
+  /**
+   * Handles the click event for the "View Details" button in the popup.
+   * @param id The ID of the occurrence to view details for.
+   */
   private onViewDetails(id: number): void {
     console.log('Button clicked! Navigating to details for ID:', id);
     this.router.navigate(['/occurrence', id]);
