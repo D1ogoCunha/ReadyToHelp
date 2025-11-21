@@ -8,7 +8,10 @@ import { UserManagementComponent } from './pages/user-management/user-management
 
 export const appRoutes: Routes = [
   // The login page
-  { path: 'login', component: LoginComponent },
+  {
+    path: 'login',
+    component: LoginComponent,
+  },
   // Change homepage to redirect to /map
   {
     path: '',
@@ -26,7 +29,7 @@ export const appRoutes: Routes = [
     component: OccurrenceDetailComponent,
   },
   // The occurrences history page
-    {
+  {
     path: 'occurrences/history',
     component: OccurrencesHistoryComponent,
   },
@@ -34,8 +37,9 @@ export const appRoutes: Routes = [
   {
     path: 'users',
     component: UserManagementComponent,
+    canActivate: [AuthGuard],
   },
-  // Wildcard (must be last)
+  // Wildcard
   {
     path: '**',
     redirectTo: '/map',
