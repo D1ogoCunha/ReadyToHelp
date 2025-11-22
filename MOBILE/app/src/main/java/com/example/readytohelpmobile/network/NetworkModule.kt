@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit
 
 object NetworkClient {
 
-    private const val BASE_URL = "http://192.168.68.52:5134/api/"
+    private const val BASE_URL = "http://192.168.68.56:5134/api/"
 
     private val moshi = Moshi.Builder()
         .addLast(KotlinJsonAdapterFactory())

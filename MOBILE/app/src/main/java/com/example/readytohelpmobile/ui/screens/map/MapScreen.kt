@@ -29,10 +29,10 @@ import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
 import com.mapbox.maps.plugin.PuckBearing
 import com.mapbox.maps.plugin.annotation.annotations
-import com.mapbox.maps.plugin.annotation.generated.OnPointAnnotationClickListener
 import com.mapbox.maps.plugin.annotation.generated.PointAnnotationOptions
 import com.mapbox.maps.plugin.annotation.generated.createPointAnnotationManager
 import com.mapbox.maps.plugin.locationcomponent.createDefault2DPuck
+import com.example.readytohelpmobile.R
 import com.mapbox.maps.plugin.locationcomponent.location
 
 @Composable
@@ -50,7 +50,30 @@ fun MapScreen(
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    val markerBitmap = bitmapFromDrawableRes(com.mapbox.maps.extension.compose.R.drawable.default_marker)
+    val animal_on_road_pin = bitmapFromDrawableRes(R.drawable.animal_on_road)
+    val crime_pin = bitmapFromDrawableRes(R.drawable.crime)
+    val domestic_violence_pin = bitmapFromDrawableRes(R.drawable.domestic_violence)
+    val electrical_network_pin = bitmapFromDrawableRes(R.drawable.electrical_network)
+    val flood_pin = bitmapFromDrawableRes(R.drawable.flood)
+    val forest_fire_pin = bitmapFromDrawableRes(R.drawable.forest_fire)
+    val injured_animal_pin = bitmapFromDrawableRes(R.drawable.injured_animal)
+    val landslide_pin = bitmapFromDrawableRes(R.drawable.landslide)
+    val lost_animal = bitmapFromDrawableRes(R.drawable.lost_animal)
+    val medical_emergency_pin = bitmapFromDrawableRes(R.drawable.medical_emergency)
+    val pollution_pin = bitmapFromDrawableRes(R.drawable.pollution)
+    val public_disturbance_pin = bitmapFromDrawableRes(R.drawable.public_disturbance)
+    val public_lighting_pin = bitmapFromDrawableRes(R.drawable.public_lighting)
+    val road_accident_pin = bitmapFromDrawableRes(R.drawable.road_accident)
+    val road_obstruction_pin = bitmapFromDrawableRes(R.drawable.road_obstruction)
+    val sanitation_pin = bitmapFromDrawableRes(R.drawable.sanitation)
+    val traffic_congestion_pin = bitmapFromDrawableRes(R.drawable.traffic_congestion)
+    val traffic_light_failure_pin = bitmapFromDrawableRes(R.drawable.traffic_light_failure)
+    val urban_fire_pin = bitmapFromDrawableRes(R.drawable.urban_fire)
+    val road_damage = bitmapFromDrawableRes(R.drawable.road_damage)
+    val vehicle_breakdown_pin = bitmapFromDrawableRes(R.drawable.vehicle_breakdown)
+    val work_accident_pin = bitmapFromDrawableRes(R.drawable.work_accident)
+    val defaultPinBitmap = bitmapFromDrawableRes(com.mapbox.maps.extension.compose.R.drawable.default_marker_inner)
+
 
     var hasLocationPermission by remember {
         mutableStateOf(
@@ -112,37 +135,62 @@ fun MapScreen(
                             mapViewportState.transitionToFollowPuckState()
                         }
 
-                        MapEffect(state.occurrences, markerBitmap) { mapView ->
+                        MapEffect(state.occurrences, public_lighting_pin) { mapView ->
                             val pointAnnotationManager = mapView.annotations.createPointAnnotationManager()
                             pointAnnotationManager.deleteAll()
 
-                            pointAnnotationManager.addClickListener(
-                                OnPointAnnotationClickListener { annotation ->
-                                    val clickedOccurrence = state.occurrences.find {
-                                        it.longitude == annotation.point.longitude() &&
-                                                it.latitude == annotation.point.latitude()
-                                    }
-
-                                    clickedOccurrence?.let {
-                                        Toast.makeText(
-                                            context,
-                                            "${it.title}: ${it.title}",
-                                            Toast.LENGTH_LONG
-                                        ).show()
-                                    }
-                                    true
+                            pointAnnotationManager.addClickListener { annotation ->
+                                val clickedOccurrence = state.occurrences.find {
+                                    it.longitude == annotation.point.longitude() &&
+                                            it.latitude == annotation.point.latitude()
                                 }
-                            )
 
-                            markerBitmap?.let { bmp ->
-                                val annotationOptionsList = state.occurrences.map { occurrence ->
+                                clickedOccurrence?.let {
+                                    Toast.makeText(
+                                        context,
+                                        "${it.title}: ${it.title}",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
+                                true
+                            }
+
+                            val annotationOptionsList = state.occurrences.mapNotNull { occurrence ->
+                                val bmp = when (occurrence.type) {
+                                    "ANIMAL_ON_ROAD" -> animal_on_road_pin
+                                    "CRIME" -> crime_pin
+                                    "DOMESTIC_VIOLENCE" -> domestic_violence_pin
+                                    "ELECTRICAL_NETWORK" -> electrical_network_pin
+                                    "FLOOD" -> flood_pin
+                                    "FOREST_FIRE" -> forest_fire_pin
+                                    "INJURED_ANIMAL" -> injured_animal_pin
+                                    "LANDSLIDE" -> landslide_pin
+                                    "LOST_ANIMAL" -> lost_animal
+                                    "MEDICAL_EMERGENCY" -> medical_emergency_pin
+                                    "POLLUTION" -> pollution_pin
+                                    "PUBLIC_DISTURBANCE" -> public_disturbance_pin
+                                    "PUBLIC_LIGHTING" -> public_lighting_pin
+                                    "ROAD_ACCIDENT" -> road_accident_pin
+                                    "ROAD_OBSTRUCTION" -> road_obstruction_pin
+                                    "SANITATION" -> sanitation_pin
+                                    "TRAFFIC_CONGESTION" -> traffic_congestion_pin
+                                    "TRAFFIC_LIGHT_FAILURE" -> traffic_light_failure_pin
+                                    "URBAN_FIRE" -> urban_fire_pin
+                                    "VEHICLE_BREAKDOWN" -> vehicle_breakdown_pin
+                                    "WORK_ACCIDENT" -> work_accident_pin
+                                    "ROAD_DAMAGE" -> road_damage
+
+                                    else -> defaultPinBitmap
+                                }
+
+                                bmp?.let {
                                     PointAnnotationOptions()
                                         .withPoint(Point.fromLngLat(occurrence.longitude, occurrence.latitude))
-                                        .withIconImage(bmp)
-                                    // .withData(Gson().toJsonTree(occurrence))
+                                        .withIconImage(it) // Usa o bitmap escolhido
                                 }
-                                pointAnnotationManager.create(annotationOptionsList)
                             }
+
+                            pointAnnotationManager.create(annotationOptionsList)
                         }
                     }
                 } else {
