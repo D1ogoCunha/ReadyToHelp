@@ -12,8 +12,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -34,6 +32,7 @@ import com.mapbox.maps.plugin.annotation.generated.createPointAnnotationManager
 import com.mapbox.maps.plugin.locationcomponent.createDefault2DPuck
 import com.example.readytohelpmobile.R
 import com.mapbox.maps.plugin.locationcomponent.location
+import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun bitmapFromDrawableRes(drawableResId: Int): Bitmap? {
@@ -74,7 +73,6 @@ fun MapScreen(
     val work_accident_pin = bitmapFromDrawableRes(R.drawable.work_accident)
     val defaultPinBitmap = bitmapFromDrawableRes(com.mapbox.maps.extension.compose.R.drawable.default_marker_inner)
 
-
     var hasLocationPermission by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(
@@ -91,6 +89,12 @@ fun MapScreen(
             hasLocationPermission = true
         } else {
             Toast.makeText(context, "Permissão de localização negada.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.toastEvent.collectLatest { message ->
+            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
         }
     }
 
@@ -135,20 +139,21 @@ fun MapScreen(
                             mapViewportState.transitionToFollowPuckState()
                         }
 
-                        MapEffect(state.occurrences, public_lighting_pin) { mapView ->
+                        MapEffect(state.occurrences) { mapView ->
                             val pointAnnotationManager = mapView.annotations.createPointAnnotationManager()
                             pointAnnotationManager.deleteAll()
 
                             pointAnnotationManager.addClickListener { annotation ->
                                 val clickedOccurrence = state.occurrences.find {
-                                    it.longitude == annotation.point.longitude() &&
-                                            it.latitude == annotation.point.latitude()
+                                    val lat = it.location?.latitude
+                                    val lng = it.location?.longitude
+                                    lng == annotation.point.longitude() && lat == annotation.point.latitude()
                                 }
 
                                 clickedOccurrence?.let {
                                     Toast.makeText(
                                         context,
-                                        "${it.title}: ${it.title}",
+                                        "${it.title}: Raio ${it.proximityRadius}m",
                                         Toast.LENGTH_LONG
                                     ).show()
                                 }
@@ -156,6 +161,8 @@ fun MapScreen(
                             }
 
                             val annotationOptionsList = state.occurrences.mapNotNull { occurrence ->
+                                val loc = occurrence.location ?: return@mapNotNull null
+
                                 val bmp = when (occurrence.type) {
                                     "ANIMAL_ON_ROAD" -> animal_on_road_pin
                                     "CRIME" -> crime_pin
@@ -179,14 +186,13 @@ fun MapScreen(
                                     "VEHICLE_BREAKDOWN" -> vehicle_breakdown_pin
                                     "WORK_ACCIDENT" -> work_accident_pin
                                     "ROAD_DAMAGE" -> road_damage
-
                                     else -> defaultPinBitmap
                                 }
 
                                 bmp?.let {
                                     PointAnnotationOptions()
-                                        .withPoint(Point.fromLngLat(occurrence.longitude, occurrence.latitude))
-                                        .withIconImage(it) // Usa o bitmap escolhido
+                                        .withPoint(Point.fromLngLat(loc.longitude, loc.latitude))
+                                        .withIconImage(it)
                                 }
                             }
 

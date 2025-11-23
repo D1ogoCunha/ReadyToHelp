@@ -9,7 +9,7 @@ import { OccurrenceDetails } from '../models/occurrence-details.model';
 })
 export class OccurrenceService {
 
-  private apiUrl = 'https://readytohelp-api.azurewebsites.net/api/occurrence'; 
+  private apiUrl = 'https://readytohelp-api.up.railway.app/api/occurrence'; 
 
   private http = inject(HttpClient);
 

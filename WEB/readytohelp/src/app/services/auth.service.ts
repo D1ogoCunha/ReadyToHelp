@@ -18,7 +18,7 @@ interface DecodedToken {
   providedIn: 'root',
 })
 export class AuthService {
-  private readonly baseAuthUrl = 'http://localhost:5134/api/auth';
+  private readonly baseAuthUrl = 'https://readytohelp-api.up.railway.app/api/auth';
   private readonly tokenKey = 'authToken';
 
   private readonly currentUserSubject: BehaviorSubject<DecodedToken | null>;
