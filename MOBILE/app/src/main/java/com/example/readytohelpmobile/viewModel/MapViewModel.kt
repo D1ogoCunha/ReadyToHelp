@@ -5,20 +5,27 @@ import android.app.Application
 import android.location.Location
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.readytohelpmobile.model.Feedback
 import com.example.readytohelpmobile.model.Occurrence
+import com.example.readytohelpmobile.services.FeedbackService
 import com.example.readytohelpmobile.services.OccurrenceService
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.mapbox.geojson.Point
-import kotlinx.coroutines.channels.Channel // Importante
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.receiveAsFlow // Importante
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import java.util.Timer
 import java.util.TimerTask
+
+data class MapEvent(
+    val message: String,
+    val occurrenceId: Int
+)
 
 sealed class MapUiState {
     data object Loading : MapUiState()
@@ -31,6 +38,9 @@ class MapViewModel(application: Application) : AndroidViewModel(application) {
         LocationServices.getFusedLocationProviderClient(application)
 
     private val _toastEvent = Channel<String>(Channel.BUFFERED)
+    private val _mapEvent = Channel<MapEvent>(Channel.BUFFERED)
+
+    val mapEvent = _mapEvent.receiveAsFlow()
     val toastEvent = _toastEvent.receiveAsFlow()
 
     private val _currentLocation = MutableStateFlow<Point?>(null)
@@ -49,25 +59,18 @@ class MapViewModel(application: Application) : AndroidViewModel(application) {
     fun fetchOccurrences() {
         viewModelScope.launch {
             _uiState.value = MapUiState.Loading
-            println("DEBUG: A buscar ocorrências...") // Log
-
             val result = OccurrenceService.getAllOccurrences()
 
             if (result != null) {
-                // Filtra apenas as ativas e com localização válida
                 val activeOccurrences = result.filter {
                     it.location != null && it.status == "ACTIVE"
                 }
-
-                println("DEBUG: ${activeOccurrences.size} ocorrências ativas carregadas.") // Log
                 _uiState.value = MapUiState.Success(activeOccurrences)
 
-                // Verifica logo se já estamos numa ocorrência ao carregar
                 _currentLocation.value?.let { userLoc ->
                     checkProximity(userLoc, activeOccurrences)
                 }
             } else {
-                println("DEBUG: Erro ao carregar ocorrências.") // Log
                 _uiState.value = MapUiState.Error("Error loading occurrences.")
             }
         }
@@ -76,7 +79,6 @@ class MapViewModel(application: Application) : AndroidViewModel(application) {
     @SuppressLint("MissingPermission")
     fun getUserLocation() {
         try {
-            // Força alta precisão para garantir que o emulador responde
             fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
                 .addOnSuccessListener { location ->
                     if (location != null) {
@@ -87,10 +89,7 @@ class MapViewModel(application: Application) : AndroidViewModel(application) {
                         if (currentState is MapUiState.Success) {
                             checkProximity(point, currentState.occurrences)
                         }
-                    } else {
                     }
-                }
-                .addOnFailureListener { e ->
                 }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -98,7 +97,6 @@ class MapViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun startLocationUpdates() {
-        // Atualiza a cada 3 segundos para ser mais reativo no teste
         Timer().scheduleAtFixedRate(object : TimerTask() {
             override fun run() {
                 getUserLocation()
@@ -117,30 +115,44 @@ class MapViewModel(application: Application) : AndroidViewModel(application) {
                 )
 
                 val distanceInMeters = results[0]
-                val radius = occurrence.proximityRadius
 
-                // Log detalhado para uma ocorrência específica (ex: a primeira da lista) para não spammar
-                if (occurrences.indexOf(occurrence) == 0) {
-                    // println("DEBUG: Distância para ${occurrence.title}: ${distanceInMeters}m (Raio: ${radius}m)")
-                }
-
-                if (distanceInMeters <= radius) {
-                    // Se entrou no raio
+                if (distanceInMeters <= occurrence.proximityRadius) {
                     if (!notifiedOccurrences.contains(occurrence.id)) {
-                        println("DEBUG: !!! DENTRO DO RAIO !!! A enviar Toast para: ${occurrence.title}")
-
+                        println("DEBUG: A enviar Evento para: ${occurrence.title}")
                         viewModelScope.launch {
-                            _toastEvent.send("⚠️ Entrou na zona de perigo: ${occurrence.title}")
+                            // Envia para o canal que o Snackbar ouve
+                            _mapEvent.send(
+                                MapEvent(
+                                    message = "⚠️ Na zona de: ${occurrence.title}",
+                                    occurrenceId = occurrence.id
+                                )
+                            )
                         }
                         notifiedOccurrences.add(occurrence.id)
                     }
                 } else {
-                    // Se saiu do raio
                     if (notifiedOccurrences.contains(occurrence.id)) {
-                        println("DEBUG: Saiu do raio de: ${occurrence.title}. Resetting notificação.")
                         notifiedOccurrences.remove(occurrence.id)
                     }
                 }
+            }
+        }
+    }
+
+    fun confirmPresence(occurrenceId: Int) {
+        viewModelScope.launch {
+            val feedback = Feedback(
+                occurrenceId = occurrenceId,
+                userId = 5,
+                isConfirmed = true
+            )
+
+            val success = FeedbackService.createFeedback(feedback)
+
+            if (success) {
+                _toastEvent.send("✅ Feedback enviado! Obrigado.")
+            } else {
+                _toastEvent.send("❌ Erro ao enviar feedback.")
             }
         }
     }

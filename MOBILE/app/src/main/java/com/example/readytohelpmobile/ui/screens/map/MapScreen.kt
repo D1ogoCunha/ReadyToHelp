@@ -9,12 +9,20 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -48,6 +56,8 @@ fun MapScreen(
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    val snackbarHostState = remember { SnackbarHostState() }
 
     val animal_on_road_pin = bitmapFromDrawableRes(R.drawable.animal_on_road)
     val crime_pin = bitmapFromDrawableRes(R.drawable.crime)
@@ -92,9 +102,20 @@ fun MapScreen(
         }
     }
 
+    // LISTENER ATUALIZADO PARA MAP EVENT
     LaunchedEffect(Unit) {
-        viewModel.toastEvent.collectLatest { message ->
-            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+        viewModel.mapEvent.collectLatest { event ->
+            // Mostra o snackbar com o botão "Confirmar"
+            val result = snackbarHostState.showSnackbar(
+                message = event.message,
+                actionLabel = "Confirmar",
+                duration = SnackbarDuration.Long
+            )
+
+            // Verifica se o utilizador clicou no botão
+            if (result == SnackbarResult.ActionPerformed) {
+                viewModel.confirmPresence(event.occurrenceId)
+            }
         }
     }
 
@@ -154,7 +175,7 @@ fun MapScreen(
                                     Toast.makeText(
                                         context,
                                         "${it.title}: Raio ${it.proximityRadius}m",
-                                        Toast.LENGTH_LONG
+                                        Toast.LENGTH_SHORT
                                     ).show()
                                 }
                                 true
@@ -203,6 +224,21 @@ fun MapScreen(
                     Text(text = "A permissão de localização é necessária para mostrar o mapa.")
                 }
             }
+        }
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(top = 16.dp)
+        ) { data ->
+            Snackbar(
+                snackbarData = data,
+                containerColor = Color.Red,
+                contentColor = Color.White,
+                actionColor = Color.Yellow,
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
+            )
         }
     }
 }
