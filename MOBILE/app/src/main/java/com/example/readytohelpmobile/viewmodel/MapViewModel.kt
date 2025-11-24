@@ -1,4 +1,4 @@
-package com.example.readytohelpmobile.viewModel
+package com.example.readytohelpmobile.viewmodel
 
 import android.annotation.SuppressLint
 import android.app.Application
@@ -21,6 +21,9 @@ sealed class MapUiState {
 }
 
 class MapViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val occurrenceService = OccurrenceService(application)
+
     private val fusedLocationClient: FusedLocationProviderClient =
         LocationServices.getFusedLocationProviderClient(application)
 
@@ -38,7 +41,7 @@ class MapViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             _uiState.value = MapUiState.Loading
 
-            val result = OccurrenceService.getActiveOccurrences()
+            val result = occurrenceService.getActiveOccurrences()
 
             if (result != null) {
                 _uiState.value = MapUiState.Success(result)
@@ -51,10 +54,14 @@ class MapViewModel(application: Application) : AndroidViewModel(application) {
     @SuppressLint("MissingPermission")
     fun getUserLocation() {
         viewModelScope.launch {
-            fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-                location?.let {
-                    _currentLocation.value = Point.fromLngLat(it.longitude, it.latitude)
+            try {
+                fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                    location?.let {
+                        _currentLocation.value = Point.fromLngLat(it.longitude, it.latitude)
+                    }
                 }
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
     }

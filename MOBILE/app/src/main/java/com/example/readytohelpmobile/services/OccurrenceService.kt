@@ -1,16 +1,11 @@
 package com.example.readytohelpmobile.services
+
+import android.content.Context
 import com.example.readytohelpmobile.model.Occurrence
 import com.example.readytohelpmobile.network.NetworkClient
-import retrofit2.Response
-import retrofit2.http.GET
 
-private interface OccurrenceApi {
-    @GET("occurrence/active")
-    suspend fun getActiveOccurrences(): Response<List<Occurrence>>
-}
-
-object OccurrenceService {
-    private val api = NetworkClient.retrofit.create(OccurrenceApi::class.java)
+class OccurrenceService(context: Context) {
+    private val api = NetworkClient.getRetrofitInstance(context).create(OccurrenceApi::class.java)
 
     suspend fun getActiveOccurrences(): List<Occurrence>? {
         return try {
@@ -21,7 +16,6 @@ object OccurrenceService {
                 null
             }
         } catch (e: Exception) {
-
             e.printStackTrace()
             null
         }
