@@ -139,21 +139,15 @@ class MapViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun confirmPresence(occurrenceId: Int) {
+    fun confirmPresence(occurrenceId: Int, confirmed: Boolean) {
         viewModelScope.launch {
             val feedback = Feedback(
                 occurrenceId = occurrenceId,
-                userId = 5,
-                isConfirmed = true
+                userId = 7,
+                isConfirmed = confirmed
             )
 
-            val success = FeedbackService.createFeedback(feedback)
-
-            if (success) {
-                _toastEvent.send("✅ Feedback enviado! Obrigado.")
-            } else {
-                _toastEvent.send("❌ Erro ao enviar feedback.")
-            }
+            FeedbackService.createFeedback(feedback)
         }
     }
 }
