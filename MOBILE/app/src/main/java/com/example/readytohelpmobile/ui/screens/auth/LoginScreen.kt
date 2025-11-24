@@ -1,6 +1,7 @@
 package com.example.readytohelpmobile.ui.screens.auth
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -22,6 +23,8 @@ import com.example.readytohelpmobile.R
 import com.example.readytohelpmobile.viewmodel.AuthUiState
 import com.example.readytohelpmobile.viewmodel.AuthViewModel
 
+private val BrandBlue = Color(0xFF4253AF)
+
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
@@ -35,16 +38,17 @@ fun LoginScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(BrandBlue)
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // Logótipo
+        // Logo
         Image(
             painter = painterResource(id = R.drawable.readytohelp_logo),
             contentDescription = "ReadyToHelp Logo",
             modifier = Modifier
-                .height(120.dp)
+                .height(140.dp)
                 .fillMaxWidth(),
             contentScale = ContentScale.Fit
         )
@@ -52,68 +56,86 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(32.dp))
 
         Text(
-            text = "Bem-vindo de volta!",
+            text = "Welcome Back!",
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onBackground
+            color = Color.White
         )
         Text(
-            text = "Faça login para continuar",
+            text = "Sign in to continue",
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = Color.White.copy(alpha = 0.8f),
             textAlign = TextAlign.Center
         )
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Campo de Email
+        // Email Field
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
-            label = { Text("Email") },
-            leadingIcon = { Icon(imageVector = Icons.Default.Email, contentDescription = null) },
+            label = { Text("Email", color = Color.White) },
+            leadingIcon = { Icon(imageVector = Icons.Default.Email, contentDescription = null, tint = Color.White) },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
-            singleLine = true
+            singleLine = true,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color.White,
+                unfocusedBorderColor = Color.White,
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.White,
+                cursorColor = Color.White
+            )
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Campo de Password
+        // Password Field
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
-            label = { Text("Password") },
-            leadingIcon = { Icon(imageVector = Icons.Default.Lock, contentDescription = null) },
+            label = { Text("Password", color = Color.White) },
+            leadingIcon = { Icon(imageVector = Icons.Default.Lock, contentDescription = null, tint = Color.White) },
             visualTransformation = PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
-            singleLine = true
+            singleLine = true,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color.White,
+                unfocusedBorderColor = Color.White,
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.White,
+                cursorColor = Color.White
+            )
         )
 
         Spacer(modifier = Modifier.height(24.dp))
 
         if (state is AuthUiState.Loading) {
-            CircularProgressIndicator()
+            CircularProgressIndicator(color = Color.White)
         } else {
-            // Botão de Login
+            // Login Button
             Button(
                 onClick = { viewModel.login(email, password) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.White,
+                    contentColor = BrandBlue
+                )
             ) {
-                Text(text = "Entrar", style = MaterialTheme.typography.titleMedium)
+                Text(text = "Sign In", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Register Navigation
             TextButton(onClick = onNavigateToRegister) {
                 Text(
-                    text = "Não tem conta? Registe-se aqui",
-                    color = MaterialTheme.colorScheme.primary
+                    text = "No account? Sign up here",
+                    color = Color.White
                 )
             }
         }
@@ -122,8 +144,9 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(16.dp))
             Text(
                 text = (state as AuthUiState.Error).msg,
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodyMedium
+                color = Color(0xFFFFCDD2),
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Center
             )
         }
 
