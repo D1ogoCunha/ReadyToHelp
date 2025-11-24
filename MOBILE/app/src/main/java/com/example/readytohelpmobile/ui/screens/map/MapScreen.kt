@@ -21,8 +21,8 @@ import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.readytohelpmobile.viewModel.MapUiState
-import com.example.readytohelpmobile.viewModel.MapViewModel
+import com.example.readytohelpmobile.viewmodel.MapUiState
+import com.example.readytohelpmobile.viewmodel.MapViewModel
 import com.mapbox.geojson.Point
 import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMap
