@@ -1,3 +1,6 @@
+/**
+ * Enumeration of different types of occurrences.
+ */
 export enum OccurrenceType {
   FOREST_FIRE = 'FOREST_FIRE',
   URBAN_FIRE = 'URBAN_FIRE',
