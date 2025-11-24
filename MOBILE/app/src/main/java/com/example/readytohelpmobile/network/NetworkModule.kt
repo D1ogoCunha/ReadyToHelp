@@ -15,7 +15,7 @@ object NetworkClient {
 
     private const val BASE_URL = "https://readytohelp-api.up.railway.app/api/"
 
-    private var retrofit: Retrofit? = null
+    var retrofit: Retrofit? = null
 
     fun getRetrofitInstance(context: Context): Retrofit {
         if (retrofit == null) {

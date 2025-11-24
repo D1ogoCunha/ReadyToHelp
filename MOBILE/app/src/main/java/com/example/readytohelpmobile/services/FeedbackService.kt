@@ -12,12 +12,12 @@ private interface FeedbackApi {
 }
 
 object FeedbackService {
-    private val api = NetworkClient.retrofit.create(FeedbackApi::class.java)
+    private val api = NetworkClient.retrofit?.create(FeedbackApi::class.java)
 
     suspend fun createFeedback(feedback: Feedback): Boolean {
         return try {
-            val response = api.createFeedback(feedback)
-            response.isSuccessful
+            val response = api?.createFeedback(feedback)
+            response!!.isSuccessful
         } catch (e: Exception) {
             e.printStackTrace()
             false

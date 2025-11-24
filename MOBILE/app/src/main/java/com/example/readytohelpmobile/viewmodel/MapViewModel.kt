@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import java.util.Timer
 import java.util.TimerTask
+import com.example.readytohelpmobile.utils.TokenManager
 
 data class MapEvent(
     val message: String,
@@ -34,11 +35,10 @@ sealed class MapUiState {
 }
 
 class MapViewModel(application: Application) : AndroidViewModel(application) {
-
-    private val occurrenceService = OccurrenceService(application)
-
     private val fusedLocationClient: FusedLocationProviderClient =
         LocationServices.getFusedLocationProviderClient(application)
+
+    private val tokenManager by lazy { TokenManager(application) }
 
     private val _toastEvent = Channel<String>(Channel.BUFFERED)
     private val _mapEvent = Channel<MapEvent>(Channel.BUFFERED)
@@ -58,23 +58,34 @@ class MapViewModel(application: Application) : AndroidViewModel(application) {
         fetchOccurrences()
         startLocationUpdates()
     }
-
+    
     fun fetchOccurrences() {
         viewModelScope.launch {
             _uiState.value = MapUiState.Loading
-            val result = OccurrenceService.getAllOccurrences()
 
-            if (result != null) {
-                val activeOccurrences = result.filter {
-                    it.location != null && it.status == "ACTIVE"
-                }
-                _uiState.value = MapUiState.Success(activeOccurrences)
+            try {
+                // Chama o serviço para buscar todas as ocorrências
+                val result = OccurrenceService.getAllOccurrences()
 
-                _currentLocation.value?.let { userLoc ->
-                    checkProximity(userLoc, activeOccurrences)
+                if (result != null) {
+                    // Filtra apenas as ativas e com localização válida
+                    val activeOccurrences = result.filter {
+                        it.location != null && it.status == "ACTIVE"
+                    }
+
+                    // Atualiza o estado para SUCESSO (isto remove o spinner infinito)
+                    _uiState.value = MapUiState.Success(activeOccurrences)
+
+                    // Se já tivermos localização, verifica proximidade
+                    _currentLocation.value?.let { userLoc ->
+                        checkProximity(userLoc, activeOccurrences)
+                    }
+                } else {
+                    _uiState.value = MapUiState.Error("Não foi possível carregar as ocorrências.")
                 }
-            } else {
-                _uiState.value = MapUiState.Error("Error loading occurrences.")
+            } catch (e: Exception) {
+                _uiState.value = MapUiState.Error("Erro: ${e.localizedMessage}")
+                e.printStackTrace()
             }
         }
     }
@@ -88,6 +99,7 @@ class MapViewModel(application: Application) : AndroidViewModel(application) {
                         val point = Point.fromLngLat(location.longitude, location.latitude)
                         _currentLocation.value = point
 
+                        // Sempre que a localização muda, verifica proximidade se os dados já estiverem carregados
                         val currentState = _uiState.value
                         if (currentState is MapUiState.Success) {
                             checkProximity(point, currentState.occurrences)
@@ -121,8 +133,8 @@ class MapViewModel(application: Application) : AndroidViewModel(application) {
 
                 if (distanceInMeters <= occurrence.proximityRadius) {
                     if (!notifiedOccurrences.contains(occurrence.id)) {
+                        println("DEBUG: A enviar Evento para: ${occurrence.title}")
                         viewModelScope.launch {
-                            // Envia para o canal que o Snackbar ouve
                             _mapEvent.send(
                                 MapEvent(
                                     message = "⚠️ Na zona de: ${occurrence.title}",
@@ -137,8 +149,6 @@ class MapViewModel(application: Application) : AndroidViewModel(application) {
                         notifiedOccurrences.remove(occurrence.id)
                     }
                 }
-            } catch (e: Exception) {
-                e.printStackTrace()
             }
         }
     }
@@ -147,7 +157,7 @@ class MapViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             val feedback = Feedback(
                 occurrenceId = occurrenceId,
-                userId = 7,
+                userId = tokenManager.getUserIdFromToken(),
                 isConfirmed = confirmed
             )
 
