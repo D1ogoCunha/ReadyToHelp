@@ -8,7 +8,8 @@ import { OccurrenceDetails } from '../models/occurrence-details.model';
   providedIn: 'root',
 })
 export class OccurrenceService {
-  private apiUrl = 'http://localhost:5134/api/occurrence';
+
+  private apiUrl = 'https://readytohelp-api.up.railway.app/api/occurrence'; 
 
   private http = inject(HttpClient);
 

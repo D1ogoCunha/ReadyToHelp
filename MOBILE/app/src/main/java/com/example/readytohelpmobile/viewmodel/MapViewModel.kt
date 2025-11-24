@@ -2,17 +2,31 @@ package com.example.readytohelpmobile.viewmodel
 
 import android.annotation.SuppressLint
 import android.app.Application
+import android.location.Location
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.readytohelpmobile.model.Feedback
 import com.example.readytohelpmobile.model.Occurrence
+import com.example.readytohelpmobile.services.FeedbackService
 import com.example.readytohelpmobile.services.OccurrenceService
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 import com.mapbox.geojson.Point
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import java.util.Timer
+import java.util.TimerTask
+import com.example.readytohelpmobile.utils.TokenManager
+
+data class MapEvent(
+    val message: String,
+    val occurrenceId: Int
+)
 
 sealed class MapUiState {
     data object Loading : MapUiState()
@@ -21,11 +35,16 @@ sealed class MapUiState {
 }
 
 class MapViewModel(application: Application) : AndroidViewModel(application) {
-
-    private val occurrenceService = OccurrenceService(application)
-
     private val fusedLocationClient: FusedLocationProviderClient =
         LocationServices.getFusedLocationProviderClient(application)
+
+    private val tokenManager by lazy { TokenManager(application) }
+
+    private val _toastEvent = Channel<String>(Channel.BUFFERED)
+    private val _mapEvent = Channel<MapEvent>(Channel.BUFFERED)
+
+    val mapEvent = _mapEvent.receiveAsFlow()
+    val toastEvent = _toastEvent.receiveAsFlow()
 
     private val _currentLocation = MutableStateFlow<Point?>(null)
     val currentLocation: StateFlow<Point?> = _currentLocation.asStateFlow()
@@ -33,36 +52,116 @@ class MapViewModel(application: Application) : AndroidViewModel(application) {
     private val _uiState = MutableStateFlow<MapUiState>(MapUiState.Loading)
     val uiState: StateFlow<MapUiState> = _uiState.asStateFlow()
 
+    private val notifiedOccurrences = mutableSetOf<Int>()
+
     init {
         fetchOccurrences()
+        startLocationUpdates()
     }
-
+    
     fun fetchOccurrences() {
         viewModelScope.launch {
             _uiState.value = MapUiState.Loading
 
-            val result = occurrenceService.getActiveOccurrences()
+            try {
+                // Chama o serviço para buscar todas as ocorrências
+                val result = OccurrenceService.getAllOccurrences()
 
-            if (result != null) {
-                _uiState.value = MapUiState.Success(result)
-            } else {
-                _uiState.value = MapUiState.Error("Não foi possível carregar as ocorrências.")
+                if (result != null) {
+                    // Filtra apenas as ativas e com localização válida
+                    val activeOccurrences = result.filter {
+                        it.location != null && it.status == "ACTIVE"
+                    }
+
+                    // Atualiza o estado para SUCESSO (isto remove o spinner infinito)
+                    _uiState.value = MapUiState.Success(activeOccurrences)
+
+                    // Se já tivermos localização, verifica proximidade
+                    _currentLocation.value?.let { userLoc ->
+                        checkProximity(userLoc, activeOccurrences)
+                    }
+                } else {
+                    _uiState.value = MapUiState.Error("Não foi possível carregar as ocorrências.")
+                }
+            } catch (e: Exception) {
+                _uiState.value = MapUiState.Error("Erro: ${e.localizedMessage}")
+                e.printStackTrace()
             }
         }
     }
 
     @SuppressLint("MissingPermission")
     fun getUserLocation() {
-        viewModelScope.launch {
-            try {
-                fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-                    location?.let {
-                        _currentLocation.value = Point.fromLngLat(it.longitude, it.latitude)
+        try {
+            fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
+                .addOnSuccessListener { location ->
+                    if (location != null) {
+                        val point = Point.fromLngLat(location.longitude, location.latitude)
+                        _currentLocation.value = point
+
+                        // Sempre que a localização muda, verifica proximidade se os dados já estiverem carregados
+                        val currentState = _uiState.value
+                        if (currentState is MapUiState.Success) {
+                            checkProximity(point, currentState.occurrences)
+                        }
                     }
                 }
-            } catch (e: Exception) {
-                e.printStackTrace()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun startLocationUpdates() {
+        Timer().scheduleAtFixedRate(object : TimerTask() {
+            override fun run() {
+                getUserLocation()
             }
+        }, 0, 3000)
+    }
+
+    private fun checkProximity(userPoint: Point, occurrences: List<Occurrence>) {
+        occurrences.forEach { occurrence ->
+            occurrence.location?.let { occLocation ->
+                val results = FloatArray(1)
+                Location.distanceBetween(
+                    userPoint.latitude(), userPoint.longitude(),
+                    occLocation.latitude, occLocation.longitude,
+                    results
+                )
+
+                val distanceInMeters = results[0]
+
+                if (distanceInMeters <= occurrence.proximityRadius) {
+                    if (!notifiedOccurrences.contains(occurrence.id)) {
+                        println("DEBUG: A enviar Evento para: ${occurrence.title}")
+                        viewModelScope.launch {
+                            _mapEvent.send(
+                                MapEvent(
+                                    message = "⚠️ Na zona de: ${occurrence.title}",
+                                    occurrenceId = occurrence.id
+                                )
+                            )
+                        }
+                        notifiedOccurrences.add(occurrence.id)
+                    }
+                } else {
+                    if (notifiedOccurrences.contains(occurrence.id)) {
+                        notifiedOccurrences.remove(occurrence.id)
+                    }
+                }
+            }
+        }
+    }
+
+    fun confirmPresence(occurrenceId: Int, confirmed: Boolean) {
+        viewModelScope.launch {
+            val feedback = Feedback(
+                occurrenceId = occurrenceId,
+                userId = tokenManager.getUserIdFromToken(),
+                isConfirmed = confirmed
+            )
+
+            FeedbackService.createFeedback(feedback)
         }
     }
 }
