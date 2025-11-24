@@ -1,18 +1,21 @@
 package com.example.readytohelpmobile.network
 
+import com.example.readytohelpmobile.utils.TokenManager
 import okhttp3.Interceptor
 import okhttp3.Response
 
-class AuthInterceptor : Interceptor {
+class AuthInterceptor(private val tokenManager: TokenManager) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalRequest = chain.request()
+        val token = tokenManager.getToken()
 
-        val myToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiQ0lUSVpFTiIsImVtYWlsIjoiY2FybG9zQGV4YW1wbGUuY29tIiwic3ViIjoiNSIsImp0aSI6IjZmMTVhOWJjOThhZjRmYmRiZjk2ZjA2YWJmNTQ0YzIwIiwibmJmIjoxNzYzOTM4OTc4LCJleHAiOjE3NjQwMjUzNzgsImlhdCI6MTc2MzkzODk3OCwiaXNzIjoiUmVhZHlUb0hlbHBBUEkiLCJhdWQiOiJSZWFkeVRvSGVscENsaWVudHMifQ.08ZHQyZrhd_C7yx5lcWxWeD_DVUEdxo8WYQDCwisM0s"
-
-        val newRequest = originalRequest.newBuilder()
-            .addHeader("Authorization", "Bearer $myToken")
-            .build()
+        val newRequest = if (token != null) {
+            originalRequest.newBuilder()
+                .header("Authorization", "Bearer $token")
+                .build()
+        } else {
+            originalRequest
+        }
 
         return chain.proceed(newRequest)
     }
-}

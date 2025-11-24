@@ -1,5 +1,6 @@
 package com.example.readytohelpmobile.services
 
+import android.content.Context
 import com.example.readytohelpmobile.model.Occurrence
 import com.example.readytohelpmobile.network.NetworkClient
 import retrofit2.Response
