@@ -2,11 +2,11 @@
 <div class="login-container">
   <div class="branding-side">
     <img src="/Logo.jpg" alt="ReadyToHelp Logo" class="main-logo" />
-    <p class="slogan">A sua plataforma de resposta a emergências.</p>
+    <p class="slogan">Your emergency response platform.</p>
   </div>
   <div class="form-side">
     <div class="form-wrapper">
-      <h2>Bem vindo de volta!</h2>
+      <h2>Welcome back!</h2>
       <form (ngSubmit)="submit()" #f="ngForm" novalidate>
         <div class="form-group">
           <label for="email" class="sr-only">Email</label>
@@ -31,11 +31,23 @@
           />
         </div>
         <button type="submit" class="btn-submit" [disabled]="loading">
-          <span *ngIf="!loading">Entrar</span>
-          <span *ngIf="loading">Entrando...</span>
+          <span *ngIf="!loading">Login</span>
+          <span *ngIf="loading">Logging in...</span>
         </button>
-        <div class="error" *ngIf="error" role="alert">{{ error }}</div>
       </form>
+    </div>
+
+    <!-- Adicione dentro da .form-side, depois da .form-wrapper -->
+    <div *ngIf="toast.show" class="rt-toast-container">
+      <div
+        class="alert"
+        [ngClass]="{
+          'alert-success': toast.type === 'success',
+          'alert-danger': toast.type === 'error'
+        }"
+      >
+        {{ toast.message }}
+      </div>
     </div>
   </div>
 </div>

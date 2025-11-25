@@ -11,7 +11,7 @@ export class UserService {
   );
   user$ = this.userSubject.asObservable();
 
-  private apiUrl = 'http://localhost:5134/api/user';
+  private apiUrl = 'https://readytohelp-api.up.railway.app/api/user';
 
   constructor(private http: HttpClient) {}
 

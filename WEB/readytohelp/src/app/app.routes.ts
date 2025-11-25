@@ -1,10 +1,10 @@
 import { Routes } from '@angular/router';
 import { LoginComponent } from './components/auth/login/login.component';
-import { MapComponent } from './pages/map/map.component';
-import { OccurrenceDetailComponent } from './pages/occurence-detail/occurence-detail.component';
+import { MapComponent } from './components/map/map.component';
+import { OccurrenceDetailComponent } from './components/occurence-detail/occurence-detail.component';
 import { AuthGuard } from './guards/auth.guard';
 import { OccurrencesHistoryComponent } from './components/occurrences-history/occurrences-history.component';
-import { UserManagementComponent } from './pages/user-management/user-management.component';
+import { UserManagementComponent } from './components/user-management/user-management.component';
 
 export const appRoutes: Routes = [
   // The login page

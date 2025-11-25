@@ -15,15 +15,13 @@ export class LoginComponent {
   email = '';
   password = '';
   loading = false;
-  error: string | null = null;
   returnUrl = '/';
+  toast: { show: boolean; message: string; type: 'success' | 'error' } = {
+    show: false,
+    message: '',
+    type: 'success',
+  };
 
-  /**
-   * Constructor for LoginComponent
-   * @param auth The authentication service
-   * @param router The router service
-   * @param route The activated route service
-   */
   constructor(
     private readonly auth: AuthService,
     private readonly router: Router,
@@ -33,11 +31,7 @@ export class LoginComponent {
     if (q) this.returnUrl = q;
   }
 
-  /**
-   * Submits the login form and handles authentication.
-   */
   submit() {
-    this.error = null;
     this.loading = true;
     this.auth.login({ email: this.email, password: this.password }).subscribe({
       next: () => {
@@ -46,30 +40,32 @@ export class LoginComponent {
       },
       error: (err) => {
         this.loading = false;
+        let errorMsg = '';
 
         if (err?.status === 401) {
-          this.error = 'Login failed. Please check your credentials.';
-          return;
-        }
-        if (err?.status === 403) {
-          this.error =
+          errorMsg = 'Login failed. Please check your credentials.';
+        } else if (err?.status === 403) {
+          errorMsg =
             'Access denied: account does not have permission to log in.';
-          return;
-        }
-
-        if (err?.error) {
+        } else if (err?.error) {
           if (typeof err.error === 'string') {
-            this.error = `Error ${err.status}: ${err.statusText || err.error}`;
+            errorMsg = `Error ${err.status}: ${err.statusText || err.error}`;
           } else if (err.error?.message) {
-            this.error = err.error.message;
+            errorMsg = err.error.message;
           } else {
-            this.error = JSON.stringify(err.error);
+            errorMsg = JSON.stringify(err.error);
           }
         } else {
-          this.error =
-            err?.message || 'An unknown error occurred during login.';
+          errorMsg = err?.message || 'An unknown error occurred during login.';
         }
+
+        this.showToast(errorMsg, 'error');
       },
     });
+  }
+
+  showToast(message: string, type: 'success' | 'error') {
+    this.toast = { show: true, message, type };
+    setTimeout(() => (this.toast.show = false), 3000);
   }
 }
