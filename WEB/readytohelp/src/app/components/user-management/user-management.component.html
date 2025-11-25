@@ -1,14 +1,15 @@
 <div class="user-mgmt-page">
-  <!-- HEADER -->
+  <!-- HEADER: Page title section -->
   <div class="um-header">
     <div class="um-title-wrap">
       <h2 class="um-title">User Management</h2>
     </div>
   </div>
 
-  <!-- TOOLBAR / FILTERS -->
+  <!-- TOOLBAR / FILTERS: Search and filter controls -->
   <div class="um-toolbar">
     <div class="filter-group">
+      <!-- Search icon and input -->
       <span class="material-icons filter-icon">search</span>
       <input
         class="filter-input"
@@ -18,6 +19,7 @@
       />
     </div>
 
+    <!-- Apply and Reset filter buttons -->
     <div class="d-flex gap-2">
       <button
         class="btn btn-outline-primary btn-sm"
@@ -36,8 +38,9 @@
     </div>
   </div>
 
-  <!-- BODY / TABLE -->
+  <!-- BODY / TABLE: User list and states -->
   <div class="um-body">
+    <!-- Loading state -->
     <div *ngIf="loading" class="loading-state p-4 text-center text-muted">
       <div
         class="spinner-border text-primary spinner-border-sm"
@@ -46,12 +49,15 @@
       <span class="ms-2">Loading users...</span>
     </div>
 
+    <!-- Error message -->
     <div class="alert alert-danger m-4 rounded" *ngIf="error">{{ error }}</div>
 
+    <!-- User table -->
     <div class="table-responsive" *ngIf="!loading && users.length">
       <table class="um-table">
         <thead>
           <tr>
+            <!-- Sortable columns -->
             <th
               (click)="changeSort('Id')"
               [class.sorted]="sortBy === 'Id'"
@@ -91,9 +97,11 @@
           </tr>
         </thead>
         <tbody>
+          <!-- User rows -->
           <tr *ngFor="let u of users">
             <td class="text-muted font-weight-bold">#{{ u.id }}</td>
             <td>
+              <!-- User name and avatar -->
               <div class="user-name-cell">
                 <div class="avatar-placeholder">
                   {{ u.name.charAt(0) | uppercase }}
@@ -105,6 +113,7 @@
               <span class="email-cell">{{ u.email }}</span>
             </td>
             <td>
+              <!-- Profile badge -->
               <span
                 class="badge profile-badge"
                 [ngClass]="{
@@ -117,6 +126,7 @@
               </span>
             </td>
             <td class="text-right">
+              <!-- Edit and Delete action buttons -->
               <div class="action-group">
                 <button class="btn" (click)="openEdit(u, $event)" title="Edit">
                   <span class="material-icons">edit</span>
@@ -136,6 +146,7 @@
       </table>
     </div>
 
+    <!-- Empty state when no users are found -->
     <div *ngIf="!loading && !users.length" class="empty-state py-5 text-center">
       <span
         class="material-icons empty-icon"
@@ -146,7 +157,7 @@
     </div>
   </div>
 
-  <!-- FOOTER -->
+  <!-- FOOTER: Pagination controls -->
   <div class="um-footer" *ngIf="!loading && users.length">
     <!-- Previous Button -->
     <button
@@ -170,7 +181,7 @@
     </button>
   </div>
 
-  <!-- MODALS & TOAST -->
+  <!-- MODALS & TOAST: Confirm deletion modal -->
   <div
     *ngIf="confirmModalOpen"
     class="rt-modal-backdrop"
@@ -198,6 +209,7 @@
     </div>
   </div>
 
+  <!-- MODALS & TOAST: Edit/Create user modal -->
   <div
     *ngIf="editModalOpen"
     class="rt-modal-backdrop"
@@ -253,7 +265,6 @@
           <div class="col-md-6">
             <label class="form-label small fw-bold text-secondary">
               Password
-              <span *ngIf="isEditing" class="fw-normal text-muted">(opt)</span>
             </label>
             <input
               type="password"
@@ -283,6 +294,7 @@
       </button>
     </div>
   </div>
+  <!-- Toast notification for success/error messages -->
   <div *ngIf="toast.show" class="rt-toast-container">
     <div
       class="alert"
@@ -295,7 +307,7 @@
     </div>
   </div>
 
-  <!-- FAB Add User -->
+  <!-- FAB Add User: Floating action button to add new user -->
   <button
     class="fab-add-user"
     type="button"
@@ -305,5 +317,6 @@
     <span class="material-icons">add</span>
   </button>
   
+  <!-- Legal footer component -->
   <app-legal-footer></app-legal-footer>
 </div>

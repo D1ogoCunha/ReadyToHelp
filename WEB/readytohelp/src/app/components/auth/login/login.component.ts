@@ -4,6 +4,10 @@ import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 
+/**
+ * LoginComponent
+ * Handles user authentication and login form logic.
+ */
 @Component({
   selector: 'app-login',
   standalone: true,
@@ -16,12 +20,25 @@ export class LoginComponent {
   password = '';
   loading = false;
   returnUrl = '/';
+  /**
+   * Toast notification object
+   * @property show - Whether the toast is visible
+   * @property message - Message to display
+   * @property type - Type of message ('success' | 'error')
+   */
   toast: { show: boolean; message: string; type: 'success' | 'error' } = {
     show: false,
     message: '',
     type: 'success',
   };
 
+  /**
+   * Injects authentication, routing, and route services.
+   * Sets the return URL from query parameters if provided.
+   * @param auth AuthService for authentication logic
+   * @param router Router for navigation
+   * @param route ActivatedRoute for accessing route parameters
+   */
   constructor(
     private readonly auth: AuthService,
     private readonly router: Router,
@@ -31,6 +48,10 @@ export class LoginComponent {
     if (q) this.returnUrl = q;
   }
 
+  /**
+   * Handles form submission for login.
+   * Calls AuthService and manages loading state and error handling.
+   */
   submit() {
     this.loading = true;
     this.auth.login({ email: this.email, password: this.password }).subscribe({
@@ -42,6 +63,7 @@ export class LoginComponent {
         this.loading = false;
         let errorMsg = '';
 
+        // Error handling for different HTTP status codes and error formats
         if (err?.status === 401) {
           errorMsg = 'Login failed. Please check your credentials.';
         } else if (err?.status === 403) {
@@ -64,6 +86,11 @@ export class LoginComponent {
     });
   }
 
+  /**
+   * Displays a toast notification for 3 seconds.
+   * @param message Message to display
+   * @param type Type of message ('success' | 'error')
+   */
   showToast(message: string, type: 'success' | 'error') {
     this.toast = { show: true, message, type };
     setTimeout(() => (this.toast.show = false), 3000);

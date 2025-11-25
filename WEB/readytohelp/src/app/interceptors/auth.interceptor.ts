@@ -3,6 +3,10 @@ import { HttpRequest, HttpHandler, HttpEvent, HttpInterceptor } from '@angular/c
 import { Observable } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 
+/**
+ * AuthInterceptor
+ * Automatically attaches the JWT token to outgoing HTTP requests for authentication.
+ */
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
 

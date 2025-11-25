@@ -1,5 +1,9 @@
 import { Component } from '@angular/core';
 
+/**
+ * LegalFooterComponent
+ * Displays legal and copyright information in the footer section.
+ */
 @Component({
   selector: 'app-legal-footer',
   standalone: true,
@@ -7,5 +11,6 @@ import { Component } from '@angular/core';
   styleUrls: ['./legal-footer.component.css'],
 })
 export class LegalFooterComponent {
+  /** Current year for copyright notice */
   readonly year = new Date().getFullYear();
 }

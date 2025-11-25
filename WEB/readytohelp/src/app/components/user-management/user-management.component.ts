@@ -5,6 +5,9 @@ import { User } from '../../models/user.model';
 import { FormsModule } from '@angular/forms';
 import { LegalFooterComponent } from '../../components/legal-footer/legal-footer.component';
 
+/**
+ * Component to manage users including listing, creating, editing, and deleting users.
+ */
 @Component({
   selector: 'app-user-management',
   standalone: true,
@@ -69,12 +72,12 @@ export class UserManagementComponent implements OnInit {
       )
       .subscribe({
         next: (data) => {
-          // Filtra ID 1
+          // Filter out the MAIN admin user with ID 1
           this.users = (data || []).filter((u) => u.id !== 1);
           this.loading = false;
-        },
+        },  
         error: () => {
-          this.error = 'Falha ao carregar utilizadores';
+          this.error = 'Failed to load users';
           this.loading = false;
         },
       });
@@ -268,7 +271,7 @@ export class UserManagementComponent implements OnInit {
         this.confirmModalOpen = false;
         this.userPendingDelete = null;
         this.showToast(
-          `Utilizador "${u.name}" removido com sucesso.`,
+          `User "${u.name}" removed successfully.`,
           'success'
         );
       },
@@ -276,7 +279,7 @@ export class UserManagementComponent implements OnInit {
         this.deletingId = null;
         this.confirmModalOpen = false;
         this.userPendingDelete = null;
-        this.showToast(`Falha ao remover o utilizador "${u.name}".`, 'error');
+        this.showToast(`Failed to remove user "${u.name}".`, 'error');
       },
     });
   }

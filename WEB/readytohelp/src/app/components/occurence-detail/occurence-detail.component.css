@@ -1,8 +1,9 @@
 /* =========================================
     PAGE LAYOUT
    ========================================= */
+/* Main page container for occurrence detail */
 .od-page {
-  background: #f8fafc; /* Fundo claro */
+  background: #f8fafc; /* Light background */
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -12,6 +13,7 @@
 /* =========================================
    HEADER
    ========================================= */
+/* Header section with title and styling */
 .od-header {
   height: 150px;
   padding: 32px 55px; 
@@ -22,6 +24,7 @@
   color: #ffffff;
 }
 
+/* Main title in header */
 .od-title {
   margin: 0;
   font-size: 2.5rem;
@@ -32,6 +35,7 @@
 /* =========================================
     BODY
    ========================================= */
+/* Body section for main content */
 .od-body {
   flex: 1; 
   padding: 40px 55px; 
@@ -40,7 +44,7 @@
   margin: 0 auto;
 }
 
-/* Map image */
+/* Map image preview box */
 .map-preview-box {
   border-radius: 12px;
   overflow: hidden;
@@ -49,7 +53,10 @@
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 
-/* Text Sections */
+/* =========================================
+   TEXT SECTIONS
+   ========================================= */
+/* Section title styling */
 .section-title {
   font-size: 1.5rem;
   font-weight: 700;
@@ -60,6 +67,7 @@
   line-height: 1;
 }
 
+/* Description text styling */
 .description-text {
   font-size: 1.5rem;
   line-height: 1.6;
@@ -67,7 +75,10 @@
   white-space: pre-wrap;
 }
 
-/* Information Table */
+/* =========================================
+   INFORMATION TABLE
+   ========================================= */
+/* Table for occurrence information */
 .info-table {
   width: 100%;
   border-collapse: separate;
@@ -89,6 +100,7 @@
   border-bottom: none;
 }
 
+/* Label column in info table */
 .info-label {
   font-weight: 600;
   color: #64748b;
@@ -96,12 +108,16 @@
   background-color: #f8fafc;
 }
 
+/* Value column in info table */
 .info-value {
   font-weight: 500;
   color: #0f172a;
 }
 
-/* Loading and Error State */
+/* =========================================
+   LOADING AND ERROR STATE
+   ========================================= */
+/* Container for loading and error messages */
 .state-container {
   padding: 60px;
   text-align: center;

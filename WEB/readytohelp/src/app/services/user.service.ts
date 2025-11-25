@@ -4,15 +4,26 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { User } from '../models/user.model';
 
+/**
+ * UserService
+ * Handles user session state and provides methods to interact with the user API.
+ */
 @Injectable({ providedIn: 'root' })
 export class UserService {
+  /** Subject holding the current user object */
   private readonly userSubject = new BehaviorSubject<any>(
     JSON.parse(localStorage.getItem('user') || '{}')
   );
+  /** Observable for current user changes */
   user$ = this.userSubject.asObservable();
 
+  /** Base URL for user API endpoints */
   private apiUrl = 'https://readytohelp-api.up.railway.app/api/user';
 
+  /**
+   * Initializes UserService with HttpClient.
+   * @param http Angular HttpClient for API requests
+   */
   constructor(private http: HttpClient) {}
 
   /**
@@ -33,7 +44,7 @@ export class UserService {
   }
 
   /**
-   * Create a new user (ADMIN/MANAGER)
+   * Creates a new user (ADMIN/MANAGER).
    * @param payload The user data to create.
    * @returns An observable of the created User object.
    */
@@ -52,7 +63,8 @@ export class UserService {
   }
 
   /**
-   * Update an existing user
+   * Updates an existing user.
+   * Sends only the fields that can be updated.
    * @param id The ID of the user to update.
    * @param payload The user data to update.
    * @returns An observable of the updated User object.
@@ -66,7 +78,6 @@ export class UserService {
       profile: 'CITIZEN' | 'MANAGER' | 'ADMIN';
     }
   ): Observable<User> {
-    // Sends only the fields that can be updated
     const body: any = {
       Name: payload.name,
       Email: payload.email,
@@ -79,7 +90,7 @@ export class UserService {
   }
 
   /**
-   * Delete a user by ID
+   * Deletes a user by ID.
    * @param id The ID of the user to delete.
    * @returns An observable of the deleted User object.
    */
@@ -88,7 +99,7 @@ export class UserService {
   }
 
   /**
-   * Get all users with pagination, sorting, and filtering
+   * Gets all users with pagination, sorting, and filtering.
    * @param pageNumber The page number (default is 1).
    * @param pageSize The number of items per page (default is 10).
    * @param sortBy The field to sort by (default is 'Name').
