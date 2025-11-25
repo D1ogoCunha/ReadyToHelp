@@ -149,3 +149,10 @@
     padding-right: 20%;
   }
 }
+
+.rt-toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1100;
+}
