@@ -3,6 +3,10 @@ import { CanActivate, Router, ActivatedRouteSnapshot, RouterStateSnapshot, UrlTr
 import { Observable } from 'rxjs';
 import { AuthService } from '../services/auth.service'; 
 
+/**
+ * AuthGuard
+ * Prevents access to routes for unauthenticated users and redirects to login.
+ */
 @Injectable({
   providedIn: 'root'
 })

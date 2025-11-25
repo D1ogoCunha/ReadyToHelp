@@ -1,12 +1,17 @@
 <!-- LOGIN COMPONENT HTML -->
+
+<!-- Main login container -->
 <div class="login-container">
+  <!-- Branding section: logo and slogan -->
   <div class="branding-side">
     <img src="/Logo.jpg" alt="ReadyToHelp Logo" class="main-logo" />
     <p class="slogan">Your emergency response platform.</p>
   </div>
+  <!-- Login form section -->
   <div class="form-side">
     <div class="form-wrapper">
       <h2>Welcome back!</h2>
+      <!-- Login form: binds email and password, disables submit when loading -->
       <form (ngSubmit)="submit()" #f="ngForm" novalidate>
         <div class="form-group">
           <label for="email" class="sr-only">Email</label>
@@ -30,6 +35,7 @@
             [(ngModel)]="password"
           />
         </div>
+        <!-- Submit button: shows loading state when submitting -->
         <button type="submit" class="btn-submit" [disabled]="loading">
           <span *ngIf="!loading">Login</span>
           <span *ngIf="loading">Logging in...</span>
@@ -37,7 +43,8 @@
       </form>
     </div>
 
-    <!-- Adicione dentro da .form-side, depois da .form-wrapper -->
+    <!-- Toast notification: shows success or error messages after login attempt -->
+    <!-- Placed inside .form-side, after .form-wrapper -->
     <div *ngIf="toast.show" class="rt-toast-container">
       <div
         class="alert"

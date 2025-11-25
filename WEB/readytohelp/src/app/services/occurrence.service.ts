@@ -4,13 +4,19 @@ import { Observable } from 'rxjs';
 import { OccurrenceMap } from '../models/occurrenceMap.model';
 import { OccurrenceDetails } from '../models/occurrence-details.model';
 
+/**
+ * OccurrenceService
+ * Provides methods to interact with the occurrence API for fetching map data, details, and paginated lists.
+ */
 @Injectable({
   providedIn: 'root',
 })
 export class OccurrenceService {
 
+  /** Base URL for occurrence API endpoints */
   private apiUrl = 'https://readytohelp-api.up.railway.app/api/occurrence'; 
 
+  /** Injected HttpClient for making HTTP requests */
   private http = inject(HttpClient);
 
   /**
@@ -23,7 +29,6 @@ export class OccurrenceService {
   }
 
   /**
-   * Added this method
    * Gets the full details for a single occurrence by its ID.
    * Corresponds to [HttpGet("{id:int}")]
    * @param id The ID of the occurrence.
@@ -34,7 +39,6 @@ export class OccurrenceService {
   }
 
   /**
-   * Added this method
    * Gets a paginated list of occurrences with optional sorting and filtering.
    * Corresponds to [HttpGet]
    * @param options An object containing pagination, sorting, and filtering options.

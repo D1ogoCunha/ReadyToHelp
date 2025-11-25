@@ -2,6 +2,10 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 
+/**
+ * NavbarComponent
+ * Displays the navigation bar with links and user authentication actions.
+ */
 @Component({
   selector: 'app-navbar',
   standalone: true,

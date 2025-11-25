@@ -1,9 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  inject,
-  OnInit,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import * as mapboxgl from 'mapbox-gl';
 import { OccurrenceService } from '../../services/occurrence.service';
@@ -12,6 +7,11 @@ import { OccurrenceType } from '../../models/occurrence-type.enum';
 import { OccurrenceStatus } from '../../models/occurrence-status.enum';
 import { PriorityLevel } from '../../models/priority-level.enum';
 
+/**
+ * MapComponent
+ * Displays a Mapbox map with markers for active occurrences.
+ * Handles marker creation, popups, and navigation to occurrence details.
+ */
 @Component({
   selector: 'app-map',
   standalone: true,
@@ -26,17 +26,19 @@ export class MapComponent implements OnInit {
   private router = inject(Router);
 
   /**
-   * Constructor for MapComponent
+   * Constructor for MapComponent.
+   * No initialization logic required here.
    */
   constructor() {}
 
   /**
-   * OnInit lifecycle hook to initialize the map and load occurrences.
+   * Angular lifecycle hook.
+   * Initializes the Mapbox map and loads active occurrences when the map is ready.
    */
   ngOnInit(): void {
     this.map = new mapboxgl.Map({
       accessToken:
-        'pk.eyJ1IjoidG1zMjYiLCJhIjoiY21pMXk3MW9qMTVnZjJqc2ZkMDVmbGF0NCJ9.ud2aOuGC2KH9YyNbJJM8Yg', // <-- ADICIONADO AQUI
+        'pk.eyJ1IjoidG1zMjYiLCJhIjoiY21pMXk3MW9qMTVnZjJqc2ZkMDVmbGF0NCJ9.ud2aOuGC2KH9YyNbJJM8Yg',
       container: 'map',
       style: 'mapbox://styles/mapbox/streets-v11',
       center: [-9.1393, 38.7223],
@@ -51,12 +53,12 @@ export class MapComponent implements OnInit {
   }
 
   /**
-   * Loads active occurrences from the service and adds them to the map as markers.
+   * Fetches active occurrences from the service and adds them as markers to the map.
    */
   private loadOccurrences(): void {
     this.occurrenceService.getActiveOccurrences().subscribe({
       next: (occurrences) => {
-        console.log(`Carregadas ${occurrences.length} ocorrências`);
+        console.log(`Loaded ${occurrences.length} occurrences`);
         this.addMarkersToMap(occurrences);
       },
       error: (err) => {
@@ -65,23 +67,20 @@ export class MapComponent implements OnInit {
     });
   }
 
- 
   /**
-   * Adds markers to the map for each occurrence.
-   * @param occurrences The list of occurrences to add as markers.
+   * Adds a marker for each occurrence on the map, with a custom popup.
+   * @param occurrences Array of occurrences to display as markers.
    */
   private addMarkersToMap(occurrences: OccurrenceMap[]): void {
-    if (!this.map) return; 
+    if (!this.map) return;
 
     for (const occ of occurrences) {
-
-      // Popup construction
-
+      // Create popup container
       const popupContainer = document.createElement('div');
-      popupContainer.className = 'card border-0 shadow-none'; 
-      popupContainer.style.width = '260px'; 
+      popupContainer.className = 'card border-0 shadow-none';
+      popupContainer.style.width = '260px';
 
-      // Header
+      // Header section
       const headerClass = 'card-header bg-primary text-white py-3 px-3';
       const header = document.createElement('div');
       header.className = headerClass;
@@ -91,50 +90,55 @@ export class MapComponent implements OnInit {
         </h5>
       `;
 
-      // Body
+      // Body section
       const body = document.createElement('div');
       body.className = 'card-body p-3';
 
       const infoRow = document.createElement('div');
-      infoRow.className = 'd-flex justify-content-between align-items-start mb-3'; // mb-3 dá espaço para o botão
+      infoRow.className =
+        'd-flex justify-content-between align-items-start mb-3';
 
+      // Type column
       const typeCol = document.createElement('div');
       typeCol.innerHTML = `
         <div>
           <small class="text-muted d-block text-uppercase font-weight-bold" style="font-size: 0.75rem; letter-spacing: 0.5px; margin-bottom: 2px;">Type</small>
-          <span class="font-weight-bold text-dark" style="font-size: 1.2rem;">${this.formatEnum(occ.type)}</span>
+          <span class="font-weight-bold text-dark" style="font-size: 1.2rem;">${this.formatEnum(
+            occ.type
+          )}</span>
         </div>
       `;
 
+      // Priority column
       let priorityClass = 'badge-light';
       if (occ.priority === PriorityLevel.HIGH) priorityClass = 'badge-danger';
       if (occ.priority === PriorityLevel.MEDIUM) priorityClass = 'badge-warning';
       if (occ.priority === PriorityLevel.LOW) priorityClass = 'badge-info';
 
       const priorityCol = document.createElement('div');
-      priorityCol.className = 'text-right'; // Alinha o texto à direita
+      priorityCol.className = 'text-right';
       priorityCol.innerHTML = `
         <div>
            <small class="text-muted d-block text-uppercase font-weight-bold" style="font-size: 0.75rem; letter-spacing: 0.5px; margin-bottom: 4px;">Priority</small>
-           <span class="badge ${priorityClass} px-3 py-2" style="font-size: 1rem;">${this.formatEnum(occ.priority)}</span>
+           <span class="badge ${priorityClass} px-3 py-2" style="font-size: 1rem;">${this.formatEnum(
+        occ.priority
+      )}</span>
         </div>
       `;
 
-      // Append the columns to the row
       infoRow.appendChild(typeCol);
       infoRow.appendChild(priorityCol);
-      
-      // Append the row to the body
       body.appendChild(infoRow);
 
-      // Footer with Button
+      // Footer with details button
       const footer = document.createElement('div');
-      footer.className = 'card-footer bg-white border-0 p-3 pt-0'; 
-      
+      footer.className = 'card-footer bg-white border-0 p-3 pt-0';
+
       const button = document.createElement('button');
-      button.className = 'btn btn-outline-primary btn-block font-weight-bold btn-sm'; 
+      button.className =
+        'btn btn-outline-primary btn-block font-weight-bold btn-sm';
       button.innerHTML = 'View Details <i class="fas fa-arrow-right ml-1"></i>';
-      
+
       button.addEventListener('click', (e) => {
         e.stopPropagation();
         this.onViewDetails(occ.id);
@@ -142,39 +146,36 @@ export class MapComponent implements OnInit {
 
       footer.appendChild(button);
 
-      // Assemble the popup
+      // Assemble popup
       popupContainer.appendChild(header);
       popupContainer.appendChild(body);
       popupContainer.appendChild(footer);
 
-      // End of popup construction 
-
-      const popup = new mapboxgl.Popup({ 
-        offset: 35, 
-        closeButton: true, 
+      const popup = new mapboxgl.Popup({
+        offset: 35,
+        closeButton: true,
         closeOnClick: false,
-        maxWidth: '280px'
-      })
-      .setDOMContent(popupContainer);
+        maxWidth: '280px',
+      }).setDOMContent(popupContainer);
 
+      // Create custom marker element
       const el = document.createElement('div');
-      el.className = 'custom-marker'; 
-      
+      el.className = 'custom-marker';
+
       const pinPath = this.getPinForType(occ.type);
       el.style.backgroundImage = `url(${pinPath})`;
 
       new mapboxgl.Marker({ element: el, anchor: 'bottom' })
         .setLngLat([occ.longitude, occ.latitude])
-        .setPopup(popup) 
+        .setPopup(popup)
         .addTo(this.map);
     }
   }
 
-
   /**
-   * Gets the file path for the pin image corresponding to the occurrence type.
-   * @param type The occurrence type.
-   * @returns The file path for the pin image corresponding to the occurrence type.
+   * Returns the file path for the pin image based on the occurrence type.
+   * @param type Occurrence type enum value.
+   * @returns Path to the pin image file.
    */
   private getPinForType(type: OccurrenceType): string {
     const basePath = 'assets/pins/';
@@ -227,16 +228,16 @@ export class MapComponent implements OnInit {
 
       default:
         console.warn(
-          `Pin não encontrado para o tipo: ${type}, a usar default.`
+          `Pin not found for type: ${type}, using default.`
         );
         return `${basePath}DEFAULT.png`;
     }
   }
 
   /**
-   * Formats an enum value into a more readable string.
-   * @param value The enum value to format.
-   * @returns A formatted string with spaces and capitalization.
+   * Formats an enum value into a human-readable string.
+   * @param value Enum value to format.
+   * @returns Formatted string with spaces and capitalization.
    */
   private formatEnum(
     value: string | OccurrenceType | PriorityLevel | OccurrenceStatus
@@ -250,8 +251,8 @@ export class MapComponent implements OnInit {
   }
 
   /**
-   * Handles the click event for the "View Details" button in the popup.
-   * @param id The ID of the occurrence to view details for.
+   * Handles navigation to the details page for a specific occurrence.
+   * @param id Occurrence ID to view details for.
    */
   private onViewDetails(id: number): void {
     console.log('Button clicked! Navigating to details for ID:', id);

@@ -8,6 +8,9 @@ import { OccurrenceType } from '../../models/occurrence-type.enum';
 import { PriorityLevel } from '../../models/priority-level.enum';
 import { LegalFooterComponent } from '../../components/legal-footer/legal-footer.component';
 
+/**
+ * Component to display detailed information about a specific occurrence.
+ */
 @Component({
   selector: 'app-occurence-detail',
   standalone: true,
