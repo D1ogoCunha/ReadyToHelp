@@ -23,27 +23,39 @@ import com.example.readytohelpmobile.R
 import com.example.readytohelpmobile.viewmodel.AuthUiState
 import com.example.readytohelpmobile.viewmodel.AuthViewModel
 
+// Define the brand primary color
 private val BrandBlue = Color(0xFF4253AF)
 
+/**
+ * Composable function for the Login Screen.
+ * Handles user input for email and password and triggers authentication logic via ViewModel.
+ *
+ * @param onLoginSuccess Callback function executed when login is successful.
+ * @param onNavigateToRegister Callback function to navigate to the registration screen.
+ * @param viewModel The ViewModel that handles authentication logic. Defaults to standard injection.
+ */
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
     onNavigateToRegister: () -> Unit,
     viewModel: AuthViewModel = viewModel()
 ) {
+    // Local state for form fields
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+
+    // Observe the UI state from the ViewModel
     val state by viewModel.uiState.collectAsState()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(BrandBlue)
+            .background(BrandBlue) // Set background color
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // Logo
+        // App Logo
         Image(
             painter = painterResource(id = R.drawable.readytohelp_logo),
             contentDescription = "ReadyToHelp Logo",
@@ -55,6 +67,7 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(32.dp))
 
+        // Welcome Text
         Text(
             text = "Welcome Back!",
             style = MaterialTheme.typography.headlineMedium,
@@ -70,7 +83,7 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Email Field
+        // Email Input Field
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
@@ -90,13 +103,13 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Password Field
+        // Password Input Field
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
             label = { Text("Password", color = Color.White) },
             leadingIcon = { Icon(imageVector = Icons.Default.Lock, contentDescription = null, tint = Color.White) },
-            visualTransformation = PasswordVisualTransformation(),
+            visualTransformation = PasswordVisualTransformation(), // Hide password characters
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
             singleLine = true,
@@ -111,6 +124,7 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
+        // Show loading spinner or action buttons based on state
         if (state is AuthUiState.Loading) {
             CircularProgressIndicator(color = Color.White)
         } else {
@@ -131,7 +145,7 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Register Navigation
+            // Navigate to Register Button
             TextButton(onClick = onNavigateToRegister) {
                 Text(
                     text = "No account? Sign up here",
@@ -140,6 +154,7 @@ fun LoginScreen(
             }
         }
 
+        // Display error message if login fails
         if (state is AuthUiState.Error) {
             Spacer(modifier = Modifier.height(16.dp))
             Text(
@@ -150,6 +165,7 @@ fun LoginScreen(
             )
         }
 
+        // Effect to handle navigation upon successful login
         LaunchedEffect(state) {
             if (state is AuthUiState.Success) {
                 onLoginSuccess()

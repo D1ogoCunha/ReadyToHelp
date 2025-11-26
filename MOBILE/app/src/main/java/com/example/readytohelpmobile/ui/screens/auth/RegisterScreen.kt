@@ -28,18 +28,30 @@ import com.example.readytohelpmobile.viewmodel.AuthViewModel
 
 private val BrandBlue = Color(0xFF4253AF)
 
+/**
+ * Composable function for the User Registration Screen.
+ * Handles new user sign-up form, including basic validation (matching passwords).
+ *
+ * @param onRegisterSuccess Callback function executed when registration is successful.
+ * @param onNavigateToLogin Callback function to navigate back to the login screen.
+ * @param viewModel The ViewModel that handles registration logic.
+ */
 @Composable
 fun RegisterScreen(
     onRegisterSuccess: () -> Unit,
     onNavigateToLogin: () -> Unit,
     viewModel: AuthViewModel = viewModel()
 ) {
+    // Local state for form inputs
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
+
+    // Local state for client-side validation errors (e.g. passwords don't match)
     var validationError by remember { mutableStateOf<String?>(null) }
 
+    // Observe UI state from ViewModel
     val state by viewModel.uiState.collectAsState()
 
     Column(
@@ -47,10 +59,11 @@ fun RegisterScreen(
             .fillMaxSize()
             .background(BrandBlue)
             .padding(24.dp)
-            .verticalScroll(rememberScrollState()),
+            .verticalScroll(rememberScrollState()), // Make screen scrollable for smaller devices
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        // Logo
         Image(
             painter = painterResource(id = R.drawable.readytohelp_logo),
             contentDescription = "ReadyToHelp Logo",
@@ -77,7 +90,7 @@ fun RegisterScreen(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Name
+        // Name Field
         OutlinedTextField(
             value = name,
             onValueChange = { name = it },
@@ -97,7 +110,7 @@ fun RegisterScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Email
+        // Email Field
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
@@ -117,7 +130,7 @@ fun RegisterScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Password
+        // Password Field
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
@@ -138,7 +151,7 @@ fun RegisterScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        //Confirm Password
+        // Confirm Password Field
         OutlinedTextField(
             value = confirmPassword,
             onValueChange = { confirmPassword = it },
@@ -148,7 +161,7 @@ fun RegisterScreen(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
             singleLine = true,
-            isError = validationError != null, // Fica vermelho se houver erro
+            isError = validationError != null, // Highlight error state
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = Color.White,
                 unfocusedBorderColor = Color.White,
@@ -160,7 +173,7 @@ fun RegisterScreen(
             )
         )
 
-        //Passwords validation error message
+        // Show validation error message if applicable
         if (validationError != null) {
             Text(
                 text = validationError!!,
@@ -178,13 +191,14 @@ fun RegisterScreen(
             // Sign Up Button
             Button(
                 onClick = {
-                    // password validation
+                    // Client-side validation
                     if (password.isBlank()) {
                         validationError = "Password cannot be empty"
                     } else if (password != confirmPassword) {
                         validationError = "Passwords do not match!"
                     } else {
                         validationError = null
+                        // Proceed to register via ViewModel
                         viewModel.register(name, email, password)
                     }
                 },
@@ -202,7 +216,7 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Back to Login
+            // Navigation back to Login
             TextButton(onClick = onNavigateToLogin) {
                 Text(
                     text = "Already have an account? Sign In",
@@ -211,7 +225,7 @@ fun RegisterScreen(
             }
         }
 
-        // errors from the registration process
+        // Display server-side errors
         if (state is AuthUiState.Error) {
             Spacer(modifier = Modifier.height(16.dp))
             Text(
@@ -221,6 +235,7 @@ fun RegisterScreen(
             )
         }
 
+        // Handle successful registration (triggers navigation)
         LaunchedEffect(state) {
             if (state is AuthUiState.Success) {
                 onRegisterSuccess()

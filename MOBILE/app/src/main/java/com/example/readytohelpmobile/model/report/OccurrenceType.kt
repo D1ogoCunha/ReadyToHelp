@@ -1,5 +1,9 @@
 package com.example.readytohelpmobile.model.report
 
+/**
+ * Enumeration defining all occurrence types supported by the system.
+ * Must match exactly the values expected by the Backend.
+ */
 enum class OccurrenceType {
     ANIMAL_ON_ROAD,
     CRIME,
