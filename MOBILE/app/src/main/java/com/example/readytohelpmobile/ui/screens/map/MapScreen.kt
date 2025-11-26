@@ -27,7 +27,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton // Import Adicionado
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -51,7 +51,6 @@ import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.readytohelpmobile.viewmodel.AuthViewModel
-import com.example.readytohelpmobile.viewmodel.MapUiState
 import com.example.readytohelpmobile.viewmodel.MapViewModel
 import com.example.readytohelpmobile.ui.screens.report.ReportOccurrenceDialog
 import com.example.readytohelpmobile.viewmodel.ReportViewModel
@@ -62,13 +61,22 @@ import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportS
 import com.mapbox.maps.plugin.PuckBearing
 import com.mapbox.maps.plugin.annotation.annotations
 import com.mapbox.maps.plugin.annotation.generated.PointAnnotationOptions
-import com.mapbox.maps.plugin.annotation.generated.createPointAnnotationManager
+import com.mapbox.maps.plugin.annotation.generated.PointAnnotationManager
 import com.mapbox.maps.plugin.locationcomponent.createDefault2DPuck
 import com.example.readytohelpmobile.R
+import com.example.readytohelpmobile.viewmodel.MapUiState
+import com.mapbox.maps.plugin.annotation.generated.createPointAnnotationManager
 import com.mapbox.maps.plugin.locationcomponent.location
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
+/**
+ * Helper function to convert a drawable resource ID into a Bitmap.
+ * This is used to create marker icons for the Mapbox map.
+ *
+ * @param drawableResId The resource ID of the drawable.
+ * @return A Bitmap representation of the drawable, or null if decoding fails.
+ */
 @Composable
 fun bitmapFromDrawableRes(drawableResId: Int): Bitmap? {
     val context = LocalContext.current
@@ -77,6 +85,15 @@ fun bitmapFromDrawableRes(drawableResId: Int): Bitmap? {
     }
 }
 
+/**
+ * Main Composable for the Map Screen.
+ * Displays a Mapbox map with occurrence markers, handles user location,
+ * reports new occurrences, and manages presence confirmation via a custom Snackbar.
+ *
+ * @param viewModel The [MapViewModel] responsible for fetching occurrences and handling map logic.
+ * @param authViewModel The [AuthViewModel] used for logout functionality.
+ * @param onLogout Callback function triggered when the user logs out.
+ */
 @Composable
 fun MapScreen(
     viewModel: MapViewModel = viewModel(),
@@ -86,11 +103,19 @@ fun MapScreen(
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    // Keep a reference to the latest UI state to be accessed within the Mapbox click listener callback.
+    // This ensures the click listener always has access to the latest data without needing recreation.
+    val currentUiState by rememberUpdatedState(uiState)
+
+    // State to hold the Mapbox PointAnnotationManager, initialized once the map is ready.
+    var pointAnnotationManager by remember { mutableStateOf<PointAnnotationManager?>(null) }
+
+    // UI State for the custom Snackbar and progress animation
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-
     val progressAnimatable = remember { Animatable(1f) }
 
+    // --- Load Bitmap Resources for Map Markers ---
     val animal_on_road_pin = bitmapFromDrawableRes(R.drawable.animal_on_road)
     val crime_pin = bitmapFromDrawableRes(R.drawable.crime)
     val domestic_violence_pin = bitmapFromDrawableRes(R.drawable.domestic_violence)
@@ -115,6 +140,7 @@ fun MapScreen(
     val work_accident_pin = bitmapFromDrawableRes(R.drawable.work_accident)
     val defaultPinBitmap = bitmapFromDrawableRes(com.mapbox.maps.extension.compose.R.drawable.default_marker_inner)
 
+    // --- Location Permissions ---
     var hasLocationPermission by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(
@@ -134,44 +160,57 @@ fun MapScreen(
         }
     }
 
+    // State for the Report Occurrence Dialog
     var showReportDialog by remember { mutableStateOf(false) }
     val reportViewModel: ReportViewModel = viewModel()
 
+    // --- Effect: Handle Custom Snackbar with Timer ---
+    // Listens for map events (e.g., entering an occurrence radius) and displays a snackbar
+    // with a countdown timer (progress bar).
     LaunchedEffect(Unit) {
         viewModel.mapEvent.collectLatest { event ->
-
+            // Start the countdown timer logic
             val timerJob = scope.launch {
+                // Reset progress to full (1.0)
                 progressAnimatable.snapTo(1f)
+                // Animate to empty (0.0) over 30 seconds
                 progressAnimatable.animateTo(
                     targetValue = 0f,
                     animationSpec = tween(durationMillis = 30000, easing = LinearEasing)
                 )
+                // Dismiss snackbar if timer completes
                 snackbarHostState.currentSnackbarData?.dismiss()
             }
 
+            // Display the snackbar indefinitely (controlled manually by the timer)
             val result = snackbarHostState.showSnackbar(
                 message = event.message,
                 actionLabel = "Confirm",
                 duration = SnackbarDuration.Indefinite
             )
 
+            // Cancel timer if user interacted
             timerJob.cancel()
             scope.launch { progressAnimatable.stop() }
 
+            // Handle user action
             if (result == SnackbarResult.ActionPerformed) {
                 viewModel.confirmPresence(event.occurrenceId, true)
             } else {
+                // If dismissed (timeout or swipe), send false
                 viewModel.confirmPresence(event.occurrenceId, false)
             }
         }
     }
 
+    // --- Effect: Handle Generic Toasts ---
     LaunchedEffect(Unit) {
         viewModel.toastEvent.collectLatest { message ->
             Toast.makeText(context, message, Toast.LENGTH_LONG).show()
         }
     }
 
+    // --- Effect: Check Location Permission on Start ---
     LaunchedEffect(hasLocationPermission) {
         if (hasLocationPermission) {
             viewModel.getUserLocation()
@@ -180,6 +219,59 @@ fun MapScreen(
         }
     }
 
+    // --- Effect: Update Map Markers ---
+    // Triggers whenever the UI state (data) changes or the annotation manager is initialized.
+    LaunchedEffect(uiState, pointAnnotationManager) {
+        val manager = pointAnnotationManager ?: return@LaunchedEffect
+        val state = uiState
+
+        if (state is MapUiState.Success) {
+            // 1. Clear existing markers to avoid duplicates
+            manager.deleteAll()
+
+            // 2. Map occurrences to PointAnnotationOptions
+            val annotationOptionsList = state.occurrences.mapNotNull { occurrence ->
+                val loc = occurrence.location ?: return@mapNotNull null
+
+                val bmp = when (occurrence.type) {
+                    "ANIMAL_ON_ROAD" -> animal_on_road_pin
+                    "CRIME" -> crime_pin
+                    "DOMESTIC_VIOLENCE" -> domestic_violence_pin
+                    "ELECTRICAL_NETWORK" -> electrical_network_pin
+                    "FLOOD" -> flood_pin
+                    "FOREST_FIRE" -> forest_fire_pin
+                    "INJURED_ANIMAL" -> injured_animal_pin
+                    "LANDSLIDE" -> landslide_pin
+                    "LOST_ANIMAL" -> lost_animal
+                    "MEDICAL_EMERGENCY" -> medical_emergency_pin
+                    "POLLUTION" -> pollution_pin
+                    "PUBLIC_DISTURBANCE" -> public_disturbance_pin
+                    "PUBLIC_LIGHTING" -> public_lighting_pin
+                    "ROAD_ACCIDENT" -> road_accident_pin
+                    "ROAD_OBSTRUCTION" -> road_obstruction_pin
+                    "SANITATION" -> sanitation_pin
+                    "TRAFFIC_CONGESTION" -> traffic_congestion_pin
+                    "TRAFFIC_LIGHT_FAILURE" -> traffic_light_failure_pin
+                    "URBAN_FIRE" -> urban_fire_pin
+                    "VEHICLE_BREAKDOWN" -> vehicle_breakdown_pin
+                    "WORK_ACCIDENT" -> work_accident_pin
+                    "ROAD_DAMAGE" -> road_damage
+                    else -> defaultPinBitmap
+                }
+
+                bmp?.let {
+                    PointAnnotationOptions()
+                        .withPoint(Point.fromLngLat(loc.longitude, loc.latitude))
+                        .withIconImage(it)
+                }
+            }
+
+            // 3. Add the new markers to the map
+            manager.create(annotationOptionsList)
+        }
+    }
+
+    // Main UI Structure
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(onClick = { showReportDialog = true }) {
@@ -196,97 +288,69 @@ fun MapScreen(
                 .padding(innerPadding),
             contentAlignment = Alignment.Center
         ) {
-            when (val state = uiState) {
-                is MapUiState.Loading -> {
-                    CircularProgressIndicator()
-                }
-                is MapUiState.Error -> {
-                    Text(text = state.message)
-                }
-                is MapUiState.Success -> {
-                    if (hasLocationPermission) {
-                        val mapViewportState = rememberMapViewportState {
-                            setCameraOptions {
-                                zoom(3.0)
-                                center(Point.fromLngLat(-9.1393, 38.7223))
-                            }
-                        }
-
-                        MapboxMap(
-                            Modifier.fillMaxSize(),
-                            mapViewportState = mapViewportState,
-                        ) {
-                            MapEffect(Unit) { mapView ->
-                                mapView.location.updateSettings {
-                                    enabled = true
-                                    locationPuck = createDefault2DPuck(withBearing = true)
-                                    puckBearing = PuckBearing.HEADING
-                                }
-                                mapViewportState.transitionToFollowPuckState()
-                            }
-
-                            MapEffect(state.occurrences) { mapView ->
-                                val pointAnnotationManager = mapView.annotations.createPointAnnotationManager()
-                                pointAnnotationManager.deleteAll()
-
-                                pointAnnotationManager.addClickListener { annotation ->
-                                    val clickedOccurrence = state.occurrences.find {
-                                        val lat = it.location?.latitude
-                                        val lng = it.location?.longitude
-                                        lng == annotation.point.longitude() && lat == annotation.point.latitude()
-                                    }
-
-                                    clickedOccurrence?.let {
-                                        showReportDialog = true
-                                    }
-                                    true
-                                }
-
-                                val annotationOptionsList = state.occurrences.mapNotNull { occurrence ->
-                                    val loc = occurrence.location ?: return@mapNotNull null
-
-                                    val bmp = when (occurrence.type) {
-                                        "ANIMAL_ON_ROAD" -> animal_on_road_pin
-                                        "CRIME" -> crime_pin
-                                        "DOMESTIC_VIOLENCE" -> domestic_violence_pin
-                                        "ELECTRICAL_NETWORK" -> electrical_network_pin
-                                        "FLOOD" -> flood_pin
-                                        "FOREST_FIRE" -> forest_fire_pin
-                                        "INJURED_ANIMAL" -> injured_animal_pin
-                                        "LANDSLIDE" -> landslide_pin
-                                        "LOST_ANIMAL" -> lost_animal
-                                        "MEDICAL_EMERGENCY" -> medical_emergency_pin
-                                        "POLLUTION" -> pollution_pin
-                                        "PUBLIC_DISTURBANCE" -> public_disturbance_pin
-                                        "PUBLIC_LIGHTING" -> public_lighting_pin
-                                        "ROAD_ACCIDENT" -> road_accident_pin
-                                        "ROAD_OBSTRUCTION" -> road_obstruction_pin
-                                        "SANITATION" -> sanitation_pin
-                                        "TRAFFIC_CONGESTION" -> traffic_congestion_pin
-                                        "TRAFFIC_LIGHT_FAILURE" -> traffic_light_failure_pin
-                                        "URBAN_FIRE" -> urban_fire_pin
-                                        "VEHICLE_BREAKDOWN" -> vehicle_breakdown_pin
-                                        "WORK_ACCIDENT" -> work_accident_pin
-                                        "ROAD_DAMAGE" -> road_damage
-                                        else -> defaultPinBitmap
-                                    }
-
-                                    bmp?.let {
-                                        PointAnnotationOptions()
-                                            .withPoint(Point.fromLngLat(loc.longitude, loc.latitude))
-                                            .withIconImage(it)
-                                    }
-                                }
-
-                                pointAnnotationManager.create(annotationOptionsList)
-                            }
-                        }
-                    } else {
-                        Text(text = "Location permission is required to display the map.")
+            if (hasLocationPermission) {
+                // Initial Map Viewport settings
+                val mapViewportState = rememberMapViewportState {
+                    setCameraOptions {
+                        zoom(3.0)
+                        center(Point.fromLngLat(-9.1393, 38.7223))
                     }
                 }
+
+                // Mapbox Component
+                MapboxMap(
+                    Modifier.fillMaxSize(),
+                    mapViewportState = mapViewportState,
+                ) {
+                    // --- Initial Map Setup (Runs Once) ---
+                    MapEffect(Unit) { mapView ->
+                        // 1. Configure Location Component (Blue Puck)
+                        mapView.location.updateSettings {
+                            enabled = true
+                            locationPuck = createDefault2DPuck(withBearing = true)
+                            puckBearing = PuckBearing.HEADING
+                        }
+                        mapViewportState.transitionToFollowPuckState()
+
+                        // 2. Initialize Annotation Manager and store it in state
+                        val manager = mapView.annotations.createPointAnnotationManager()
+                        pointAnnotationManager = manager
+
+                        // 3. Configure Marker Click Listener
+                        manager.addClickListener { annotation ->
+                            // Access the latest data using currentUiState
+                            val currentState = currentUiState
+                            if (currentState is MapUiState.Success) {
+                                val clickedOccurrence = currentState.occurrences.find {
+                                    val lat = it.location?.latitude
+                                    val lng = it.location?.longitude
+                                    lng == annotation.point.longitude() && lat == annotation.point.latitude()
+                                }
+
+                                clickedOccurrence?.let {
+                                    Toast.makeText(
+                                        context,
+                                        "${it.title}: Radius ${it.proximityRadius}m",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
+                            }
+                            true
+                        }
+                    }
+                }
+            } else {
+                Text(text = "Location permission is required to display the map.")
             }
 
+            // Loading State Indicator (Only if no map manager is ready yet to avoid flickering)
+            if (uiState is MapUiState.Loading && pointAnnotationManager == null) {
+                CircularProgressIndicator()
+            } else if (uiState is MapUiState.Error && pointAnnotationManager == null) {
+                Text(text = (uiState as MapUiState.Error).message)
+            }
+
+            // Report Occurrence Dialog
             if (showReportDialog) {
                 ReportOccurrenceDialog(
                     onDismiss = {
@@ -296,6 +360,7 @@ fun MapScreen(
                 )
             }
 
+            // Logout Button (Top Right)
             Surface(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
@@ -315,12 +380,14 @@ fun MapScreen(
                 }
             }
 
+            // Custom Snackbar Host (Top Center)
             SnackbarHost(
                 hostState = snackbarHostState,
                 modifier = Modifier
                     .align(Alignment.TopCenter)
                     .padding(top = 16.dp, start = 16.dp, end = 16.dp)
             ) { data: SnackbarData ->
+                // Custom Snackbar Design
                 Surface(
                     color = Color(0xFF4353AB),
                     contentColor = Color.White,
@@ -329,6 +396,7 @@ fun MapScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column {
+                        // Message and Button
                         Column(
                             modifier = Modifier.padding(16.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
@@ -357,6 +425,7 @@ fun MapScreen(
                             }
                         }
 
+                        // Progress Bar (Timer)
                         LinearProgressIndicator(
                             progress = { progressAnimatable.value },
                             modifier = Modifier

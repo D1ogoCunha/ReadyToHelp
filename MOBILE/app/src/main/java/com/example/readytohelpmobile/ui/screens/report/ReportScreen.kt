@@ -25,21 +25,35 @@ import com.example.readytohelpmobile.model.report.ResponsibleEntityContact
 import com.example.readytohelpmobile.viewmodel.ReportUiState
 import com.example.readytohelpmobile.viewmodel.ReportViewModel
 
+// Define the primary brand color for consistent styling
 private val BrandColor = Color(0xFF4353AB)
 
+/**
+ * A dialog Composable that allows users to report a new occurrence.
+ * It manages the form state (title, description, type) and handles the submission process via the ViewModel.
+ *
+ * @param onDismiss Callback function to close the dialog.
+ * @param viewModel The ViewModel responsible for handling the reporting logic.
+ */
 @Composable
 fun ReportOccurrenceDialog(
     onDismiss: () -> Unit,
     viewModel: ReportViewModel = viewModel()
 ) {
+    // Observe the UI state from the ViewModel
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    // Local state for form fields
     var title by remember { mutableStateOf(TextFieldValue()) }
     var description by remember { mutableStateOf(TextFieldValue()) }
     var selectedType by remember { mutableStateOf<OccurrenceType?>(null) }
+
+    // State for the dropdown menu
     var expanded by remember { mutableStateOf(false) }
 
+    // Handle different UI states
     when (val state = uiState) {
+        // If report is successful, show the success dialog with entity details
         is ReportUiState.Success -> {
             SuccessReportDialog(
                 responsible = state.response.responsibleEntity,
@@ -49,6 +63,7 @@ fun ReportOccurrenceDialog(
                 }
             )
         }
+        // Otherwise, show the form dialog
         else -> {
             AlertDialog(
                 onDismissRequest = onDismiss,
@@ -66,6 +81,7 @@ fun ReportOccurrenceDialog(
                                 )
                             }
                         },
+                        // Disable button if fields are empty or if loading
                         enabled = selectedType != null
                                 && title.text.isNotBlank()
                                 && description.text.isNotBlank()
@@ -105,6 +121,7 @@ fun ReportOccurrenceDialog(
                 },
                 text = {
                     Column(modifier = Modifier.fillMaxWidth()) {
+                        // Show error message if submission failed
                         if (uiState is ReportUiState.Error) {
                             Text(
                                 text = (uiState as ReportUiState.Error).message,
@@ -114,6 +131,7 @@ fun ReportOccurrenceDialog(
                             )
                         }
 
+                        // Title Input
                         OutlinedTextField(
                             value = title,
                             onValueChange = { title = it },
@@ -130,6 +148,7 @@ fun ReportOccurrenceDialog(
 
                         Spacer(modifier = Modifier.height(8.dp))
 
+                        // Description Input
                         OutlinedTextField(
                             value = description,
                             onValueChange = { description = it },
@@ -147,6 +166,7 @@ fun ReportOccurrenceDialog(
 
                         Spacer(modifier = Modifier.height(8.dp))
 
+                        // Occurrence Type Dropdown
                         OutlinedTextField(
                             value = selectedType?.name ?: "",
                             onValueChange = {},
@@ -186,6 +206,13 @@ fun ReportOccurrenceDialog(
     }
 }
 
+/**
+ * Dialog shown upon successful report submission.
+ * Displays contact information for the responsible entity if available.
+ *
+ * @param responsible The entity details returned by the backend.
+ * @param onClose Callback to close the dialog.
+ */
 @Composable
 private fun SuccessReportDialog(
     responsible: ResponsibleEntityContact?,
@@ -224,6 +251,7 @@ private fun SuccessReportDialog(
 
                         Spacer(modifier = Modifier.height(8.dp))
 
+                        // Email Row (Clickable to open Email App)
                         if (responsible.email.isNotBlank()) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
@@ -254,6 +282,7 @@ private fun SuccessReportDialog(
                             }
                         }
 
+                        // Phone Row (Clickable to open Dialer)
                         val phoneStr = responsible.contactPhone.toString()
                         if (phoneStr.isNotBlank()) {
                             Row(
@@ -279,6 +308,7 @@ private fun SuccessReportDialog(
                             }
                         }
 
+                        // Address Row (Clickable to open Maps)
                         if (responsible.address.isNotBlank()) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
