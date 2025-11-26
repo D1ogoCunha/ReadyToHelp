@@ -16,7 +16,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val tokenManager = TokenManager(this)
-        tokenManager.clearToken()
+        //tokenManager.clearToken()
         val startDest = if (tokenManager.getToken() != null) "map" else "login"
 
         setContent {

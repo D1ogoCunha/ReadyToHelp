@@ -17,12 +17,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.filled.Create
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton // Import Adicionado
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -33,11 +38,10 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Create
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -46,6 +50,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.readytohelpmobile.viewmodel.AuthViewModel
 import com.example.readytohelpmobile.viewmodel.MapUiState
 import com.example.readytohelpmobile.viewmodel.MapViewModel
 import com.example.readytohelpmobile.ui.screens.report.ReportOccurrenceDialog
@@ -74,7 +79,9 @@ fun bitmapFromDrawableRes(drawableResId: Int): Bitmap? {
 
 @Composable
 fun MapScreen(
-    viewModel: MapViewModel = viewModel()
+    viewModel: MapViewModel = viewModel(),
+    authViewModel: AuthViewModel = viewModel(),
+    onLogout: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -287,6 +294,25 @@ fun MapScreen(
                     },
                     viewModel = reportViewModel
                 )
+            }
+
+            Surface(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(16.dp)
+                    .shadow(4.dp, CircleShape),
+                shape = CircleShape,
+                color = Color.White.copy(alpha = 0.9f)
+            ) {
+                IconButton(
+                    onClick = { authViewModel.logout(onLogoutComplete = onLogout) }
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                        contentDescription = "Logout",
+                        tint = Color(0xFF4353AB)
+                    )
+                }
             }
 
             SnackbarHost(

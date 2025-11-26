@@ -1,16 +1,52 @@
 package com.example.readytohelpmobile.services
 
+import android.content.Context
 import com.example.readytohelpmobile.model.auth.LoginRequest
 import com.example.readytohelpmobile.model.auth.RegisterRequest
 import com.example.readytohelpmobile.model.auth.UserResponse
-import retrofit2.Response
-import retrofit2.http.Body
-import retrofit2.http.POST
+import com.example.readytohelpmobile.network.NetworkClient
+import com.example.readytohelpmobile.utils.TokenManager
 
-interface AuthService {
-    @POST("auth/login/mobile")
-    suspend fun login(@Body request: LoginRequest): Response<String>
+class AuthService(context: Context) {
 
-    @POST("user/register")
-    suspend fun register(@Body request: RegisterRequest): Response<UserResponse>
+    private val api = NetworkClient.getRetrofitInstance(context).create(AuthApi::class.java)
+    private val tokenManager = TokenManager(context)
+
+    suspend fun login(email: String, pass: String): Result<String> {
+        return try {
+            val response = api.login(LoginRequest(email, pass))
+            if (response.isSuccessful && response.body() != null) {
+                val token = response.body()!!
+                tokenManager.saveToken(token)
+                Result.success(token)
+            } else {
+                Result.failure(Exception("Login falhou: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun register(name: String, email: String, pass: String): Result<UserResponse?> {
+        return try {
+            val response = api.register(RegisterRequest(name, email, pass))
+            if (response.isSuccessful) {
+                Result.success(response.body())
+            } else {
+                Result.failure(Exception("Registo falhou: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun logout() {
+        try {
+            api.logout()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        } finally {
+            tokenManager.clearToken()
+        }
+    }
 }

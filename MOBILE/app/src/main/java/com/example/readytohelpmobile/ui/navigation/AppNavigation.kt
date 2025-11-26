@@ -42,7 +42,13 @@ fun AppNavigation(startDestination: String) {
         }
 
         composable("map") {
-            MapScreen()
+            MapScreen(
+                onLogout = {
+                    navController.navigate("login") {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
         }
     }
 }
