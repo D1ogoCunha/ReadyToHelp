@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, OnDestroy } from '@angular/core'; // Import OnDestroy
 import { Router } from '@angular/router';
 import * as mapboxgl from 'mapbox-gl';
 import { OccurrenceService } from '../../services/occurrence.service';
@@ -10,7 +10,8 @@ import { PriorityLevel } from '../../models/priority-level.enum';
 /**
  * MapComponent
  * Displays a Mapbox map with markers for active occurrences.
- * Handles marker creation, popups, and navigation to occurrence details.
+ * Handles marker creation, popups, navigation to occurrence details,
+ * and updates the data automatically every 30 seconds.
  */
 @Component({
   selector: 'app-map',
@@ -20,15 +21,17 @@ import { PriorityLevel } from '../../models/priority-level.enum';
   styleUrls: ['./map.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class MapComponent implements OnInit {
+export class MapComponent implements OnInit, OnDestroy { // Implement OnDestroy
   private map?: mapboxgl.Map;
   private occurrenceService = inject(OccurrenceService);
   private router = inject(Router);
 
-  /**
-   * Constructor for MapComponent.
-   * No initialization logic required here.
-   */
+  // Array to store marker references so they can be removed later
+  private markers: mapboxgl.Marker[] = [];
+  
+  // Variable to store the refresh interval ID
+  private refreshInterval: any;
+
   constructor() {}
 
   /**
@@ -48,12 +51,42 @@ export class MapComponent implements OnInit {
     this.map.addControl(new mapboxgl.NavigationControl());
 
     this.map.on('load', () => {
+      // 1. Load for the first time
       this.loadOccurrences();
+      // 2. Start the update cycle
+      this.startAutoRefresh();
     });
   }
 
   /**
-   * Fetches active occurrences from the service and adds them as markers to the map.
+   * Cleanup when the component is destroyed (e.g., changing pages).
+   * Stops the timer to prevent errors and memory leaks.
+   */
+  ngOnDestroy(): void {
+    this.stopAutoRefresh();
+  }
+
+  /**
+   * Starts the 30-second refresh interval.
+   */
+  private startAutoRefresh(): void {
+    this.refreshInterval = setInterval(() => {
+      console.log('Auto-refreshing occurrences...');
+      this.loadOccurrences();
+    }, 30000); // 30 seconds
+  }
+
+  /**
+   * Stops the refresh interval.
+   */
+  private stopAutoRefresh(): void {
+    if (this.refreshInterval) {
+      clearInterval(this.refreshInterval);
+    }
+  }
+
+  /**
+   * Fetches active occurrences from the service.
    */
   private loadOccurrences(): void {
     this.occurrenceService.getActiveOccurrences().subscribe({
@@ -68,11 +101,16 @@ export class MapComponent implements OnInit {
   }
 
   /**
-   * Adds a marker for each occurrence on the map, with a custom popup.
-   * @param occurrences Array of occurrences to display as markers.
+   * Adds markers to map, clearing existing ones first to avoid duplicates.
+   * @param occurrences Array of occurrences to display.
    */
   private addMarkersToMap(occurrences: OccurrenceMap[]): void {
     if (!this.map) return;
+
+    // 1. IMPORTANT: Remove old markers from the map
+    this.markers.forEach(marker => marker.remove());
+    // Clear the array
+    this.markers = [];
 
     for (const occ of occurrences) {
       // Create popup container
@@ -165,17 +203,19 @@ export class MapComponent implements OnInit {
       const pinPath = this.getPinForType(occ.type);
       el.style.backgroundImage = `url(${pinPath})`;
 
-      new mapboxgl.Marker({ element: el, anchor: 'bottom' })
+      // Create the marker
+      const marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
         .setLngLat([occ.longitude, occ.latitude])
         .setPopup(popup)
         .addTo(this.map);
+      
+      // 2. Save the reference in the array to clear on the next update
+      this.markers.push(marker);
     }
   }
 
   /**
    * Returns the file path for the pin image based on the occurrence type.
-   * @param type Occurrence type enum value.
-   * @returns Path to the pin image file.
    */
   private getPinForType(type: OccurrenceType): string {
     const basePath = 'assets/pins/';
@@ -234,11 +274,6 @@ export class MapComponent implements OnInit {
     }
   }
 
-  /**
-   * Formats an enum value into a human-readable string.
-   * @param value Enum value to format.
-   * @returns Formatted string with spaces and capitalization.
-   */
   private formatEnum(
     value: string | OccurrenceType | PriorityLevel | OccurrenceStatus
   ): string {
@@ -250,10 +285,6 @@ export class MapComponent implements OnInit {
       .join(' ');
   }
 
-  /**
-   * Handles navigation to the details page for a specific occurrence.
-   * @param id Occurrence ID to view details for.
-   */
   private onViewDetails(id: number): void {
     console.log('Button clicked! Navigating to details for ID:', id);
     this.router.navigate(['/occurrence', id]);
