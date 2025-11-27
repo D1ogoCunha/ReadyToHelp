@@ -17,8 +17,8 @@ describe('Map Page (Home)', () => {
       type: 'TRAFFIC_CONGESTION',
       status: 'ACTIVE',
       priority: 'MEDIUM',
-      latitude: 38.7000,
-      longitude: -9.1500
+      latitude: 38.7,
+      longitude: -9.15
     }
   ];
 

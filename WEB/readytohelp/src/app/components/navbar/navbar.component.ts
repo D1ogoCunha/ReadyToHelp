@@ -16,7 +16,7 @@ import { AuthService } from '../../services/auth.service';
 })
 export class NavbarComponent {
   private readonly storageKey = 'rt-sidebar-open';
-  private auth = inject(AuthService);
+  private readonly auth = inject(AuthService);
 
   isOpen = false;
 
