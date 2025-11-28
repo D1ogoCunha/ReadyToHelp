@@ -2,6 +2,7 @@ package com.example.readytohelpmobile.ui.screens.report
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -104,13 +105,24 @@ fun ReportOccurrenceDialog(
                     }
                 },
                 dismissButton = {
-                    TextButton(onClick = onDismiss) {
+                    TextButton(
+                        onClick = onDismiss,
+                        colors = ButtonDefaults.textButtonColors(contentColor = BrandColor)
+                    ) {
                         Text("Cancel")
                     }
                 },
                 title = {
-                    Column {
-                        Text("Report Occurrence", fontWeight = FontWeight.Bold)
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            "Report Occurrence",
+                            fontWeight = FontWeight.Bold,
+                            color = BrandColor,
+                            style = MaterialTheme.typography.headlineSmall
+                        )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             "Please complete the information below",
@@ -141,7 +153,12 @@ fun ReportOccurrenceDialog(
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = BrandColor,
                                 focusedLabelColor = BrandColor,
-                                cursorColor = BrandColor
+                                cursorColor = BrandColor,
+                                unfocusedBorderColor = BrandColor.copy(alpha = 0.5f),
+                                focusedContainerColor = Color.White,
+                                unfocusedContainerColor = Color.White,
+                                focusedTextColor = Color.Black,
+                                unfocusedTextColor = Color.Black
                             ),
                             shape = RoundedCornerShape(10.dp)
                         )
@@ -159,7 +176,12 @@ fun ReportOccurrenceDialog(
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = BrandColor,
                                 focusedLabelColor = BrandColor,
-                                cursorColor = BrandColor
+                                cursorColor = BrandColor,
+                                unfocusedBorderColor = BrandColor.copy(alpha = 0.5f),
+                                focusedContainerColor = Color.White,
+                                unfocusedContainerColor = Color.White,
+                                focusedTextColor = Color.Black,
+                                unfocusedTextColor = Color.Black
                             ),
                             shape = RoundedCornerShape(10.dp)
                         )
@@ -167,29 +189,45 @@ fun ReportOccurrenceDialog(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         // Occurrence Type Dropdown
-                        OutlinedTextField(
-                            value = selectedType?.name ?: "",
-                            onValueChange = {},
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { expanded = true },
-                            enabled = false,
-                            label = { Text("Occurrence Type") },
-                            readOnly = true,
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = BrandColor,
-                                focusedLabelColor = BrandColor
-                            ),
-                            shape = RoundedCornerShape(10.dp)
-                        )
+                        Box(modifier = Modifier.fillMaxWidth()) {
+                            OutlinedTextField(
+                                value = selectedType?.name?.replace('_', ' ') ?: "",
+                                onValueChange = {},
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { expanded = true },
+                                enabled = false,
+                                label = { Text("Occurrence Type") },
+                                readOnly = true,
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    disabledBorderColor = BrandColor.copy(alpha = 0.5f),
+                                    disabledLabelColor = BrandColor,
+                                    disabledTextColor = Color.Black, // Force text to be Black
+                                    disabledContainerColor = Color.White
+                                ),
+                                shape = RoundedCornerShape(10.dp)
+                            )
+                            // Invisible overlay to capture clicks when TextField is disabled
+                            Box(
+                                modifier = Modifier
+                                    .matchParentSize()
+                                    .clickable { expanded = true }
+                            )
+                        }
 
                         DropdownMenu(
                             expanded = expanded,
-                            onDismissRequest = { expanded = false }
+                            onDismissRequest = { expanded = false },
+                            modifier = Modifier.background(Color.White)
                         ) {
                             OccurrenceType.values().forEach { type ->
                                 DropdownMenuItem(
-                                    text = { Text(type.name.replace('_', ' ')) },
+                                    text = {
+                                        Text(
+                                            text = type.name.replace('_', ' '),
+                                            color = Color.Black
+                                        )
+                                    },
                                     onClick = {
                                         selectedType = type
                                         expanded = false
@@ -199,8 +237,8 @@ fun ReportOccurrenceDialog(
                         }
                     }
                 },
-                shape = RoundedCornerShape(16.dp),
-                containerColor = MaterialTheme.colorScheme.surfaceVariant
+                shape = RoundedCornerShape(24.dp),
+                containerColor = Color.White
             )
         }
     }
@@ -235,7 +273,11 @@ private fun SuccessReportDialog(
             }
         },
         title = {
-            Text("Report submitted successfully!", fontWeight = FontWeight.Bold)
+            Text(
+                "Report submitted successfully!",
+                fontWeight = FontWeight.Bold,
+                color = BrandColor
+            )
         },
         text = {
             if (responsible == null) {
@@ -244,6 +286,7 @@ private fun SuccessReportDialog(
                 Surface(
                     shape = RoundedCornerShape(12.dp),
                     tonalElevation = 2.dp,
+                    color = Color.White,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(modifier = Modifier.padding(12.dp)) {
@@ -278,7 +321,10 @@ private fun SuccessReportDialog(
                                     modifier = Modifier.size(20.dp)
                                 )
                                 Spacer(modifier = Modifier.width(10.dp))
-                                Text(responsible.email, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(
+                                    responsible.email,
+                                    color = Color.Black
+                                )
                             }
                         }
 
@@ -304,7 +350,10 @@ private fun SuccessReportDialog(
                                     modifier = Modifier.size(20.dp)
                                 )
                                 Spacer(modifier = Modifier.width(10.dp))
-                                Text(phoneStr, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(
+                                    phoneStr,
+                                    color = Color.Black
+                                )
                             }
                         }
 
@@ -340,13 +389,17 @@ private fun SuccessReportDialog(
                                     modifier = Modifier.size(20.dp)
                                 )
                                 Spacer(modifier = Modifier.width(10.dp))
-                                Text(responsible.address, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(
+                                    responsible.address,
+                                    color = Color.Black
+                                )
                             }
                         }
                     }
                 }
             }
         },
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(12.dp),
+        containerColor = Color.White
     )
 }
