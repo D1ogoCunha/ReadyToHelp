@@ -3,17 +3,20 @@ package com.example.readytohelpmobile.ui.screens.report
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -25,6 +28,9 @@ import com.example.readytohelpmobile.model.report.OccurrenceType
 import com.example.readytohelpmobile.model.report.ResponsibleEntityContact
 import com.example.readytohelpmobile.viewmodel.ReportUiState
 import com.example.readytohelpmobile.viewmodel.ReportViewModel
+import com.mapbox.geojson.Point
+import com.mapbox.maps.extension.compose.MapboxMap
+import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
 
 // Define the primary brand color for consistent styling
 private val BrandColor = Color(0xFF4353AB)
@@ -48,6 +54,31 @@ fun ReportOccurrenceDialog(
     var title by remember { mutableStateOf(TextFieldValue()) }
     var description by remember { mutableStateOf(TextFieldValue()) }
     var selectedType by remember { mutableStateOf<OccurrenceType?>(null) }
+
+    // State for location mode: True = GPS, False = Map Picker
+    var useCurrentLocation by remember { mutableStateOf(true) }
+
+    // Map Viewport State for the picker
+    val mapViewportState = rememberMapViewportState {
+        setCameraOptions {
+            zoom(14.0)
+            // Default center (Lisbon) if location not loaded yet
+            center(Point.fromLngLat(-9.1393, 38.7223))
+        }
+    }
+
+    // Effect to initialize map center to user location when opening "Pick on Map"
+    LaunchedEffect(useCurrentLocation) {
+        if (!useCurrentLocation) {
+            val loc = viewModel.getCurrentLocation()
+            if (loc != null) {
+                mapViewportState.setCameraOptions {
+                    center(Point.fromLngLat(loc.longitude, loc.latitude))
+                    zoom(15.0)
+                }
+            }
+        }
+    }
 
     // State for the dropdown menu
     var expanded by remember { mutableStateOf(false) }
@@ -75,11 +106,25 @@ fun ReportOccurrenceDialog(
                                 && description.text.isNotBlank()
                                 && selectedType != null
                             ) {
-                                viewModel.submitReport(
-                                    title.text.trim(),
-                                    description.text.trim(),
-                                    selectedType!!
-                                )
+                                // Logic to decide which location to send
+                                if (useCurrentLocation) {
+                                    // Send normally (ViewModel fetches GPS)
+                                    viewModel.submitReport(
+                                        title.text.trim(),
+                                        description.text.trim(),
+                                        selectedType!!
+                                    )
+                                } else {
+                                    // Send with manual coordinates from map center
+                                    val center = mapViewportState.cameraState?.center
+                                    viewModel.submitReport(
+                                        title.text.trim(),
+                                        description.text.trim(),
+                                        selectedType!!,
+                                        manualLat = center?.latitude(),
+                                        manualLng = center?.longitude()
+                                    )
+                                }
                             }
                         },
                         // Disable button if fields are empty or if loading
@@ -186,7 +231,59 @@ fun ReportOccurrenceDialog(
                             shape = RoundedCornerShape(10.dp)
                         )
 
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Location Selection Toggle
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            // Button: Current Location
+                            LocationOptionButton(
+                                text = "Current Location",
+                                icon = Icons.Filled.LocationOn,
+                                isSelected = useCurrentLocation,
+                                onClick = { useCurrentLocation = true },
+                                modifier = Modifier.weight(1f)
+                            )
+                            // Button: Pick on Map
+                            LocationOptionButton(
+                                text = "Pick on Map",
+                                icon = Icons.Filled.LocationOn,
+                                isSelected = !useCurrentLocation,
+                                onClick = { useCurrentLocation = false },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+
                         Spacer(modifier = Modifier.height(8.dp))
+
+                        // Map Preview (Visible only if "Pick on Map" is selected)
+                        if (!useCurrentLocation) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(200.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .border(1.dp, BrandColor.copy(alpha = 0.5f), RoundedCornerShape(10.dp))
+                            ) {
+                                MapboxMap(
+                                    Modifier.fillMaxSize(),
+                                    mapViewportState = mapViewportState,
+                                )
+                                // Center Pin Icon (Target)
+                                Icon(
+                                    imageVector = Icons.Filled.Place,
+                                    contentDescription = "Selected Location",
+                                    tint = BrandColor, // Pin in Brand Color
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .align(Alignment.Center)
+                                        .padding(bottom = 16.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
 
                         // Occurrence Type Dropdown
                         Box(modifier = Modifier.fillMaxWidth()) {
@@ -202,12 +299,11 @@ fun ReportOccurrenceDialog(
                                 colors = OutlinedTextFieldDefaults.colors(
                                     disabledBorderColor = BrandColor.copy(alpha = 0.5f),
                                     disabledLabelColor = BrandColor,
-                                    disabledTextColor = Color.Black, // Force text to be Black
+                                    disabledTextColor = Color.Black,
                                     disabledContainerColor = Color.White
                                 ),
                                 shape = RoundedCornerShape(10.dp)
                             )
-                            // Invisible overlay to capture clicks when TextField is disabled
                             Box(
                                 modifier = Modifier
                                     .matchParentSize()
@@ -244,12 +340,40 @@ fun ReportOccurrenceDialog(
     }
 }
 
+// Helper composable for the location toggle buttons
+@Composable
+fun LocationOptionButton(
+    text: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val containerColor = if (isSelected) BrandColor else Color.Transparent
+    val contentColor = if (isSelected) Color.White else BrandColor
+    val borderColor = if (isSelected) Color.Transparent else BrandColor.copy(alpha = 0.5f)
+
+    OutlinedButton(
+        onClick = onClick,
+        modifier = modifier,
+        colors = ButtonDefaults.outlinedButtonColors(
+            containerColor = containerColor,
+            contentColor = contentColor
+        ),
+        border = androidx.compose.foundation.BorderStroke(1.dp, borderColor),
+        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+        shape = RoundedCornerShape(10.dp)
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Icon(imageVector = icon, contentDescription = null, modifier = Modifier.size(20.dp))
+            Text(text = text, style = MaterialTheme.typography.labelSmall, maxLines = 1)
+        }
+    }
+}
+
 /**
  * Dialog shown upon successful report submission.
  * Displays contact information for the responsible entity if available.
- *
- * @param responsible The entity details returned by the backend.
- * @param onClose Callback to close the dialog.
  */
 @Composable
 private fun SuccessReportDialog(
@@ -294,7 +418,6 @@ private fun SuccessReportDialog(
 
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        // Email Row (Clickable to open Email App)
                         if (responsible.email.isNotBlank()) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
@@ -328,7 +451,6 @@ private fun SuccessReportDialog(
                             }
                         }
 
-                        // Phone Row (Clickable to open Dialer)
                         val phoneStr = responsible.contactPhone.toString()
                         if (phoneStr.isNotBlank()) {
                             Row(
@@ -357,7 +479,6 @@ private fun SuccessReportDialog(
                             }
                         }
 
-                        // Address Row (Clickable to open Maps)
                         if (responsible.address.isNotBlank()) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,

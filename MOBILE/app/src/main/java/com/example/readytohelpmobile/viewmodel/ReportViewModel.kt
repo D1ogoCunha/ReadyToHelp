@@ -58,27 +58,42 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
 
     /**
      * Submits a new report to the backend.
-     * 1. Gets current user location.
+     * 1. Gets current user location (OR uses manual location provided).
      * 2. Gets user ID from token.
      * 3. Sends data to API.
      *
      * @param title Title of the report.
      * @param description Description of the report.
      * @param type Type of occurrence.
+     * @param manualLat Optional manual latitude (if user picked on map).
+     * @param manualLng Optional manual longitude (if user picked on map).
      */
     fun submitReport(
         title: String,
         description: String,
-        type: OccurrenceType
+        type: OccurrenceType,
+        manualLat: Double? = null,
+        manualLng: Double? = null
     ) {
         viewModelScope.launch {
             _uiState.value = ReportUiState.Loading
 
-            // Get location first
-            val location = getCurrentLocation()
-            if (location == null) {
-                _uiState.value = ReportUiState.Error("It was not possible to get the user location.")
-                return@launch
+            // Determine location: Use manual if provided, otherwise fetch current
+            val finalLat: Double
+            val finalLng: Double
+
+            if (manualLat != null && manualLng != null) {
+                finalLat = manualLat
+                finalLng = manualLng
+            } else {
+                // Get location from GPS
+                val location = getCurrentLocation()
+                if (location == null) {
+                    _uiState.value = ReportUiState.Error("It was not possible to get the user location.")
+                    return@launch
+                }
+                finalLat = location.latitude
+                finalLng = location.longitude
             }
 
             // Get User ID
@@ -94,8 +109,8 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
                 description = description,
                 type = type,
                 userId = userId,
-                latitude = location.latitude,
-                longitude = location.longitude
+                latitude = finalLat,
+                longitude = finalLng
             )
 
             // Call Service
@@ -118,7 +133,7 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
      * @return The [Location] object or null if failed.
      */
     @SuppressLint("MissingPermission")
-    private suspend fun getCurrentLocation(): Location? {
+    suspend fun getCurrentLocation(): Location? {
         return kotlinx.coroutines.suspendCancellableCoroutine { cont ->
             try {
                 fusedLocationClient.getCurrentLocation(
