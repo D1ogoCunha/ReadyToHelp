@@ -90,13 +90,13 @@ dependencies {
     androidTestImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
     androidTestImplementation(platform("androidx.compose:compose-bom:2024.09.00"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    androidTestImplementation("androidx.test:rules:1.6.1")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
 }
 
 tasks.register<JacocoReport>("gerarRelatorioCoverage") {
-    // Esta tarefa depende de os testes terem rodado.
-    // Se já tens o .ec, podes comentar a linha abaixo para ser mais rápido.
+
     dependsOn("connectedDebugAndroidTest")
 
     group = "Reporting"
@@ -107,7 +107,6 @@ tasks.register<JacocoReport>("gerarRelatorioCoverage") {
         html.required.set(true)
     }
 
-    // Onde estão as classes compiladas do teu código (Kotlin)
     val debugTree = fileTree("${layout.buildDirectory.get()}/tmp/kotlin-classes/debug") {
         exclude(
             "**/R.class",

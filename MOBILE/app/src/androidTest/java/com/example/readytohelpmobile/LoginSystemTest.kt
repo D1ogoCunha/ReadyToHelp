@@ -34,11 +34,9 @@ class LoginSystemTest {
 
     @Before
     fun setup() {
-        // 1. Iniciar o Servidor Falso
         mockWebServer = MockWebServer()
         mockWebServer.start()
 
-        // 2. Criar um Retrofit que aponta para o Servidor Falso (localhost)
         val moshi = Moshi.Builder().addLast(KotlinJsonAdapterFactory()).build()
         val fakeRetrofit = Retrofit.Builder()
             .baseUrl(mockWebServer.url("/")) // Aponta para o teste
@@ -46,11 +44,9 @@ class LoginSystemTest {
             .addConverterFactory(MoshiConverterFactory.create(moshi))
             .build()
 
-        // 3. "Hackear" o NetworkClient Singleton para devolver o nosso Retrofit falso
         mockkObject(NetworkClient)
         every { NetworkClient.getRetrofitInstance(any()) } returns fakeRetrofit
 
-        // 4. Inicializar o ViewModel REAL com o contexto da app
         val context = ApplicationProvider.getApplicationContext<android.app.Application>()
         viewModel = AuthViewModel(context)
     }
@@ -58,13 +54,12 @@ class LoginSystemTest {
     @After
     fun tearDown() {
         mockWebServer.shutdown()
-        unmockkAll() // Limpar os mocks do Singleton
+        unmockkAll()
     }
 
     @Test
     fun system_login_success_navigates_correctly() {
-        // 1. Enfileirar uma resposta de SUCESSO no servidor falso
-        // A tua API devolve uma String (o token) no body
+
         mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody("fake-jwt-token-123"))
 
         var loginSuccessCalled = false
@@ -77,32 +72,26 @@ class LoginSystemTest {
             )
         }
 
-        // 2. Preencher o formulário
         composeTestRule.onNodeWithText("Email").performTextInput("admin@test.com")
         composeTestRule.onNodeWithText("Password").performTextInput("123456")
 
-        // 3. Clicar em Login
         composeTestRule.onNodeWithText("Sign In").performClick()
 
-        // 4. Verificar se a navegação aconteceu
-        // O ViewModel real vai chamar o MockWebServer, receber 200 OK, e mudar o estado para Success
         composeTestRule.waitUntil(timeoutMillis = 5000) { loginSuccessCalled }
 
-        // Verificar que o servidor recebeu o pedido correto
         val request = mockWebServer.takeRequest()
         assert(request.path == "/auth/login/mobile")
     }
 
     @Test
     fun system_login_failure_shows_error_message() {
-        // 1. Enfileirar uma resposta de ERRO (401 Unauthorized)
         mockWebServer.enqueue(MockResponse().setResponseCode(401).setBody("Unauthorized"))
 
         composeTestRule.setContent {
             LoginScreen(
                 onLoginSuccess = {},
                 onNavigateToRegister = {},
-                viewModel = viewModel // ViewModel REAL
+                viewModel = viewModel
             )
         }
 
@@ -110,8 +99,6 @@ class LoginSystemTest {
         composeTestRule.onNodeWithText("Password").performTextInput("wrongpass")
         composeTestRule.onNodeWithText("Sign In").performClick()
 
-        // 2. Verificar se a mensagem de erro aparece no ecrã
-        // O ViewModel vai processar o 401 e atualizar o UI State para Error
         composeTestRule.waitUntil(timeoutMillis = 5000) {
             composeTestRule.onAllNodesWithText("Login failed: 401").fetchSemanticsNodes().isNotEmpty()
         }

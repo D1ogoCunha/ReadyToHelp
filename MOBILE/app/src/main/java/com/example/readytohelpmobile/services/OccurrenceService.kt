@@ -6,6 +6,11 @@ import com.example.readytohelpmobile.model.Occurrence
 import com.example.readytohelpmobile.network.NetworkClient
 
 object OccurrenceService {
+    /**
+     * Fetches a list of occurrences from the API.
+     *@param context Application context to ensure Retrofit initialization.
+     *@return A list of Occurrence objects or null if an error occurred.
+     */
     suspend fun getAllOccurrences(context: Context): List<Occurrence>? {
         return try {
             val retrofit = NetworkClient.getRetrofitInstance(context)
