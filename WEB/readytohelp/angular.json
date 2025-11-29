@@ -11,11 +11,12 @@
       "prefix": "app",
       "architect": {
         "build": {
-          "builder": "@angular-devkit/build-angular:application",
+          "builder": "ngx-build-plus:browser",
           "options": {
             "outputPath": "dist/readytohelp",
             "index": "src/index.html",
-            "browser": "src/main.ts",
+            "main": "src/main.ts",
+            "extraWebpackConfig": "./cypress-coverage.webpack.js",
             "polyfills": [
               "zone.js"
             ],
@@ -58,13 +59,17 @@
           "defaultConfiguration": "production"
         },
         "serve": {
-          "builder": "@angular-devkit/build-angular:dev-server",
+          "builder": "ngx-build-plus:dev-server",
+          "options": {
+            "extraWebpackConfig": "./cypress-coverage.webpack.js"
+          },
           "configurations": {
             "production": {
               "buildTarget": "readytohelp:build:production"
             },
             "development": {
-              "buildTarget": "readytohelp:build:development"
+              "buildTarget": "readytohelp:build:development",
+              "extraWebpackConfig": "./cypress-coverage.webpack.js"
             }
           },
           "defaultConfiguration": "development"
