@@ -2,175 +2,189 @@ package com.example.readytohelpmobile
 
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.example.readytohelpmobile.network.NetworkClient
 import com.example.readytohelpmobile.ui.screens.auth.RegisterScreen
-import com.example.readytohelpmobile.viewmodel.AuthUiState
 import com.example.readytohelpmobile.viewmodel.AuthViewModel
-import io.mockk.*
-import kotlinx.coroutines.flow.MutableStateFlow
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import io.mockk.every
+import io.mockk.mockkObject
+import io.mockk.unmockkAll
+import okhttp3.mockwebserver.MockResponse
+import okhttp3.mockwebserver.MockWebServer
+import org.junit.After
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import retrofit2.Retrofit
+import retrofit2.converter.moshi.MoshiConverterFactory
+import retrofit2.converter.scalars.ScalarsConverterFactory
 
 @RunWith(AndroidJUnit4::class)
-class RegisterScreenTest {
+class RegisterSystemTest {
 
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    // Mocks
-    private val mockViewModel = mockk<AuthViewModel>(relaxed = true)
-    private val uiStateFlow = MutableStateFlow<AuthUiState>(AuthUiState.Idle)
+    private lateinit var mockWebServer: MockWebServer
+    private lateinit var viewModel: AuthViewModel
 
-    @Test
-    fun register_screen_displays_all_fields_correctly() {
-        every { mockViewModel.uiState } returns uiStateFlow
+    @Before
+    fun setup() {
+        // 1. Iniciar servidor falso
+        mockWebServer = MockWebServer()
+        mockWebServer.start()
 
-        composeTestRule.setContent {
-            RegisterScreen(
-                onRegisterSuccess = {},
-                onNavigateToLogin = {},
-                viewModel = mockViewModel
-            )
-        }
+        // 2. Configurar Retrofit com Moshi (JSON) e Scalars (String)
+        val moshi = Moshi.Builder().addLast(KotlinJsonAdapterFactory()).build()
+        val fakeRetrofit = Retrofit.Builder()
+            .baseUrl(mockWebServer.url("/"))
+            .addConverterFactory(ScalarsConverterFactory.create()) // Para o token (String)
+            .addConverterFactory(MoshiConverterFactory.create(moshi)) // Para o User (JSON)
+            .build()
 
-        // Verificar Textos Estáticos e Campos
-        composeTestRule.onNodeWithText("Create Account").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Name").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Email").assertIsDisplayed()
-        // Nota: Temos dois campos de "Password" (label), o Compose pode reclamar se não formos específicos.
-        // Como o texto do label é "Password" e "Confirm Password", estamos seguros.
-        composeTestRule.onNodeWithText("Password").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Confirm Password").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Sign Up").assertIsDisplayed()
+        // 3. Intercetar o Singleton NetworkClient
+        mockkObject(NetworkClient)
+        every { NetworkClient.getRetrofitInstance(any()) } returns fakeRetrofit
+
+        // 4. Inicializar o ViewModel REAL
+        val context = ApplicationProvider.getApplicationContext<android.app.Application>()
+        viewModel = AuthViewModel(context)
+    }
+
+    @After
+    fun tearDown() {
+        mockWebServer.shutdown()
+        unmockkAll()
     }
 
     @Test
-    fun client_validation_shows_error_when_passwords_do_not_match() {
-        every { mockViewModel.uiState } returns uiStateFlow
+    fun system_register_success_flow() {
+        // O teu ViewModel faz "Auto-Login" após o registo.
+        // Precisamos de ENFILEIRAR 2 RESPOSTAS:
+
+        // Resposta 1: Registo (Devolve objeto UserResponse em JSON)
+        // register -> UserResponse
+        mockWebServer.enqueue(MockResponse()
+            .setResponseCode(200)
+            .addHeader("Content-Type", "application/json")
+            .setBody("""
+                {
+                    "id": 101, 
+                    "name": "New User", 
+                    "email": "new@test.com", 
+                    "profile": "CITIZEN"
+                }
+            """.trimIndent())
+        )
+
+        // Resposta 2: Login Automático (Devolve Token em String)
+        // login -> String
+        mockWebServer.enqueue(MockResponse()
+            .setResponseCode(200)
+            .addHeader("Content-Type", "text/plain; charset=utf-8")
+            .setBody("fake-jwt-token-from-auto-login")
+        )
+
+        var registerSuccessCalled = false
 
         composeTestRule.setContent {
             RegisterScreen(
-                onRegisterSuccess = {},
+                onRegisterSuccess = { registerSuccessCalled = true },
                 onNavigateToLogin = {},
-                viewModel = mockViewModel
+                viewModel = viewModel // Usamos o ViewModel REAL
             )
         }
 
-        // 1. Preencher Password
-        composeTestRule.onNodeWithText("Password").performTextInput("123456")
-
-        // 2. Preencher Confirm Password (Diferente)
-        composeTestRule.onNodeWithText("Confirm Password").performTextInput("654321")
-
-        // 3. Clicar em Sign Up
-        // Usamos performScrollTo para garantir que o botão está visível em ecrãs pequenos
-        composeTestRule.onNodeWithText("Sign Up").performScrollTo().performClick()
-
-        // 4. VERIFICAR: Mensagem de erro deve aparecer
-        composeTestRule.onNodeWithText("Passwords do not match!").assertIsDisplayed()
-
-        // 5. VERIFICAR: O método register do ViewModel NÃO deve ter sido chamado
-        verify(exactly = 0) { mockViewModel.register(any(), any(), any()) }
-    }
-
-    @Test
-    fun successful_input_calls_viewmodel_register() {
-        every { mockViewModel.uiState } returns uiStateFlow
-
-        composeTestRule.setContent {
-            RegisterScreen(
-                onRegisterSuccess = {},
-                onNavigateToLogin = {},
-                viewModel = mockViewModel
-            )
-        }
-
-        // 1. Preencher Dados Válidos
-        composeTestRule.onNodeWithText("Name").performTextInput("John Doe")
-        composeTestRule.onNodeWithText("Email").performTextInput("john@test.com")
+        // 1. Preencher Formulário
+        composeTestRule.onNodeWithText("Name").performTextInput("New User")
+        composeTestRule.onNodeWithText("Email").performTextInput("new@test.com")
         composeTestRule.onNodeWithText("Password").performTextInput("123456")
         composeTestRule.onNodeWithText("Confirm Password").performTextInput("123456")
 
-        // 2. Clicar
+        // 2. Clicar em Sign Up (usar scroll para garantir visibilidade)
         composeTestRule.onNodeWithText("Sign Up").performScrollTo().performClick()
 
-        // 3. VERIFICAR: ViewModel chamado com os dados corretos
-        verify { mockViewModel.register("John Doe", "john@test.com", "123456") }
+        // 3. Verificar se o callback de sucesso foi chamado
+        // Se falhar aqui, o debug printa a árvore para vermos se houve erro na UI
+        try {
+            composeTestRule.waitUntil(timeoutMillis = 5000) { registerSuccessCalled }
+        } catch (e: Exception) {
+            composeTestRule.onRoot().printToLog("DEBUG_FAIL")
+            throw e
+        }
+
+        // 4. Validar os pedidos HTTP feitos ao servidor falso
+
+        // Pedido 1: Register
+        val request1 = mockWebServer.takeRequest()
+        assert(request1.path == "/user/register")
+        assert(request1.method == "POST")
+
+        // Pedido 2: Login (Auto-login)
+        val request2 = mockWebServer.takeRequest()
+        assert(request2.path == "/auth/login/mobile")
+        assert(request2.method == "POST")
     }
 
     @Test
-    fun register_screen_shows_loading_state() {
-        uiStateFlow.value = AuthUiState.Loading
-        every { mockViewModel.uiState } returns uiStateFlow
+    fun system_register_client_validation_fails() {
+        // Teste de validação local (Passwords diferentes)
+        // Não precisa de respostas do servidor porque o pedido nunca deve sair.
 
         composeTestRule.setContent {
             RegisterScreen(
                 onRegisterSuccess = {},
                 onNavigateToLogin = {},
-                viewModel = mockViewModel
+                viewModel = viewModel
             )
         }
 
-        // Botão deve desaparecer
-        composeTestRule.onNodeWithText("Sign Up").assertDoesNotExist()
+        composeTestRule.onNodeWithText("Password").performTextInput("123456")
+        composeTestRule.onNodeWithText("Confirm Password").performTextInput("wrongpass")
+
+        composeTestRule.onNodeWithText("Sign Up").performScrollTo().performClick()
+
+        // Verificar erro na UI
+        composeTestRule.onNodeWithText("Passwords do not match!").assertIsDisplayed()
+
+        // Garantir que NENHUM pedido foi enviado à API
+        assert(mockWebServer.requestCount == 0)
     }
 
     @Test
-    fun register_screen_shows_server_error() {
-        val errorMsg = "Email already in use"
-        uiStateFlow.value = AuthUiState.Error(errorMsg)
-        every { mockViewModel.uiState } returns uiStateFlow
+    fun system_register_server_error_shows_message() {
+        // Simular erro do servidor (ex: Email já existe - 409 Conflict ou 400 Bad Request)
+        mockWebServer.enqueue(MockResponse()
+            .setResponseCode(409)
+            .setBody("Email already exists")
+        )
 
         composeTestRule.setContent {
             RegisterScreen(
                 onRegisterSuccess = {},
                 onNavigateToLogin = {},
-                viewModel = mockViewModel
+                viewModel = viewModel
             )
         }
 
-        composeTestRule.onNodeWithText(errorMsg).assertIsDisplayed()
-    }
+        // Preencher dados válidos
+        composeTestRule.onNodeWithText("Name").performTextInput("User")
+        composeTestRule.onNodeWithText("Email").performTextInput("exists@test.com")
+        composeTestRule.onNodeWithText("Password").performTextInput("123456")
+        composeTestRule.onNodeWithText("Confirm Password").performTextInput("123456")
 
-    @Test
-    fun registration_success_triggers_callback() {
-        // Simular sucesso
-        uiStateFlow.value = AuthUiState.Success
-        every { mockViewModel.uiState } returns uiStateFlow
+        composeTestRule.onNodeWithText("Sign Up").performScrollTo().performClick()
 
-        var successCallbackCalled = false
-
-        composeTestRule.setContent {
-            RegisterScreen(
-                onRegisterSuccess = { successCallbackCalled = true }, // Capturar
-                onNavigateToLogin = {},
-                viewModel = mockViewModel
-            )
+        // Verificar se a mensagem de erro vinda do servidor (ou genérica do VM) aparece
+        // O AuthViewModel faz: _uiState.value = AuthUiState.Error(e.message)
+        // O Retrofit lança exceção no erro, o ViewModel apanha.
+        composeTestRule.waitUntil(timeoutMillis = 5000) {
+            composeTestRule.onAllNodesWithText("Registration failed: 409", substring = true)
+                .fetchSemanticsNodes().isNotEmpty()
         }
-
-        // Verificar callback
-        assert(successCallbackCalled) { "Callback onRegisterSuccess devia ter sido chamado" }
-    }
-
-    @Test
-    fun clicking_login_link_navigates_back() {
-        every { mockViewModel.uiState } returns uiStateFlow
-
-        var navigateLoginCalled = false
-
-        composeTestRule.setContent {
-            RegisterScreen(
-                onRegisterSuccess = {},
-                onNavigateToLogin = { navigateLoginCalled = true }, // Capturar
-                viewModel = mockViewModel
-            )
-        }
-
-        // Clicar no link de texto
-        composeTestRule.onNodeWithText("Already have an account? Sign In").performScrollTo().performClick()
-
-        // Verificar callback
-        assert(navigateLoginCalled) { "Callback onNavigateToLogin devia ter sido chamado" }
     }
 }
