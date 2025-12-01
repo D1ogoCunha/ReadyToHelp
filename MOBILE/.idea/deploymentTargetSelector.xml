@@ -13,13 +13,7 @@
         </DropdownSelection>
         <DialogSelection />
       </SelectionState>
-      <SelectionState runConfigName="RegisterSystemTest">
-        <option name="selectionMode" value="DROPDOWN" />
-      </SelectionState>
       <SelectionState runConfigName="system_map_fetch_error_shows_message()">
-        <option name="selectionMode" value="DROPDOWN" />
-      </SelectionState>
-      <SelectionState runConfigName="system_report_submission_fails_shows_error()">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
     </selectionStates>

@@ -100,7 +100,6 @@ tasks.register<JacocoReport>("gerarRelatorioCoverage") {
     dependsOn("connectedDebugAndroidTest")
 
     group = "Reporting"
-    description = "Gera relatório HTML de coverage a partir dos testes instrumentados."
 
     reports {
         xml.required.set(true)
