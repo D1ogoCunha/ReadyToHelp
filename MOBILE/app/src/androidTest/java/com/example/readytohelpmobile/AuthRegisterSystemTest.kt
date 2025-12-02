@@ -32,7 +32,7 @@ import java.util.concurrent.TimeUnit
  * and the Data Layer. It uses [MockWebServer] to simulate API responses.
  */
 @RunWith(AndroidJUnit4::class)
-class RegisterSystemTest {
+class AuthRegisterSystemTest {
 
     @get:Rule
     val composeTestRule = createComposeRule()
@@ -106,7 +106,7 @@ class RegisterSystemTest {
     fun system_register_success_flow() {
         // Enqueue responses: 1. Register Success, 2. Auto-Login Success
         mockWebServer.enqueue(MockResponse().setResponseCode(200).addHeader("Content-Type", "application/json").setBody("""{"id": 1, "name": "User", "email": "a@b.com", "profile": "CITIZEN"}"""))
-        mockWebServer.enqueue(MockResponse().setResponseCode(200).addHeader("Content-Type", "text/plain").setBody("token-123"))
+        mockWebServer.enqueue(MockResponse().setResponseCode(200).addHeader("Content-Type", "text/plain").setBody("\"token-123\""))
 
         var registerSuccessCalled = false
         composeTestRule.setContent {

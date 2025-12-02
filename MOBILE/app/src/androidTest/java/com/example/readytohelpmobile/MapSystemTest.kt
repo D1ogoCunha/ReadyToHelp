@@ -7,17 +7,23 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.rule.GrantPermissionRule
+import com.example.readytohelpmobile.model.MapEvent
 import com.example.readytohelpmobile.network.NetworkClient
 import com.example.readytohelpmobile.ui.screens.map.MapScreen
 import com.example.readytohelpmobile.utils.TokenManager
 import com.example.readytohelpmobile.viewmodel.AuthViewModel
+import com.example.readytohelpmobile.viewmodel.MapUiState
 import com.example.readytohelpmobile.viewmodel.MapViewModel
 import com.example.readytohelpmobile.viewmodel.ReportViewModel
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import io.mockk.every
+import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.unmockkAll
+import io.mockk.verify
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.json.JSONObject
@@ -250,5 +256,78 @@ class MapSystemTest {
 
         // Ensure we are back on the main screen
         composeTestRule.onNodeWithContentDescription("Report Occurrence").assertIsDisplayed()
+    }
+
+
+
+    /**
+     * Tests the proximity alert Snackbar logic (feedbacks) and user interaction.
+     *
+     * This test validates that:
+     * 1. When the ViewModel emits a [MapEvent] (e.g., "In zone"), the Snackbar appears.
+     * 2. The "Confirm" button is displayed correctly.
+     * 3. Clicking "Confirm" triggers the [MapViewModel.confirmPresence] function with `true`.
+     *
+     * **Technical Note on Clock Management:**
+     * The Snackbar in [MapScreen] includes a linear progress indicator that animates for 30 seconds.
+     * By default, Compose tests wait for all animations to finish (idle state) before performing assertions.
+     * To avoid a timeout waiting for the 30s animation, we disable `mainClock.autoAdvance`.
+     * We then manually advance the clock by small increments (e.g., 1 second) to allow the
+     * Snackbar to transition onto the screen without waiting for the full animation to complete.
+     */
+    @Test
+    fun system_snackbar_appears_and_handles_confirmation() {
+        // 1. Queue responses
+        // Empty list for map initialization
+        mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody("[]"))
+        // Response for the feedback submission
+        mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody("{}"))
+
+        // 2. Create Mock ViewModel
+        // We use a relaxed mock to avoid configuring every single method
+        val mockVM = mockk<MapViewModel>(relaxed = true)
+
+        // Mock the UI State to be Success so the map renders
+        every { mockVM.uiState } returns MutableStateFlow(
+            MapUiState.Success(emptyList())
+        )
+
+        // 3. Configure the Event Flow
+        // Even if the MapScreen starts collecting slightly after we emit, it will still receive the event.
+        val eventFlow = MutableSharedFlow<MapEvent>(replay = 1)
+        eventFlow.tryEmit(MapEvent("⚠️ In zone: Teste", 999))
+        every { mockVM.mapEvent } returns eventFlow
+
+        // 4. Disable Auto Advance
+        // This prevents the test from hanging while waiting for the 30s progress bar animation.
+        composeTestRule.mainClock.autoAdvance = false
+
+        composeTestRule.setContent {
+            MapScreen(
+                viewModel = mockVM,
+                authViewModel = authViewModel,
+                reportViewModel = reportViewModel
+            )
+        }
+
+        // 5. Manually advance time
+        // Advance 1 second to allow the UI to recompose and the Snackbar to appear.
+        composeTestRule.mainClock.advanceTimeBy(1000)
+
+        // 6. Verify and Click
+        composeTestRule.onNodeWithText("Confirm").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Confirm").performClick()
+
+        // Advance slightly to process the click event
+        composeTestRule.mainClock.advanceTimeBy(500)
+
+        // 7. Verify ViewModel interaction
+        // Ensure the confirmPresence method was called with the correct ID and boolean.
+        verify(timeout = 3000) {
+            mockVM.confirmPresence(999, true)
+        }
+
+        // Reset clock behavior for subsequent tests
+        composeTestRule.mainClock.autoAdvance = true
     }
 }
