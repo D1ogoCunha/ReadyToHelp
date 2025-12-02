@@ -28,30 +28,24 @@ describe('Occurrences History Page', () => {
   };
 
   beforeEach(() => {
-    // 1. Intercept mais abrangente (singular ou plural)
-    // Cobre: /api/occurrences?page=1 E /api/occurrence?page=1
+    // Intercept the API call to return mock data
     cy.intercept('GET', '**/api/occurrence*', {
       statusCode: 200,
       body: mockOccurrences
     }).as('getHistory');
 
-    // 2. Visitar a página simulando autenticação
+    //Visit the occurrences history page with authentication
     cy.visit('/occurrences/history', {
       onBeforeLoad: (window) => {
-        // TENTA DESCOBRIR A CHAVE CORRETA NO TEU BROWSER (Application -> Local Storage)
-        // Exemplos comuns: 'token', 'access_token', 'currentUser', 'auth'
         window.localStorage.setItem('token', 'fake-jwt-token'); 
         
-        // Se a tua app guardar o user num objeto separado, adiciona também:
         // window.localStorage.setItem('currentUser', JSON.stringify({ name: 'Tester', role: 'ADMIN' }));
       }
     });
 
-    // 3. Verificar se NÃO fomos redirecionados para o login
-    // Se esta linha falhar, o problema é o Auth Guard da tua app
     cy.url().should('include', '/occurrences/history');
 
-    // 4. Agora sim, esperar pelo pedido
+    // Wait for the API call to complete
     cy.wait('@getHistory');
   });
 
@@ -74,15 +68,15 @@ describe('Occurrences History Page', () => {
   });
 
   it('should handle search filtering', () => {
-    // Pesquisa 1
+    // Search 1
     cy.get('.filter-input').type('Historic{enter}');
     cy.wait('@getHistory').then((interception) => {
       expect(interception.request.url).to.include('filter=Historic');
     });
 
-    // Pesquisa 2
+    // Search 2
     cy.get('.filter-input').clear().type('Fire{enter}');
-    cy.wait('@getHistory'); // Esperar reload
+    cy.wait('@getHistory'); // Wait for reload
 
     cy.get('tbody tr').should('contain.text', 'Old Fire Incident');
     cy.get('tbody tr').should('not.contain.text', 'Historic Flood');
@@ -135,4 +129,85 @@ describe('Occurrences History Page', () => {
     cy.get('table.um-table').should('not.exist');
   });
 
+  it('should show error message when API fails', () => {
+    // Force a failed API response
+    cy.intercept('GET', '**/api/occurrence*', {
+      statusCode: 500,
+      body: { message: 'Internal Server Error' }
+    }).as('getHistoryError');
+
+    // Reload to trigger the failed request
+    cy.reload();
+    cy.wait('@getHistoryError');
+
+    // Verify if the error message appears
+    cy.get('.alert.alert-danger')
+      .should('be.visible')
+      .and('contain.text', 'It was not possible to load the history.');
+  });
+
+  it('should apply complex filters (Type, Priority, Dates)', () => {
+    // 1. Filter by Type
+    cy.get('select').eq(0).select('FOREST_FIRE'); 
+    // The component reloads when the filter changes
+    cy.wait('@getHistory');
+    
+    // 2. Filter by Priority
+    cy.get('select').eq(1).select('HIGH');
+    cy.wait('@getHistory');
+
+    // 3. Filter by Dates (Start Date)
+    // Define a date that excludes the item "Old Fire Incident" (2023-02-20) but keeps the other if adjusted
+    cy.get('input[type="date"]').first().type('2023-01-01');
+    cy.wait('@getHistory');
+
+    // Verify if the inputs maintain their values
+    cy.get('select').eq(0).should('have.value', 'FOREST_FIRE');
+    cy.get('select').eq(1).should('have.value', 'HIGH');
+  });
+
+  it('should enforce "CLOSED" status filter client-side', () => {
+    // Mock that returns a mixed ACTIVE occurrence (which should not appear in the history list)
+    const mixedResponse = {
+      items: [
+        { id: 900, title: 'Active Fire', status: 'ACTIVE', type: 'FOREST_FIRE', priority: 'HIGH', creationDateTime: '2023-10-01', reportCount: 1 },
+        { id: 901, title: 'Closed Flood', status: 'CLOSED', type: 'FLOOD', priority: 'LOW', creationDateTime: '2023-10-02', reportCount: 2 }
+      ],
+      totalItems: 2
+    };
+
+    cy.intercept('GET', '**/api/occurrence*', {
+      statusCode: 200,
+      body: mixedResponse
+    }).as('getMixedHistory');
+
+    cy.reload();
+    cy.wait('@getMixedHistory');
+
+    // The CLOSED occurrence should be visible
+    cy.contains('Closed Flood').should('be.visible');
+    
+    // The ACTIVE occurrence should be filtered out by the component code and not displayed
+    cy.contains('Active Fire').should('not.exist');
+  });
+
+  it('should toggle sort order when clicking the same header', () => {
+    // Click on 'Start Date' (default is desc, should change to asc)
+    cy.contains('th', 'Start Date').click();
+    cy.wait('@getHistory').then((interception) => {
+      expect(interception.request.url).to.include('sortOrder=asc');
+    });
+    
+    // Verify visual indicator
+    cy.contains('th', 'Start Date').find('.sort-ind').should('contain.text', '▲');
+
+    // Click again (should revert to desc)
+    cy.contains('th', 'Start Date').click();
+    cy.wait('@getHistory').then((interception) => {
+      expect(interception.request.url).to.include('sortOrder=desc');
+    });
+
+    // Verify visual indicator
+    cy.contains('th', 'Start Date').find('.sort-ind').should('contain.text', '▼');
+  });
 });

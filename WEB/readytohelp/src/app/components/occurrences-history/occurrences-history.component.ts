@@ -68,8 +68,8 @@ export class OccurrencesHistoryComponent implements OnInit {
       .getOccurrences({
         pageNumber: this.pageNumber(),
         pageSize: this.pageSize(),
-        sortBy: this.currentSortBy(), // Passar coluna de ordenação
-        sortOrder: this.currentSortOrder(), // Passar direção
+        sortBy: this.currentSortBy(),
+        sortOrder: this.currentSortOrder(),
         filter: apiFilterString.trim(),
       })
       .subscribe({
