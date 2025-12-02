@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("jacoco")
 }
 
 android {
@@ -21,6 +22,10 @@ android {
     }
 
     buildTypes {
+        getByName("debug") {
+            enableAndroidTestCoverage = true
+            enableUnitTestCoverage = true
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
@@ -38,6 +43,15 @@ android {
     }
     buildFeatures {
         compose = true
+    }
+    packaging {
+        resources {
+
+            excludes += "META-INF/LICENSE.md"
+            excludes += "META-INF/LICENSE-notice.md"
+            excludes += "META-INF/AL2.0"
+            excludes += "META-INF/LGPL2.1"
+        }
     }
 }
 
@@ -71,4 +85,44 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+    androidTestImplementation("io.mockk:mockk-android:1.13.11")
+    androidTestImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+    androidTestImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
+    androidTestImplementation(platform("androidx.compose:compose-bom:2024.09.00"))
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    androidTestImplementation("androidx.test:rules:1.6.1")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
+
+}
+
+tasks.register<JacocoReport>("gerarRelatorioCoverage") {
+
+    dependsOn("connectedDebugAndroidTest")
+
+    group = "Reporting"
+
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
+
+    val debugTree = fileTree("${layout.buildDirectory.get()}/tmp/kotlin-classes/debug") {
+        exclude(
+            "**/R.class",
+            "**/R$*.class",
+            "**/BuildConfig.*",
+            "**/Manifest*.*",
+            "**/*Test*.*",
+            "android/**/*.*"
+        )
+    }
+
+    val mainSrc = "${project.projectDir}/src/main/java"
+
+    sourceDirectories.setFrom(files(mainSrc))
+    classDirectories.setFrom(files(debugTree))
+
+    executionData.setFrom(fileTree("${layout.buildDirectory.get()}") {
+        include("outputs/code_coverage/debugAndroidTest/connected/**/*.ec")
+    })
 }

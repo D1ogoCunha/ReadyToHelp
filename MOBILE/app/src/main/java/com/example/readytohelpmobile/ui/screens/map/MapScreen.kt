@@ -98,6 +98,7 @@ fun bitmapFromDrawableRes(drawableResId: Int): Bitmap? {
 fun MapScreen(
     viewModel: MapViewModel = viewModel(),
     authViewModel: AuthViewModel = viewModel(),
+    reportViewModel: ReportViewModel = viewModel(),
     onLogout: () -> Unit = {}
 ) {
     val context = LocalContext.current
