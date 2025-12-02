@@ -204,4 +204,102 @@ describe('User Management Page', () => {
       expect(interception.request.url).to.include('sortBy=Email');
     });
   });
+
+  it('should handle pagination correctly', () => {
+    // Simulate navigation to page 2
+    cy.get('button').contains('Next').click();
+
+    // Verify the API was called with pageNumber=2
+    cy.wait('@getUsers').then((interception) => {
+      expect(interception.request.url).to.include('pageNumber=2');
+    });
+
+    // Update the visual counter on the page
+    cy.get('.page-counter strong').should('contain.text', '2');
+
+    // Simulate navigation back to page 1
+    cy.get('button').contains('Previous').click();
+
+    // Verify the API was called with pageNumber=1
+    cy.wait('@getUsers').then((interception) => {
+      expect(interception.request.url).to.include('pageNumber=1');
+    });
+  });
+
+  it('should handle load error gracefully', () => {
+    // Simular erro 500 ao carregar utilizadores
+    cy.intercept('GET', '**/api/user*', {
+      statusCode: 500,
+      body: { message: 'Server error' }
+    }).as('getUsersError');
+
+    // Forçar recarregamento chamando a função de filtro ou reload da pagina
+    cy.visit('/users');
+    cy.wait('@getUsersError');
+
+    // Verificar se a mensagem de erro aparece no HTML (baseado no *ngIf="error")
+    cy.get('.alert.alert-danger').should('contain.text', 'Failed to load users');
+  });
+
+  it('should handle create user error', () => {
+    // Open modal
+    cy.get('.fab-add-user').click();
+    
+    // Fill out the form
+    cy.get('input[name="name"]').type('Error User');
+    cy.get('input[name="email"]').type('error@test.com');
+    cy.get('input[name="password"]').type('123');
+
+    // Simulate 400 error on POST
+    cy.intercept('POST', '**/api/user*', {
+      statusCode: 400,
+      body: { message: 'Invalid data' }
+    }).as('createUserError');
+
+    cy.get('button').contains('Create').click();
+    cy.wait('@createUserError');
+
+    // Verify error Toast
+    cy.get('.rt-toast-container .alert-danger').should('contain.text', 'Failed to create user');
+    
+    // Verify that the modal closes after error
+    cy.get('.rt-modal').should('not.exist');
+  });
+
+  it('should disable save button if form is invalid', () => {
+    cy.get('.fab-add-user').click();
+
+    // Button should be disabled initially (empty fields)
+    cy.get('button').contains('Create').should('be.disabled');
+
+    // Fill out only the name -> should remain disabled
+    cy.get('input[name="name"]').type('Incomplete User');
+    cy.get('button').contains('Create').should('be.disabled');
+
+    // Fill out email -> should remain disabled (password missing in create mode)
+    cy.get('input[name="email"]').type('test@test.com');
+    cy.get('button').contains('Create').should('be.disabled');
+
+    // Fill out password -> now should be enabled
+    cy.get('input[name="password"]').type('123456');
+    cy.get('button').contains('Create').should('not.be.disabled');
+  });
+
+  it('should display empty state when no users return', () => {
+    // Simulate empty API response (excluding ID 1 which is filtered by the front)
+    cy.intercept('GET', '**/api/user*', {
+      statusCode: 200,
+      body: [] // Empty list
+    }).as('getEmptyUsers');
+
+    cy.reload();
+    cy.wait('@getEmptyUsers');
+
+    // Verify the table disappeared
+    cy.get('table.um-table').should('not.exist');
+
+    // Verify the "No users found" message appears
+    cy.get('.empty-state').should('be.visible')
+      .and('contain.text', 'No users found');
+  });
 });

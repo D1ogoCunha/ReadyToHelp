@@ -126,8 +126,8 @@ export class OccurrencesHistoryComponent implements OnInit {
           this.isLoading.set(false);
         },
         error: (err) => {
-          console.error('Erro ao carregar histórico:', err);
-          this.error.set('Não foi possível carregar o histórico.');
+          console.error('Error loading history:', err);
+          this.error.set('It was not possible to load the history.');
           this.isLoading.set(false);
         },
       });
