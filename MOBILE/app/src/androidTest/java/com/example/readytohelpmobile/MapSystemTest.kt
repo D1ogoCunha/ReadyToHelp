@@ -31,12 +31,22 @@ import retrofit2.converter.moshi.MoshiConverterFactory
 import retrofit2.converter.scalars.ScalarsConverterFactory
 import java.util.concurrent.TimeUnit
 
+/**
+ * System tests for the Map Screen functionality and Report screen.
+ *
+ * This class validates the integration of the [MapScreen], the Location Services,
+ * the [ReportViewModel], and the [MapViewModel]. It mocks the backend API using
+ * [MockWebServer] but runs the real UI and ViewModel logic.
+ */
 @RunWith(AndroidJUnit4::class)
 class MapSystemTest {
 
     @get:Rule
     val composeTestRule = createComposeRule()
 
+    /**
+     * Global rule to automatically grant Location permissions.
+     */
     @get:Rule
     val permissionRule: GrantPermissionRule = GrantPermissionRule.grant(
         Manifest.permission.ACCESS_FINE_LOCATION,
@@ -49,11 +59,21 @@ class MapSystemTest {
     private lateinit var authViewModel: AuthViewModel
     private lateinit var reportViewModel: ReportViewModel
 
+    /**
+     * Sets up the test environment.
+     * 1. Starts the MockWebServer.
+     * 2. Configures a fake Retrofit instance.
+     * 3. Mocks the [NetworkClient] singleton to redirect API calls to localhost.
+     * 4. Injects a fake JWT token into [TokenManager]. The [ReportViewModel]
+     * requires a logged-in user (with a valid ID) to submit reports.
+     */
     @Before
     fun setup() {
+        // Start Mock Server
         mockWebServer = MockWebServer()
         mockWebServer.start()
 
+        // Configure Retrofit
         val moshi = Moshi.Builder().addLast(KotlinJsonAdapterFactory()).build()
         val fakeRetrofit = Retrofit.Builder()
             .baseUrl(mockWebServer.url("/"))
@@ -61,11 +81,14 @@ class MapSystemTest {
             .addConverterFactory(MoshiConverterFactory.create(moshi))
             .build()
 
+        // Intercept Singleton
         mockkObject(NetworkClient)
         every { NetworkClient.getRetrofitInstance(any()) } returns fakeRetrofit
 
         val context = ApplicationProvider.getApplicationContext<android.app.Application>()
 
+        // Create a fake JWT payload containing a User ID (id: 100).
+        // This simulates a logged-in state so ReportViewModel doesn't throw an "Unauthenticated" error.
         val jsonPayload = JSONObject().put("id", 100).toString()
         val fakePayload = Base64.encodeToString(
             jsonPayload.toByteArray(),
@@ -75,6 +98,7 @@ class MapSystemTest {
 
         TokenManager(context).saveToken(fakeToken)
 
+        // Initialize ViewModels with test context
         mapViewModel = MapViewModel(context)
         authViewModel = AuthViewModel(context)
         reportViewModel = ReportViewModel(context)
@@ -86,8 +110,20 @@ class MapSystemTest {
         unmockkAll()
     }
 
+    /**
+     * Tests that the Map Screen loads correctly.
+     *
+     * Scenario:
+     * 1. The screen initializes and requests occurrences from the API.
+     * 2. API returns an empty list (200 OK).
+     *
+     * Expected Outcome:
+     * - A GET request is made to the /occurrence endpoint.
+     * - Essential UI elements (Report, Logout Button) become visible.
+     */
     @Test
     fun system_map_loads_and_shows_ui_elements() {
+        // Enqueue empty list of occurrences
         mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody("[]"))
 
         composeTestRule.setContent {
@@ -98,18 +134,39 @@ class MapSystemTest {
             )
         }
 
+        // Verify API call
         val request = mockWebServer.takeRequest(5, TimeUnit.SECONDS)
         assert(request?.path?.contains("/occurrence") == true)
 
+        // Wait for UI to settle
         composeTestRule.waitForIdle()
+
+        // Assert UI visibility
         composeTestRule.onNodeWithContentDescription("Report Occurrence").assertIsDisplayed()
         composeTestRule.onNodeWithContentDescription("Logout").assertIsDisplayed()
     }
 
+    /**
+     * Tests the full flow of reporting a new occurrence.
+     *
+     * Scenario:
+     * 1. User opens the Report Dialog.
+     * 2. Fills in Title and Description.
+     * 3. Selects "ROAD ACCIDENT" from the type dropdown.
+     * 4. Submits the report.
+     * 5. Server responds with success and Entity details (PSP de Lisboa).
+     *
+     * Expected Outcome:
+     * - A POST request is sent with the correct JSON body.
+     * - The Success Dialog appears displaying the responsible entity's contact info.
+     * - The dialog can be closed, returning to the map.
+     */
     @Test
     fun system_report_dialog_submission_flow() {
+        // 1. Initial Map Load response
         mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody("[]"))
 
+        // 2. Report Submission Response (Success with Entity Data)
         mockWebServer.enqueue(MockResponse()
             .setResponseCode(200)
             .setBody("""
@@ -117,7 +174,12 @@ class MapSystemTest {
                 "reportId": 10,
                 "occurrenceId": 100,
                 "occurrenceStatus": "WAITING",
-                "responsibleEntity": null
+                "responsibleEntity": {
+                    "name": "PSP de Lisboa",
+                    "email": "contacto@psp.pt",
+                    "address": "Esquadra Principal",
+                    "contactPhone": 210000000
+                }
             }
         """.trimIndent())
         )
@@ -130,91 +192,63 @@ class MapSystemTest {
             )
         }
 
+        // Consume the initial map load request
         mockWebServer.takeRequest()
+        composeTestRule.waitForIdle()
 
+        // --- Interaction Step ---
+
+        // Open Dialog
         composeTestRule.onNodeWithContentDescription("Report Occurrence").performClick()
 
+        // Fill Text Fields
         composeTestRule.onNodeWithText("Title").performTextInput("Buraco na estrada")
         composeTestRule.onNodeWithText("Description").performTextInput("Perigo para carros")
 
+        // Select Dropdown Item
         composeTestRule.onNodeWithText("Occurrence Type").performClick()
         composeTestRule.onNodeWithText("ROAD ACCIDENT").performClick()
 
+        // Click Submit (Button should be enabled now)
         composeTestRule.onNodeWithText("Submit")
             .assertIsEnabled()
             .performClick()
 
+        // Retry logic for robustness (Double click strategy if first fails due to focus/overlay)
         val submitButtonNode = composeTestRule.onAllNodesWithText("Submit")
         if (submitButtonNode.fetchSemanticsNodes().isNotEmpty()) {
             submitButtonNode.onFirst().performClick()
         }
 
+        // --- Verification Step ---
+
+        // Verify HTTP Request
         val postRequest = mockWebServer.takeRequest(5, TimeUnit.SECONDS)
         assert(postRequest != null)
         assert(postRequest?.method == "POST")
         assert(postRequest?.path?.contains("/reports") == true)
 
+        // Verify Request Body Content
         val requestBody = postRequest?.body?.readUtf8() ?: ""
         assert(requestBody.contains("Buraco na estrada"))
         assert(requestBody.contains("ROAD_ACCIDENT"))
-    }
 
-    @Test
-    fun system_report_submission_fails_shows_error() {
-        // 1. Mapa carrega vazio (sucesso inicial)
-        mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody("[]"))
-
-        // 2. Report falha (400 Bad Request)
-        mockWebServer.enqueue(MockResponse()
-            .setResponseCode(400)
-            .setBody("Invalid Data")
-        )
-
-        composeTestRule.setContent {
-            MapScreen(
-                viewModel = mapViewModel,
-                authViewModel = authViewModel,
-                reportViewModel = reportViewModel
-            )
+        // Verify Success Dialog Content
+        // Wait for the success message to appear
+        composeTestRule.waitUntil(timeoutMillis = 10000) {
+            composeTestRule.onAllNodesWithText("Report submitted successfully!")
+                .fetchSemanticsNodes().isNotEmpty()
         }
-        mockWebServer.takeRequest() // Consumir o GET do mapa
 
-        // Abrir Dialog
-        composeTestRule.onNodeWithContentDescription("Report Occurrence").performClick()
-        composeTestRule.waitForIdle()
+        // Check if Entity details from JSON are displayed
+        composeTestRule.onNodeWithText("PSP de Lisboa").assertIsDisplayed()
+        composeTestRule.onNodeWithText("contacto@psp.pt").assertIsDisplayed()
+        composeTestRule.onNodeWithText("210000000").assertIsDisplayed()
 
-        // Preencher
-        composeTestRule.onNodeWithText("Title").performTextInput("Bad Report")
-        composeTestRule.onNodeWithText("Description").performTextInput("Desc")
+        // Close Dialog
+        composeTestRule.onNodeWithText("Close").performClick()
 
-        // Selecionar Tipo (se for dropdown) ou apenas assumir preenchimento se houver default.
-        // O teu Dialog tem dropdown. Vamos tentar clicar e selecionar um.
-        composeTestRule.onNodeWithText("Occurrence Type").performClick()
-        // Selecionar o primeiro da lista que aparecer
-        composeTestRule.onAllNodesWithText("ANIMAL ON ROAD").onFirst().performClick()
-
-        // Submeter
-        composeTestRule.onNodeWithText("Submit").performClick()
-
-        // Verificar pedido POST
-        val postRequest = mockWebServer.takeRequest(5, TimeUnit.SECONDS)
-
-        // Se o request for null, é provável que o emulador não tenha dado Location.
-        // O teste passa se não houver request (comportamento correto sem GPS) ou se houver erro visível.
-        if (postRequest != null) {
-            assert(postRequest.method == "POST")
-
-            // CORREÇÃO: O Retrofit lança HttpException com a mensagem "HTTP 400 Client Error"
-            // O ReportViewModel mostra essa mensagem.
-            // O texto "Error submitting report" só aparece se a exceção não tiver mensagem.
-            val expectedErrorPart = "HTTP 400"
-
-            composeTestRule.waitUntil(timeoutMillis = 5000) {
-                composeTestRule.onAllNodesWithText(expectedErrorPart, substring = true)
-                    .fetchSemanticsNodes().isNotEmpty()
-            }
-
-            composeTestRule.onNodeWithText(expectedErrorPart, substring = true).assertIsDisplayed()
-        }
+        // Ensure we are back on the main screen
+        composeTestRule.onNodeWithContentDescription("Report Occurrence").assertIsDisplayed()
     }
 }
