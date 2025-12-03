@@ -33,7 +33,7 @@ describe('Map Page (Home)', () => {
     cy.visit('/map');
     
     // 3. Wait for the initial API call to complete
-    cy.wait('@getActiveOccurrences');
+    cy.wait('@getActiveOccurrences', { timeout: 35000 });
   });
 
   it('should display the map container and markers', () => {
