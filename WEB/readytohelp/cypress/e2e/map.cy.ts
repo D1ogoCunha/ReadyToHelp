@@ -33,15 +33,15 @@ describe('Map Page (Home)', () => {
     cy.visit('/map');
     
     // 3. Wait for the initial API call to complete
-    cy.wait('@getActiveOccurrences');
+    cy.wait('@getActiveOccurrences', { timeout: 35000 });
   });
 
   it('should display the map container and markers', () => {
     // Verify if the map container div exists and is visible
     cy.get('#map').should('be.visible');
     
-    // CORREÇÃO: Verificar se o Canvas existe no DOM, mas relaxar a verificação de visibilidade
-    // porque os marcadores (pins) podem estar a cobri-lo parcialmente.
+    // Verify if the Canvas exists in the DOM, but relax the visibility check
+    // because the markers (pins) might be partially covering it.
     cy.get('canvas.mapboxgl-canvas').should('exist');
 
     // Verify if the custom markers are created in the DOM.

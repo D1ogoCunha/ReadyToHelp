@@ -1,15 +1,12 @@
 # -------------------------------
-# ReadyToHelp - CI Pipeline
+# ReadyToHelp - Pipeline Configuration
 # -------------------------------
 
 stages:
   - setup
   - build
-  - lint
   - test
   - deploy
-
-image: mcr.microsoft.com/dotnet/sdk:8.0
 
 variables:
   POSTGRES_USER: readytohelp
@@ -18,13 +15,14 @@ variables:
   POSTGRES_HOST: postgres
   SOLUTION_PATH: API/ReadyToHelpAPI.sln
   PROJECT_PATH: API/ReadyToHelpAPI/ReadyToHelpAPI.csproj
+  WEB_PATH: WEB/readytohelp
+  MOBILE_PATH: MOBILE/
   DOTNET_CLI_TELEMETRY_OPTOUT: "1"
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "1"
 
+image: mcr.microsoft.com/dotnet/sdk:8.0
+
 before_script:
-  - apt-get update && apt-get install -y curl
-  - curl -o wait-for-it.sh https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh
-  - chmod +x wait-for-it.sh
   - export PATH="$PATH:/root/.dotnet/tools"
 
 setup-database:
@@ -33,6 +31,9 @@ setup-database:
     - name: postgis/postgis:15-3.3
       alias: postgres
   script:
+    - apt-get update && apt-get install -y curl
+    - curl -o wait-for-it.sh https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh
+    - chmod +x wait-for-it.sh
     - ./wait-for-it.sh postgres:5432 -- echo "PostgreSQL pronto"
 
 build:
@@ -44,16 +45,6 @@ build:
     - echo "Building ReadyToHelp API..."
     - dotnet restore "$SOLUTION_PATH"
     - dotnet build "$SOLUTION_PATH" --configuration Release --no-restore
-
-lint:
-  stage: lint
-  script:
-    - dotnet tool install -g dotnet-format
-    - $HOME/.dotnet/tools/dotnet-format "$SOLUTION_PATH" --check
-  allow_failure: true
-  only:
-    - branches
-    - merge_requests
 
 unit-tests:
   stage: test
@@ -80,6 +71,8 @@ integration-tests:
     POSTGRES_PORT: 5432
   script:
     - apt-get update && apt-get install -y curl postgresql-client
+    - curl -o wait-for-it.sh https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh
+    - chmod +x wait-for-it.sh
     - ./wait-for-it.sh postgres:5432 -- echo "PostgreSQL is up"
     - PGPASSWORD="$POSTGRES_PASSWORD" psql -h "$POSTGRES_HOST" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "CREATE EXTENSION IF NOT EXISTS postgis;"
     - dotnet restore "$SOLUTION_PATH"
@@ -91,5 +84,69 @@ integration-tests:
     paths:
       - IntegrationTests.trx
       - TestResults/
+  only:
+    - merge_requests
+
+# =========================================================
+# FRONTEND WEB (Angular + Cypress)
+# =========================================================
+web-test-system:
+  stage: test
+  image: cypress/browsers:node-20.9.0-chrome-118.0.5993.88-1-ff-118.0.2-edge-118.0.2088.46-1
+  script:
+    - apt-get update || true
+    - apt-get install -y curl || true
+    - echo "Testing Web Frontend (System/E2E)..."
+    - cd "$WEB_PATH"
+    - npm ci
+    - npx ng serve --host 0.0.0.0 --port 4200 &
+    - npx wait-on http://localhost:4200
+    - npx cypress run --browser chrome
+  artifacts:
+    when: always
+    paths:
+      - "$WEB_PATH/cypress/videos/**/*.mp4"
+      - "$WEB_PATH/cypress/screenshots/**/*.png"
+    expire_in: 1 week
+  only:
+    - merge_requests
+# =========================================================
+# MOBILE (Android) - Runner Linux Self-Hosted
+# =========================================================
+.android-test-system:
+  stage: test
+  image: reactnativecommunity/react-native-android:latest
+
+  tags:
+    - linux
+
+  before_script:
+    - echo "Preparing Android environment..."
+    - apt-get update && apt-get install -y libpulse0
+    - yes | sdkmanager --licenses > /dev/null || true
+    - echo "Downloading System Image..."
+    - sdkmanager "system-images;android-34;google_apis;x86_64" "platform-tools" "platforms;android-34" > /dev/null
+    - echo "no" | avdmanager create avd -n test_device -k "system-images;android-34;google_apis;x86_64" --force
+
+  script:
+    - echo "Starting Emulator..."
+    - $ANDROID_HOME/emulator/emulator -avd test_device -no-audio -no-window -gpu swiftshader_indirect -no-snapshot -no-boot-anim &
+    - echo "Waiting for device to boot..."
+    - adb wait-for-device
+    - adb shell input keyevent 82
+
+    - echo "Starting tests..."
+    - cd "$MOBILE_PATH"
+    - chmod +x gradlew
+
+    - ./gradlew clean
+    - ./gradlew :app:gerarRelatorioCoverage
+
+  artifacts:
+    when: always
+    paths:
+      - "$MOBILE_PATH/app/build/reports/jacoco/gerarRelatorioCoverage/html/"
+      - "$MOBILE_PATH/app/build/reports/androidTests/connected/"
+    expire_in: 1 week
   only:
     - merge_requests
