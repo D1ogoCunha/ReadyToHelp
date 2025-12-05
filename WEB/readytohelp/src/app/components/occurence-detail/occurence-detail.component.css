@@ -1,0 +1,125 @@
+/* =========================================
+    PAGE LAYOUT
+   ========================================= */
+/* Main page container for occurrence detail */
+.od-page {
+  background: #f8fafc; /* Light background */
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-size: 1rem;
+}
+
+/* =========================================
+   HEADER
+   ========================================= */
+/* Header section with title and styling */
+.od-header {
+  height: 150px;
+  padding: 32px 55px; 
+  display: flex;
+  align-items: center;
+  background: #4353ab;
+  border-bottom: 1px solid #e2e8f0;
+  color: #ffffff;
+}
+
+/* Main title in header */
+.od-title {
+  margin: 0;
+  font-size: 2.5rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+
+/* =========================================
+    BODY
+   ========================================= */
+/* Body section for main content */
+.od-body {
+  flex: 1; 
+  padding: 40px 55px; 
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+/* Map image preview box */
+.map-preview-box {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+/* =========================================
+   TEXT SECTIONS
+   ========================================= */
+/* Section title styling */
+.section-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 16px;
+  border-left: 5px solid #4353ab;
+  padding-left: 16px;
+  line-height: 1;
+}
+
+/* Description text styling */
+.description-text {
+  font-size: 1.5rem;
+  line-height: 1.6;
+  color: #475569;
+  white-space: pre-wrap;
+}
+
+/* =========================================
+   INFORMATION TABLE
+   ========================================= */
+/* Table for occurrence information */
+.info-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+}
+
+.info-table td {
+  padding: 20px 24px; 
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 1.15rem;
+  vertical-align: middle;
+}
+
+.info-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Label column in info table */
+.info-label {
+  font-weight: 600;
+  color: #64748b;
+  width: 30%;
+  background-color: #f8fafc;
+}
+
+/* Value column in info table */
+.info-value {
+  font-weight: 500;
+  color: #0f172a;
+}
+
+/* =========================================
+   LOADING AND ERROR STATE
+   ========================================= */
+/* Container for loading and error messages */
+.state-container {
+  padding: 60px;
+  text-align: center;
+  color: #64748b;
+}

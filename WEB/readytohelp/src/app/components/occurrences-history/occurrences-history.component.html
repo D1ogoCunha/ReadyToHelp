@@ -1,0 +1,226 @@
+<!-- Página padronizada estilo User Management -->
+<div class="user-mgmt-page">
+
+  <!-- HEADER -->
+  <div class="um-header">
+    <div class="um-title-wrap">
+      <h2 class="um-title">Occurrences History</h2>
+    </div>
+  </div>
+
+  <!-- TOOLBAR / FILTERS -->
+  <div class="um-toolbar flex-wrap">
+    <!-- Search -->
+    <div class="filter-group" style="max-width: 320px;">
+      <span class="material-icons filter-icon">search</span>
+      <input
+        class="filter-input"
+        [ngModel]="filterSearch()"
+        (keyup.enter)="filterSearch.set($any($event.target).value); onFilterChange()"
+        (blur)="filterSearch.set($any($event.target).value); onFilterChange()"
+        placeholder="Search Title..."
+      />
+    </div>
+
+    <!-- Type -->
+    <div class="toolbar-inline-group">
+      <label class="toolbar-label">Type</label>
+      <select
+        class="toolbar-select"
+        [ngModel]="filterType()"
+        (ngModelChange)="filterType.set($event); onFilterChange()"
+      >
+        <option value="">All</option>
+        @for (t of types; track t) {
+          <option [value]="t">{{ formatEnum(t) }}</option>
+        }
+      </select>
+    </div>
+
+    <!-- Priority -->
+    <div class="toolbar-inline-group">
+      <label class="toolbar-label">Priority</label>
+      <select
+        class="toolbar-select"
+        [ngModel]="filterPriority()"
+        (ngModelChange)="filterPriority.set($event); onFilterChange()"
+      >
+        <option value="">All</option>
+        @for (p of priorities; track p) {
+          <option [value]="p">{{ formatEnum(p) }}</option>
+        }
+      </select>
+    </div>
+
+    <!-- Dates -->
+    <div class="toolbar-inline-group">
+      <label class="toolbar-label">Start</label>
+      <input
+        type="date"
+        class="toolbar-date"
+        [ngModel]="filterStartDate()"
+        (ngModelChange)="filterStartDate.set($event); onFilterChange()"
+      />
+    </div>
+    <div class="toolbar-inline-group">
+      <label class="toolbar-label">End</label>
+      <input
+        type="date"
+        class="toolbar-date"
+        [ngModel]="filterEndDate()"
+        (ngModelChange)="filterEndDate.set($event); onFilterChange()"
+      />
+    </div>
+
+    <!-- Clear -->
+    <div class="d-flex gap-2 ms-auto">
+      <button
+        class="btn btn-outline-secondary btn-sm"
+        style="height:40px; padding:0 16px;"
+        (click)="clearFilters()"
+        title="Reset filters"
+      >
+        Reset
+      </button>
+    </div>
+  </div>
+
+  <!-- BODY / TABLE / STATES -->
+  <div class="um-body">
+    <!-- Loading -->
+    @if (isLoading()) {
+      <div class="loading-state p-5 text-center text-muted">
+        <div class="spinner-border text-primary spinner-border-sm" role="status"></div>
+        <span class="ms-2">Loading occurrences...</span>
+      </div>
+    }
+    <!-- Error -->
+    @else if (error()) {
+      <div class="alert alert-danger m-4 rounded">{{ error() }}</div>
+    }
+    <!-- Empty -->
+    @else if (occurrencesClosed().length === 0) {
+      <div class="empty-state py-5 text-center">
+        <span class="material-icons empty-icon" style="font-size:48px; color:#cbd5e1;">folder_open</span>
+        <h5 class="mt-3 text-muted">No closed occurrences found</h5>
+      </div>
+    }
+    <!-- Table -->
+    @else {
+      <div class="table-responsive">
+        <table class="um-table">
+          <thead>
+            <tr>
+              <th (click)="toggleSort('Id')" [class.sorted]="currentSortBy() === 'Id'" style="width:70px;">
+                ID
+                <span class="sort-ind" *ngIf="currentSortBy() === 'Id'">
+                  {{ currentSortOrder() === 'asc' ? '▲' : '▼' }}
+                </span>
+              </th>
+              <th (click)="toggleSort('Title')" [class.sorted]="currentSortBy() === 'Title'">
+                Title
+                <span class="sort-ind" *ngIf="currentSortBy() === 'Title'">
+                  {{ currentSortOrder() === 'asc' ? '▲' : '▼' }}
+                </span>
+              </th>
+              <th (click)="toggleSort('Type')" [class.sorted]="currentSortBy() === 'Type'" style="width:130px;">
+                Type
+                <span class="sort-ind" *ngIf="currentSortBy() === 'Type'">
+                  {{ currentSortOrder() === 'asc' ? '▲' : '▼' }}
+                </span>
+              </th>
+              <th (click)="toggleSort('Priority')" [class.sorted]="currentSortBy() === 'Priority'" style="width:120px;">
+                Priority
+                <span class="sort-ind" *ngIf="currentSortBy() === 'Priority'">
+                  {{ currentSortOrder() === 'asc' ? '▲' : '▼' }}
+                </span>
+              </th>
+              <th (click)="toggleSort('CreationDateTime')" [class.sorted]="currentSortBy() === 'CreationDateTime'" style="width:180px;">
+                Start Date
+                <span class="sort-ind" *ngIf="currentSortBy() === 'CreationDateTime'">
+                  {{ currentSortOrder() === 'asc' ? '▲' : '▼' }}
+                </span>
+              </th>
+              <th (click)="toggleSort('EndDateTime')" [class.sorted]="currentSortBy() === 'EndDateTime'" style="width:180px;">
+                End Date
+                <span class="sort-ind" *ngIf="currentSortBy() === 'EndDateTime'">
+                  {{ currentSortOrder() === 'asc' ? '▲' : '▼' }}
+                </span>
+              </th>
+              <th style="width:90px;">Reports</th>
+              <th class="text-right" style="width:80px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (o of occurrencesClosed(); track o.id) {
+              <tr>
+                <td class="text-muted font-weight-bold">#{{ o.id }}</td>
+                <td>
+                  <div class="occ-title">{{ o.title }}</div>
+                </td>
+                <td>
+                  <span class="badge badge-type">{{ formatEnum(o.type) }}</span>
+                </td>
+                <td>
+                  @if (o.priority === 'HIGH') {
+                    <span class="status-badge status-high">High</span>
+                  } @else if (o.priority === 'MEDIUM') {
+                    <span class="status-badge status-medium">Medium</span>
+                  } @else {
+                    <span class="status-badge status-low">Low</span>
+                  }
+                </td>
+                <td>
+                  <div class="date-cell text-success small">{{ formatDate(o.creationDateTime) }}</div>
+                </td>
+                <td>
+                  <div class="date-cell text-danger small">{{ formatDate(o.endDateTime) }}</div>
+                </td>
+                <td class="text-center">{{ o.reportCount }}</td>
+                <td class="text-right">
+                  <div class="action-group">
+                    <a
+                      class="btn"
+                      [routerLink]="['/occurrence', o.id]"
+                      title="View details"
+                    >
+                      <span class="material-icons">visibility</span>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+
+  <!-- PAGINATION -->
+  <div class="um-footer" *ngIf="!isLoading() && occurrencesClosed().length">
+    <button
+      class="btn btn-nav"
+      (click)="prevPage()"
+      [disabled]="pageNumber() === 1 || isLoading()"
+    >
+      <span class="material-icons" style="font-size:18px;">chevron_left</span>
+      Previous
+    </button>
+
+    <div class="page-counter">
+      Page <strong>{{ pageNumber() }}</strong>
+    </div>
+
+    <button
+      class="btn btn-nav"
+      (click)="nextPage()"
+      [disabled]="!hasNextPage() || isLoading()"
+    >
+      Next
+      <span class="material-icons" style="font-size:18px;">chevron_right</span>
+    </button>
+  </div>
+
+  <!-- LEGAL FOOTER -->
+  <app-legal-footer></app-legal-footer>
+</div>

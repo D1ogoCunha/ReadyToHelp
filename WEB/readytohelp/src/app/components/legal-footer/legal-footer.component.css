@@ -1,0 +1,35 @@
+/* =========================================
+   FOOTER STYLES
+   ========================================= */
+.legal-footer {
+  margin-top: auto;
+  padding: 40px 40px;
+  background: #4353ab;
+  color: #e2e8f0;
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+  line-height: 1.4;
+  text-align: center;
+}
+.legal-footer small {
+  display: block;
+  font-weight: 500;
+}
+.legal-footer small + small {
+  margin-top: 6px;
+  opacity: 0.85;
+  font-weight: 400;
+}
+.legal-footer a {
+  color: #94c5ff;
+  text-decoration: none;
+}
+.legal-footer a:hover {
+  text-decoration: underline;
+}
+@media (max-width: 600px) {
+  .legal-footer {
+    font-size: 0.65rem;
+    padding: 16px 20px;
+  }
+}

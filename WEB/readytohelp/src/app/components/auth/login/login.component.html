@@ -1,0 +1,60 @@
+<!-- LOGIN COMPONENT HTML -->
+
+<!-- Main login container -->
+<div class="login-container">
+  <!-- Branding section: logo and slogan -->
+  <div class="branding-side">
+    <img src="/Logo.jpg" alt="ReadyToHelp Logo" class="main-logo" />
+    <p class="slogan">Your emergency response platform.</p>
+  </div>
+  <!-- Login form section -->
+  <div class="form-side">
+    <div class="form-wrapper">
+      <h2>Welcome back!</h2>
+      <!-- Login form: binds email and password, disables submit when loading -->
+      <form (ngSubmit)="submit()" #f="ngForm" novalidate>
+        <div class="form-group">
+          <label for="email" class="sr-only">Email</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            placeholder="Email"
+            required
+            [(ngModel)]="email"
+          />
+        </div>
+        <div class="form-group">
+          <label for="password" class="sr-only">Password</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            placeholder="Password"
+            required
+            [(ngModel)]="password"
+          />
+        </div>
+        <!-- Submit button: shows loading state when submitting -->
+        <button type="submit" class="btn-submit" [disabled]="loading">
+          <span *ngIf="!loading">Login</span>
+          <span *ngIf="loading">Logging in...</span>
+        </button>
+      </form>
+    </div>
+
+    <!-- Toast notification: shows success or error messages after login attempt -->
+    <!-- Placed inside .form-side, after .form-wrapper -->
+    <div *ngIf="toast.show" class="rt-toast-container">
+      <div
+        class="alert"
+        [ngClass]="{
+          'alert-success': toast.type === 'success',
+          'alert-danger': toast.type === 'error'
+        }"
+      >
+        {{ toast.message }}
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,120 @@
+<div class="od-page">
+
+  <!-- LOADING STATE -->
+  @if (isLoading()) {
+    <div class="state-container">
+      <div class="spinner-border text-primary" role="status">
+        <span class="sr-only">Loading...</span>
+      </div>
+      <h2 class="mt-4 text-xl">Loading details...</h2>
+    </div>
+  }
+
+  <!-- DATA LOADED STATE -->
+  @if (occurrence(); as occ) {
+    
+    <!-- HEADER -->
+    <header class="od-header">
+      <div>
+        <h1 class="od-title">{{ occ.title }}</h1>
+      </div>
+    </header>
+
+    <!-- CONTENT BODY -->
+    <div class="od-body">
+      <div class="row">
+        
+        <!-- Left Column: Map Image & Description -->
+        <div class="col-lg-6 mb-5 mb-lg-0">
+          
+          <!-- Map Image -->
+          <div class="map-preview-box mb-5">
+            <img 
+              [src]="getStaticMapUrl(occ)" 
+              class="img-fluid w-100" 
+              alt="Localização da ocorrência" 
+              style="object-fit: cover; min-height: 350px;"
+            >
+          </div>
+
+          <!-- Description -->
+          <h3 class="section-title">Description</h3>
+          <p class="description-text">
+            {{ occ.description || 'No description provided for this occurrence.' }}
+          </p>
+        </div>
+
+        <!-- Right Column: General Info Table -->
+        <div class="col-lg-6 pl-lg-5">
+          <h3 class="section-title">General Information</h3>
+          
+          <table class="info-table">
+            <tbody>
+              <tr>
+                <td class="info-label">Type</td>
+                <td class="info-value">{{ formatEnum(occ.type) }}</td>
+              </tr>
+              <tr>
+                <td class="info-label">Status</td>
+                <td class="info-value">
+                  @if (occ.status === 'ACTIVE') {
+                    <span class="text-success font-weight-bold">{{ formatEnum(occ.status) }}</span>
+                  } @else if (occ.status === 'CLOSED') {
+                    <span class="text-danger font-weight-bold">{{ formatEnum(occ.status) }}</span>
+                  } @else {
+                    <span class="text-warning font-weight-bold">{{ formatEnum(occ.status) }}</span>
+                  }
+                </td>
+              </tr>
+              <tr>
+                <td class="info-label">Priority</td>
+                <td class="info-value">
+                  @if (occ.priority === 'HIGH') {
+                    <span class="text-danger font-weight-bold">{{ formatEnum(occ.priority) }}</span>
+                  } @else if (occ.priority === 'MEDIUM') {
+                    <span class="text-warning font-weight-bold">{{ formatEnum(occ.priority) }}</span>
+                  } @else {
+                    <span class="text-secondary font-weight-bold">{{ formatEnum(occ.priority) }}</span>
+                  }
+                </td>
+              </tr>
+              <tr>
+                <td class="info-label">Reported On</td>
+                <td class="info-value">{{ formatDate(occ.creationDateTime) }}</td>
+              </tr>
+              <tr>
+                <td class="info-label">Concluded On</td>
+                <td class="info-value">{{ formatDate(occ.endDateTime) }}</td>
+              </tr>
+              <tr>
+                <td class="info-label">Coordinates</td>
+                <td class="info-value">
+                  {{ occ.latitude | number:'1.4-4' }}, {{ occ.longitude | number:'1.4-4' }}
+                </td>
+              </tr>
+              <tr>
+                <td class="info-label">Report Count</td>
+                <td class="info-value">{{ occ.reportCount }}</td>
+              </tr>
+              <tr>
+                <td class="info-label">Responsible Entity</td>
+                <td class="info-value">{{ occ.responsibleEntityId || "N/A" }}</td>
+              </tr>
+            </tbody>
+          </table>
+
+        </div>
+      </div>
+    </div>
+
+  } @else if (!isLoading()) {
+    <!-- ERROR STATE -->
+    <div class="state-container">
+      <h3 class="text-danger">Error</h3>
+      <p>Unable to load the details of this occurrence.</p>
+    </div>
+  }
+
+  <!-- FOOTER -->
+  <app-legal-footer></app-legal-footer>
+</div>

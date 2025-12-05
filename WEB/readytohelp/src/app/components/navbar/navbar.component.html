@@ -1,0 +1,93 @@
+<!-- Sidebar toggle button for collapsing/expanding the navbar -->
+<button
+  type="button"
+  class="toggle-btn"
+  (click)="toggle()"
+  [attr.aria-expanded]="isOpen"
+  aria-label="Toggle sidebar"
+>
+  <span class="material-symbols-outlined">
+    {{ isOpen ? "chevron_left" : "menu" }}
+  </span>
+</button>
+
+<!-- Main navigation sidebar -->
+<nav
+  class="fixed inset-y-0 left-0 z-[9999] w-20 md:w-24 bg-blue-600 text-white"
+  [class.collapsed]="!isOpen"
+  aria-label="Main navigation"
+>
+  <ul class="h-full flex flex-col items-center justify-center gap-6 list-none m-0 p-0">
+    <!-- Map link -->
+    <li>
+      <a
+        class="nav-link text-white text-center"
+        [routerLink]="['/map']"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: true }"
+        title="Map"
+        data-label="Map"
+      >
+        <span class="material-symbols-outlined nav-icon">map</span>
+        <span class="sr-only">Map</span>
+      </a>
+    </li>
+    <!-- History link -->
+    <li>
+      <a
+        class="nav-link"
+        [routerLink]="['/occurrences/history']"
+        routerLinkActive="active"
+        title="History"
+        data-label="History"
+      >
+        <span class="material-symbols-outlined nav-icon">history</span>
+        <span class="sr-only">History</span>
+      </a>
+    </li>
+
+    <!-- Conditional links based on authentication status -->
+    @if (!isAuthenticated) {
+      <!-- Login link for unauthenticated users -->
+      <li>
+        <a
+          class="nav-link"
+          [routerLink]="['/login']"
+          routerLinkActive="active"
+          title="Login"
+          data-label="Login"
+        >
+          <span class="material-symbols-outlined nav-icon">person</span>
+          <span class="sr-only">Login</span>
+        </a>
+      </li>
+    } @else {
+      <!-- Users link for authenticated users -->
+      <li>
+        <a
+          class="nav-link"
+          [routerLink]="['/users']"
+          routerLinkActive="active"
+          title="Users"
+          data-label="Users"
+        >
+          <span class="material-symbols-outlined nav-icon">deployed_code_account</span>
+          <span class="sr-only">Users</span>
+        </a>
+      </li>
+      <!-- Logout link for authenticated users -->
+      <li>
+        <a
+          class="nav-link"
+          href="#"
+          (click)="$event.preventDefault(); logout()"
+          title="Logout"
+          data-label="Logout"
+        >
+          <span class="material-symbols-outlined nav-icon">logout</span>
+          <span class="sr-only">Logout</span>
+        </a>
+      </li>
+    }
+  </ul>
+</nav>
