@@ -87,7 +87,6 @@ integration-tests:
   only:
     - merge_requests
 
-
 # =========================================================
 # FRONTEND WEB (Angular + Cypress)
 # =========================================================
@@ -108,6 +107,46 @@ web-test-system:
     paths:
       - "$WEB_PATH/cypress/videos/**/*.mp4"
       - "$WEB_PATH/cypress/screenshots/**/*.png"
+    expire_in: 1 week
+  only:
+    - merge_requests
+# =========================================================
+# MOBILE (Android) - Runner Linux Self-Hosted
+# =========================================================
+.android-test-system:
+  stage: test
+  image: reactnativecommunity/react-native-android:latest
+
+  tags:
+    - linux
+
+  before_script:
+    - echo "Preparing Android environment..."
+    - apt-get update && apt-get install -y libpulse0
+    - yes | sdkmanager --licenses > /dev/null || true
+    - echo "Downloading System Image..."
+    - sdkmanager "system-images;android-34;google_apis;x86_64" "platform-tools" "platforms;android-34" > /dev/null
+    - echo "no" | avdmanager create avd -n test_device -k "system-images;android-34;google_apis;x86_64" --force
+
+  script:
+    - echo "Starting Emulator..."
+    - $ANDROID_HOME/emulator/emulator -avd test_device -no-audio -no-window -gpu swiftshader_indirect -no-snapshot -no-boot-anim &
+    - echo "Waiting for device to boot..."
+    - adb wait-for-device
+    - adb shell input keyevent 82
+
+    - echo "Starting tests..."
+    - cd "$MOBILE_PATH"
+    - chmod +x gradlew
+
+    - ./gradlew clean
+    - ./gradlew :app:gerarRelatorioCoverage
+
+  artifacts:
+    when: always
+    paths:
+      - "$MOBILE_PATH/app/build/reports/jacoco/gerarRelatorioCoverage/html/"
+      - "$MOBILE_PATH/app/build/reports/androidTests/connected/"
     expire_in: 1 week
   only:
     - merge_requests
