@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit, OnDestroy } from '@angular/core'; // Import OnDestroy
+import { ChangeDetectionStrategy, Component, inject, OnInit, OnDestroy } from '@angular/core'; 
 import { Router } from '@angular/router';
 import * as mapboxgl from 'mapbox-gl';
 import { OccurrenceService } from '../../services/occurrence.service';
@@ -21,7 +21,7 @@ import { PriorityLevel } from '../../models/priority-level.enum';
   styleUrls: ['./map.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class MapComponent implements OnInit, OnDestroy { // Implement OnDestroy
+export class MapComponent implements OnInit, OnDestroy { 
   private map?: mapboxgl.Map;
   private occurrenceService = inject(OccurrenceService);
   private router = inject(Router);
@@ -274,6 +274,10 @@ export class MapComponent implements OnInit, OnDestroy { // Implement OnDestroy
     }
   }
 
+  /**
+   * Formats enum values to a more readable string.
+   * E.g., "FOREST_FIRE" -> "Forest Fire"
+   */
   private formatEnum(
     value: string | OccurrenceType | PriorityLevel | OccurrenceStatus
   ): string {
@@ -285,6 +289,11 @@ export class MapComponent implements OnInit, OnDestroy { // Implement OnDestroy
       .join(' ');
   }
 
+  /**
+   * Handles the "View Details" button click in the popup.
+   * Navigates to the occurrence details page.
+   * @param id Occurrence ID
+   */
   private onViewDetails(id: number): void {
     console.log('Button clicked! Navigating to details for ID:', id);
     this.router.navigate(['/occurrence', id]);

@@ -1,53 +1,53 @@
 describe('Página de Login', () => {
   
   beforeEach(() => {
-    // Visita a página de login antes de cada teste
+    // Visits the login page before each test
     cy.visit('/login');
   });
 
   it('deve apresentar o formulário corretamente', () => {
-    // Verifica se o título existe
+    // Checks if the title exists
     cy.contains('h2', 'Welcome back!').should('be.visible');
     
-    // Verifica campos
+    // Checks fields
     cy.get('input[placeholder="Email"]').should('be.visible');
     cy.get('input[placeholder="Password"]').should('be.visible');
     
-    // Verifica botão
+    // Checks button
     cy.get('button[type="submit"]').should('contain', 'Login');
   });
 
-  it('deve mostrar erro com credenciais inválidas', () => {
-    // Preencher dados
+  it('should show error with invalid credentials', () => {
+    // Fill in data
     cy.get('input[placeholder="Email"]').type('errado@teste.com');
     cy.get('input[placeholder="Password"]').type('senhaerrada');
     
-    // Clicar
+    // Click
     cy.get('button[type="submit"]').click();
     
-    // Verificar Toast de Erro (classe .alert-danger)
+    // Check Error Toast (class .alert-danger)
     cy.get('.alert-danger').should('be.visible')
-      .and('contain.text', 'Login failed'); // ou 'Error'
+      .and('contain.text', 'Login failed'); // or 'Error'
   });
 
-  it('deve fazer login com sucesso (Mock)', () => {
-    // Interceptar o pedido para a API e responder sucesso falso
+  it('should successfully login (Mock)', () => {
+    // Intercept the API request and respond with fake success
     cy.intercept('POST', '**/auth/login/web', {
       statusCode: 200,
-      body: '"fake-jwt-token-123"' // String JSON válida
+      body: '"fake-jwt-token-123"' // Valid JSON string
     }).as('loginRequest');
 
-    // Preencher
+    // Fill in data
     cy.get('input[placeholder="Email"]').type('admin@readytohelp.com');
     cy.get('input[placeholder="Password"]').type('123456');
     
-    // Clicar
+    // Click
     cy.get('button[type="submit"]').click();
 
-    // Esperar que o pedido aconteça
+    // Wait for the request to happen
     cy.wait('@loginRequest');
 
-    // Verificar redirecionamento para o mapa
+    // Check redirection to the map
     cy.url().should('include', '/map');
   });
 });

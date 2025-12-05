@@ -227,17 +227,17 @@ describe('User Management Page', () => {
   });
 
   it('should handle load error gracefully', () => {
-    // Simular erro 500 ao carregar utilizadores
+    // Simulate server error on GET
     cy.intercept('GET', '**/api/user*', {
       statusCode: 500,
       body: { message: 'Server error' }
     }).as('getUsersError');
 
-    // Forçar recarregamento chamando a função de filtro ou reload da pagina
+    // Force reload by calling the filter function or reloading the page
     cy.visit('/users');
     cy.wait('@getUsersError');
 
-    // Verificar se a mensagem de erro aparece no HTML (baseado no *ngIf="error")
+    // Verify if the error message appears in the HTML (based on *ngIf="error")
     cy.get('.alert.alert-danger').should('contain.text', 'Failed to load users');
   });
 
